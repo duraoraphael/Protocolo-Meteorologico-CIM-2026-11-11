@@ -1,0 +1,256 @@
+// Integração exclusivamente server-side com as páginas públicas municipais.
+// O portal não expõe contrato público de API; entrega temperatura, "Comparar"
+// e GeoSES no HTML inicial (SSR). Umidade não é publicada nessa resposta.
+const fs = require('node:fs');
+const path = require('node:path');
+const tls = require('node:tls');
+const { Agent } = require('undici');
+const cheerio = require('cheerio');
+const { formatarDataBrasilia, registrarFalha } = require('./sourceHealth');
+const { tipoErro } = require('./httpJsonClient');
+const { recomendacoesPorProtocolo } = require('../logic/healthProtection');
+
+const ARQUIVO = path.join(__dirname, '..', '..', 'data', 'clima-saude.json');
+const FONTE = 'Clima e Saúde — Ministério da Saúde';
+const MOTIVO_UV_INDISPONIVEL = 'O portal Clima e Saúde não publica índice UV nem documenta um serviço público de UV para consumo automatizado.';
+
+function indiceUvIndisponivel(cidade, consultadoEm = new Date().toISOString()) {
+  return {
+    status: 'indisponivel',
+    valorAtual: null,
+    maximoPrevisto: null,
+    classificacao: null,
+    fonte: FONTE,
+    municipio: cidade?.nome || null,
+    uf: cidade?.uf || null,
+    referenciaEm: null,
+    periodo: null,
+    consultadoEm,
+    motivo: MOTIVO_UV_INDISPONIVEL,
+  };
+}
+// Escopo exclusivo desta fonte: confia nas CAs corporativas do Windows sem
+// desligar a validação TLS nem alterar SMTP ou as outras integrações.
+let agenteSistema;
+function dispatcherSistema() {
+  if (!agenteSistema) {
+    const ca = tls.getCACertificates?.('system') || [];
+    agenteSistema = ca.length ? new Agent({ connect: { ca } }) : null;
+  }
+  return agenteSistema;
+}
+const NIVEIS = Object.freeze({
+  'sem excesso': {
+    grau: 'NORMAL', protocolo: null, gravidade: 'normal',
+    significado: 'Ausência de sinal térmico relevante no dia. Manter monitoramento ativo e rotinas de vigilância.',
+  },
+  baixo: {
+    grau: 'ATENÇÃO', protocolo: 'P1', gravidade: 'atencao',
+    significado: 'Calor acima do habitual com potencial impacto na população de risco. Reforçar medidas preventivas, com foco em hidratação e orientação a grupos vulnerabilizados.',
+  },
+  severo: {
+    grau: 'ALERTA', protocolo: 'P2', gravidade: 'alto',
+    significado: 'Potencial concreto de adoecimento, internações e sobrecarga assistencial, sobretudo em populações vulnerabilizadas. Considerar priorização de resposta no mesmo dia.',
+  },
+  extremo: {
+    grau: 'EMERGÊNCIA', protocolo: 'P3', gravidade: 'severo',
+    significado: 'Calor excepcional e perigoso, com elevado potencial de impactos à saúde, incluindo aumento de internações e óbitos evitáveis. Prioridade máxima para contingência e resposta intersetorial.',
+  },
+});
+function normalizar(texto) {
+  return String(texto || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+}
+function numero(texto) {
+  const valor = String(texto || '').match(/-?\d+(?:[.,]\d+)?/);
+  return valor ? Number(valor[0].replace(',', '.')) : null;
+}
+function nivelEhf(classificacao) {
+  return NIVEIS[normalizar(classificacao)] || null;
+}
+function riscoCombinadoCanonico(classificacao) {
+  const chave = normalizar(classificacao);
+  return ({
+    'sem risco': 'Normal', normal: 'Normal', baixo: 'Baixo', moderado: 'Moderado',
+    alto: 'Alto', 'muito alto': 'Muito Alto',
+  })[chave] || classificacao || null;
+}
+function recomendacoesCalor(nivel) {
+  return recomendacoesPorProtocolo(nivel?.protocolo);
+}
+
+const MESES = Object.freeze({
+  jan: 1, fev: 2, mar: 3, abr: 4, mai: 5, jun: 6,
+  jul: 7, ago: 8, set: 9, out: 10, nov: 11, dez: 12,
+});
+
+// Página fora do layout esperado: distingue "o portal mudou" de "o portal caiu".
+function erroFormato(mensagem) {
+  const erro = new Error(mensagem);
+  erro.name = 'ParserError';
+  return erro;
+}
+
+function dataIsoPainel(texto) {
+  const partes = normalizar(texto).match(/\b(\d{1,2})\s+(jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)\s+(\d{4})\b/);
+  if (!partes) return null;
+  return `${partes[3]}-${String(MESES[partes[2]]).padStart(2, '0')}-${String(Number(partes[1])).padStart(2, '0')}`;
+}
+
+function dataLocalBrasilia(instante) {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(new Date(instante));
+}
+
+function interpretarHtml(html, { url, consultadoEm = new Date().toISOString(), dataReferencia = null } = {}) {
+  const $ = cheerio.load(html);
+  // Não interpreta scripts de hidratação: os campos úteis estão no HTML SSR.
+  $('script, style, svg').remove();
+  const municipio = $('h1').first().text().trim() || null;
+  const uf = $('h1').first().parent().find('p').first().text().match(/\b[A-Z]{2}\b/)?.[0] || null;
+  const ehfBadge = $('[aria-label^="EHF:"]').first().attr('aria-label')?.replace(/^EHF:\s*/, '').trim() || null;
+  const riscoCombinado = riscoCombinadoCanonico($('[aria-label^="Risco Combinado:"]').first().attr('aria-label')?.replace(/^Risco Combinado:\s*/, '').trim() || null);
+  const rotuloEhf = $('span').filter((_, el) => $(el).text().trim() === 'EHF').first();
+  const linhaEhf = rotuloEhf.parent();
+  const spansEhf = linhaEhf.children('span');
+  const valorEhf = numero(spansEhf.eq(1).text());
+  const classificacao = ehfBadge || spansEhf.filter((_, el) => Boolean(nivelEhf($(el).text()))).first().text().trim() || null;
+  const linhaTemperatura = linhaEhf.next().text().replace(/\s+/g, ' ');
+  const geosesRotulo = $('p').filter((_, el) => /Vulnerabilidade social\s*\(GeoSES\)/i.test($(el).text())).first();
+  const geosesTexto = geosesRotulo.parent().find('span').first().text();
+  const dataPainel = dataIsoPainel(linhaEhf.parent().text()) || dataIsoPainel($.root().text());
+  const dataConsulta = dataPainel || dataLocalBrasilia(consultadoEm);
+  const previsaoDias = $('[aria-label]').map((_, el) => $(el).attr('aria-label'))
+    .get().map((rotulo) => rotulo.match(/^(\d{4}-\d{2}-\d{2}):\s*(Sem excesso|Baixo|Severo|Extremo),\s*(-?\d+(?:[.,]\d+)?)°/i))
+    .filter((partes) => partes && partes[1] >= dataConsulta).map((partes) => ({ data: partes[1], classificacao: partes[2], tempMax: numero(partes[3]) }));
+  if (!municipio || !uf || !nivelEhf(classificacao) || rotuloEhf.length === 0) {
+    throw erroFormato('HTML municipal sem município, UF ou classificação EHF reconhecível.');
+  }
+  if (dataReferencia && dataConsulta !== dataReferencia) {
+    throw new Error(`Clima e Saúde retornou EHF de ${dataConsulta}, mas a data solicitada é ${dataReferencia}.`);
+  }
+  const nivel = nivelEhf(classificacao);
+  return {
+    source: FONTE, municipio, uf, dataConsulta,
+    ehf: { valor: valorEhf, classificacao }, riscoCombinado,
+    temperatura: {
+      media: numero(linhaTemperatura.match(/Média\s+(-?\d+(?:[.,]\d+)?)/i)?.[1]),
+      maxima: numero(linhaTemperatura.match(/(?:Hoje|Máx)\s+(-?\d+(?:[.,]\d+)?)/i)?.[1]),
+      minima: numero(linhaTemperatura.match(/mín\s+(-?\d+(?:[.,]\d+)?)/i)?.[1]),
+    },
+    umidade: { minima: null, maxima: null, status: 'nao_publicada' },
+    geoses: { valor: numero(geosesTexto), classificacao: geosesTexto.match(/\(([^)]+)\)/)?.[1] || null },
+    previsaoDias, consultadoEm, urlFonte: url || null,
+    metadados: {
+      fonte: FONTE,
+      instanteMedicao: dataConsulta,
+      ultimaAtualizacao: consultadoEm,
+      localidade: `${municipio}/${uf}`,
+      estacao: null,
+      natureza: 'previsto',
+      status: 'operacional',
+    },
+    nivel, recomendacoes: recomendacoesCalor(nivel),
+  };
+}
+
+function validarUrl(url) {
+  const parsed = new URL(url);
+  if (parsed.protocol !== 'https:' || parsed.hostname !== 'clima.saude.gov.br' || parsed.port || parsed.username || parsed.password || !/^\/[a-z]{2}\/[a-z0-9-]+$/.test(parsed.pathname)) {
+    throw new Error('URL Clima e Saúde inválida ou fora do domínio permitido.');
+  }
+  return parsed.href;
+}
+function lerCache() {
+  try { return JSON.parse(fs.readFileSync(ARQUIVO, 'utf8')); }
+  catch (erro) { if (erro.code === 'ENOENT') return {}; throw erro; }
+}
+function gravarCache(estado) {
+  fs.mkdirSync(path.dirname(ARQUIVO), { recursive: true });
+  const tmp = `${ARQUIVO}.${process.pid}.tmp`;
+  fs.writeFileSync(tmp, JSON.stringify(estado, null, 2), 'utf8');
+  fs.renameSync(tmp, ARQUIVO);
+}
+function lerArmazenado(cidade, { carregar = lerCache } = {}) {
+  const indiceUv = indiceUvIndisponivel(cidade);
+  if (!cidade.climaSaudeUrl) return { status: 'nao_configurada', mensagem: 'Clima e Saúde: não configurado para esta base.', dados: null, indiceUv };
+  let dados = null;
+  try { dados = carregar()[cidade.chave] || null; }
+  catch (erro) { console.error(`[CLIMA-SAÚDE][ERRO] cache: ${erro.message}`); }
+  return dados
+    ? {
+      status: 'armazenado',
+      mensagem: `Última coleta válida: ${formatarDataBrasilia(dados.consultadoEm) || 'horário indisponível'}.`,
+      dados,
+      indiceUv,
+      lastSuccessAt: dados.consultadoEm || null,
+    }
+    : { status: 'indisponivel', mensagem: 'Clima e Saúde: dados indisponíveis nesta atualização.', dados: null, indiceUv };
+}
+async function consultar(cidade, { fetchFn = fetch, carregar = lerCache, salvar = gravarCache, tentativas = 2, timeoutMs = 8000, agora = () => new Date() } = {}) {
+  if (!cidade.climaSaudeUrl) return lerArmazenado(cidade, { carregar });
+  let url;
+  let dataReferencia;
+  let consultadoEm;
+  try {
+    const instante = agora();
+    consultadoEm = instante.toISOString();
+    dataReferencia = dataLocalBrasilia(instante);
+    const urlValidada = new URL(validarUrl(cidade.climaSaudeUrl));
+    urlValidada.searchParams.set('modo', 'ehf');
+    urlValidada.searchParams.set('data', dataReferencia);
+    url = urlValidada.href;
+  }
+  catch (erro) { return { status: 'indisponivel', mensagem: erro.message, dados: null, indiceUv: indiceUvIndisponivel(cidade) }; }
+  console.log(`[CLIMA-SAÚDE] Consultando ${cidade.nome}/${cidade.uf}`);
+  let ultimoErro = null;
+  for (let i = 0; i < tentativas; i++) {
+    try {
+      const resposta = await fetchFn(url, {
+        signal: AbortSignal.timeout(timeoutMs), redirect: 'error',
+        ...(fetchFn === globalThis.fetch && dispatcherSistema() ? { dispatcher: dispatcherSistema() } : {}),
+        headers: { 'User-Agent': 'Protocolo-Meteorologico-CIM/1.0 (consulta publica institucional)', Accept: 'text/html' },
+      });
+      console.log(`[CLIMA-SAÚDE] HTTP ${resposta.status}`);
+      if (resposta.status !== 200) throw Object.assign(new Error(`HTTP ${resposta.status}`), { httpStatus: resposta.status });
+      const html = await resposta.text();
+      if (Buffer.byteLength(html, 'utf8') > 2_000_000) throw new Error('HTML maior que o limite de 2 MB.');
+      const dados = interpretarHtml(html, { url, consultadoEm, dataReferencia });
+      const esperado = cidade.climaSaudeMunicipio || cidade.municipio || cidade.nome;
+      if (normalizar(dados.municipio) !== normalizar(esperado) || dados.uf !== cidade.uf) throw erroFormato('Município/UF da página não corresponde à base.');
+      const estado = carregar();
+      estado[cidade.chave] = dados;
+      salvar(estado);
+      console.log(`[CLIMA-SAÚDE] EHF=${dados.ehf.classificacao}; Risco=${dados.riscoCombinado ?? 'indisponível'}; dados armazenados.`);
+      return { status: 'operacional', mensagem: 'Dados atualizados.', dados, indiceUv: indiceUvIndisponivel(cidade, consultadoEm) };
+    } catch (erro) {
+      ultimoErro = erro;
+      registrarFalha(`CLIMA-SAÚDE:${cidade.chave}`, erro);
+    }
+  }
+  // "parser" = o portal respondeu, mas o layout mudou; demais = falha de acesso.
+  const tipoFalha = tipoErro(ultimoErro);
+  let ultimoValido = null;
+  try { ultimoValido = carregar()[cidade.chave] || null; } catch (erro) { console.error(`[CLIMA-SAÚDE][ERRO] cache: ${erro.message}`); }
+  if (ultimoValido) {
+    return {
+      status: 'degradado',
+      mensagem: `Consulta atual indisponível. Utilizando última coleta válida de ${formatarDataBrasilia(ultimoValido.consultadoEm) || 'horário indisponível'}.`,
+      dados: ultimoValido,
+      indiceUv: indiceUvIndisponivel(cidade, consultadoEm),
+      ultimoValido,
+      lastSuccessAt: ultimoValido.consultadoEm || null,
+      tipoFalha,
+    };
+  }
+  return {
+    status: 'indisponivel',
+    mensagem: 'Clima e Saúde: dados indisponíveis nesta atualização.',
+    dados: null,
+    indiceUv: indiceUvIndisponivel(cidade, consultadoEm),
+    ultimoValido: null,
+    tipoFalha,
+  };
+}
+
+module.exports = { interpretarHtml, nivelEhf, recomendacoesCalor, riscoCombinadoCanonico, consultar, lerArmazenado, validarUrl, dataIsoPainel, indiceUvIndisponivel, MOTIVO_UV_INDISPONIVEL, ARQUIVO };

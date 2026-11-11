@@ -1,0 +1,1245 @@
+const brand = require("./brand");
+const { HEADER_AMARELO, HEADER_VERDE, LOGOS_HEADER, PETROBRAS_PDF, logoHeaderDataUri, logoPetrobrasPdfDataUri } = require("../config/headerAssets");
+const { montarCardsAlerta, visualNivel } = require("./alertCards");
+const { formatarDataBrasilia } = require("../sources/sourceHealth");
+const monitorSecas = require("../sources/monitorSecas");
+const CorRio = require("../../public/cor-rio-compartilhado");
+const { comunicadoDoDia } = require("./corRioEmail");
+const { informativoProgramado, tipoDocumentoDoRelatorio } = require("../logic/alertPresentation");
+const { referenciaEdicaoVisual } = require("../logic/informativoValidity");
+const { calorPorData, dataLocal, fonteCalor, DESCRICAO_CALOR } = require("../logic/calorPorData");
+const { formatarRajadaNumero, formatarRajadaPrevista } = require("../../public/weather-format");
+
+function esc(valor) {
+  if (valor === null || valor === undefined) return "—";
+  return String(valor)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function horaConsultaPdf(valor) {
+  const horaCheia = /^(\d{2}):00$/.exec(String(valor || "").trim());
+  return horaCheia ? `${horaCheia[1]}h` : valor;
+}
+
+function referenciaEdicaoPdf(r) {
+  const referencia = referenciaEdicaoVisual(r.horarioAgendado);
+  if (referencia) return referencia;
+  if (r.horarioAgendado) return null;
+  if (!r.horaConsulta || !r.previsaoAte) return null;
+  return { hora: horaConsultaPdf(r.horaConsulta), previsaoAte: r.previsaoAte };
+}
+
+function escAtributo(valor) {
+  return esc(valor).replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+function listaHtml(itens) {
+  return `<ul>${itens.map((i) => `<li>${esc(i)}</li>`).join("")}</ul>`;
+}
+
+function textoOficialHtml(valor) {
+  const texto = Array.isArray(valor) ? valor.filter(Boolean).join(" ") : valor;
+  return esc(texto).replace(/\r?\n/g, "<br>");
+}
+
+// Tabela com título e fonte de dados num bloco só: se o conjunto couber numa
+// página e não couber no espaço restante, vai inteiro para a próxima. Tabela
+// maior que uma página quebra entre linhas (nunca no meio de uma) e repete o
+// cabeçalho. A fonte fica sempre logo abaixo da tabela, no mesmo estilo.
+function blocoTabela({ titulo = "", tabela, fonte = "", antes = "" }) {
+  if (!tabela) return "";
+  return `<section class="bloco-tabela">
+    ${titulo}${antes}
+    ${tabela}
+    ${fonte ? `<p class="fonte-tabela">${fonte}</p>` : ""}
+  </section>`;
+}
+
+function linhaCardHtml(item) {
+  if (item.lista) {
+    return `<div class="evento-linha"><strong>${esc(item.rotulo)}:</strong>${listaHtml(item.lista)}</div>`;
+  }
+  const valor = item.multilinha ? textoOficialHtml(item.texto) : esc(item.texto);
+  return `<p class="${item.rotulo ? "evento-linha" : "evento-descricao"}">${item.rotulo ? `<strong>${esc(item.rotulo)}:</strong> ` : ""}${valor}</p>`;
+}
+
+// Alerta e recomendações num card único (modelo em ./alertCards, o mesmo do
+// e-mail): card inteiro no tom claro do nível, com a seção
+// RECOMENDAÇÕES dentro da mesma borda. Paginação: o card inteiro vai para a
+// próxima página quando cabe nela; maior que uma página, continua na seguinte
+// com a borda repetida, sem cortar linha e sem deixar o título sozinho.
+function cardAlertaHtml(card) {
+  const v = card.visual;
+  const rec = card.recomendacoes;
+  const classeTitulo = card.titulo.length > 34 ? " card-alerta-titulo-longo" : "";
+  return `<section class="card-alerta" data-nivel="${escAtributo(card.nivel)}" style="border-color:${v.cor};background:${v.fundo};">
+    <div class="card-alerta-topo">
+      <div class="card-alerta-cab" style="background:${v.fundo};border-bottom-color:${v.cor};">
+        <div class="card-alerta-meta"><span class="card-alerta-selo" style="background:${v.selo};color:${v.textoSelo};">${esc(v.rotulo)}</span> ${esc(card.rotuloOrigem)}</div>
+        <div class="card-alerta-titulo${classeTitulo}" style="color:${v.texto};"><span class="evento-icone" style="color:${v.cor};">●</span> ${esc(card.titulo)}</div>
+      </div>
+      ${card.linhas.slice(0, 1).map(linhaCardHtml).join("")}
+    </div>
+    <div class="card-alerta-corpo">${card.linhas.slice(1).map(linhaCardHtml).join("")}</div>
+    ${rec && rec.itens.length ? `<div class="card-alerta-rec">
+      <div class="card-alerta-rec-cab">
+        <div class="card-alerta-rec-titulo" style="color:${v.texto};">RECOMENDAÇÕES</div>
+        <div class="card-alerta-rec-origem">${esc(rec.titulo)}</div>
+      </div>
+      ${rec.grupos ? rec.grupos.map((g) => `<div class="card-alerta-rec-nivel"><strong>${esc(g.nivel)}:</strong>${listaHtml(g.itens)}</div>`).join("") : listaHtml(rec.itens)}
+    </div>` : ""}
+  </section>`;
+}
+
+function blocoCardsAlerta(r) {
+  return montarCardsAlerta(r, {
+    tipoDocumento: tipoDocumentoDoRelatorio(r),
+    detalhado: true,
+    cardCondicoesNormais: true,
+  }).map(cardAlertaHtml).join("");
+}
+
+function blocoDivergencias(divergencias) {
+  if (!divergencias || divergencias.length === 0) return "";
+  return `<div class="warning-box">
+    <strong>⚠ Ressalva sobre divergência entre fontes</strong>
+    ${listaHtml(divergencias)}
+  </div>`;
+}
+
+function blocoAvisosColeta(r) {
+  const avisosColeta = [...new Set((r.avisosColeta || [])
+    .filter((aviso) => typeof aviso === "string" && aviso.trim())
+    .map((aviso) => aviso.trim()))];
+  if (!avisosColeta.length) return "";
+  return `<div class="warning-box">
+    <strong>⚠ Avisos de coleta automática</strong>
+    ${listaHtml(avisosColeta)}
+  </div>`;
+}
+
+// ---------------------------------------------------------------------------
+// Card "Comunicado oficial COR-Rio" (só relatórios com r.corRio — município do
+// Rio). r.corRio é o mesmo estado de /api/cor-rio; cores e leitura do estado
+// vêm de public/cor-rio-compartilhado.js, também usado pelo painel.
+// Comunicados longos são divididos em partes de cerca de meia página (cada uma
+// inteira numa página, duas por página), identificadas como continuação —
+// nada é cortado nem omitido, e o vazio deixado ao mover uma parte para a
+// página seguinte fica limitado. Medidas calibradas no PDF renderizado
+// (10,5 pt, ~105 caracteres por linha útil do card).
+// ---------------------------------------------------------------------------
+// Até este volume de texto o card inteiro (com cabeçalho, dados e estágio)
+// cabe numa página: fica num bloco só, movido para a página seguinte se preciso.
+const LINHAS_CARD_INTEIRO = 30;
+const LINHAS_PRIMEIRA_PARTE = 13;
+const LINHAS_DEMAIS_PARTES = 17;
+const CARACTERES_POR_LINHA = 105;
+
+const linhasTexto = (texto) => String(texto).split("\n").reduce((n, l) => n + Math.max(1, Math.ceil(l.length / CARACTERES_POR_LINHA)), 0);
+
+// Parágrafo maior que uma parte inteira: quebra por linhas e depois por frases.
+function fatiarParagrafo(p, limite) {
+  if (linhasTexto(p.texto) <= limite) return [p];
+  const pedacos = [];
+  let atual = "";
+  const unidades = p.texto.split("\n").flatMap((linha) => linhasTexto(linha) > limite ? linha.match(/[^.!?;]+[.!?;]*\s*/g) || [linha] : [linha + "\n"]);
+  for (const u of unidades) {
+    if (atual && linhasTexto(atual + u) > limite) { pedacos.push(atual.trim()); atual = ""; }
+    atual += u;
+  }
+  if (atual.trim()) pedacos.push(atual.trim());
+  return pedacos.map((texto) => ({ ...p, texto }));
+}
+
+const LINHAS_BLOCO_ESTAGIO = 7;
+function dividirEmPartes(paragrafos) {
+  const pesoTotal = LINHAS_BLOCO_ESTAGIO + (paragrafos || []).reduce((n, p) => n + linhasTexto(p.texto) + 0.4 + (p.destaque ? 0.4 : 0), 0);
+  if (pesoTotal <= LINHAS_CARD_INTEIRO) return [paragrafos || []];
+  const partes = [[]];
+  let usadas = 0;
+  for (const original of paragrafos || []) {
+    const limite = () => (partes.length === 1 ? LINHAS_PRIMEIRA_PARTE : LINHAS_DEMAIS_PARTES);
+    for (const p of fatiarParagrafo(original, LINHAS_DEMAIS_PARTES)) {
+      const peso = linhasTexto(p.texto) + 0.4 + (p.destaque ? 0.4 : 0);
+      if (usadas + peso > limite() && partes.at(-1).length) { partes.push([]); usadas = 0; }
+      partes.at(-1).push(p);
+      usadas += peso;
+    }
+  }
+  return partes;
+}
+
+function paragrafosCorRioHtml(paragrafos) {
+  let html = "";
+  let lista = [];
+  const fechar = () => { if (lista.length) html += `<ul class="cor-lista">${lista.join("")}</ul>`; lista = []; };
+  for (const p of paragrafos) {
+    if (p.item) { lista.push(`<li>${textoOficialHtml(p.texto)}</li>`); continue; }
+    fechar();
+    html += `<p class="cor-par${p.destaque ? " cor-par-destaque" : ""}">${textoOficialHtml(p.texto)}</p>`;
+  }
+  fechar();
+  return html;
+}
+
+function dataHoraBrasilia(iso) {
+  const texto = formatarDataBrasilia(iso);
+  return texto ? `${texto} (Brasília)` : "horário indisponível";
+}
+
+function linkCorRioHtml(url, texto) {
+  return /^https:\/\/cor\.rio\//.test(url || "") ? `<a href="${escAtributo(url)}">${esc(texto)}</a>` : "";
+}
+
+// somenteDoDia: versão do PDF anexada ao e-mail — só o comunicado do dia, com
+// o conteúdo referente ao dia (mesma seleção do corpo do e-mail) e sem a
+// lista de outros comunicados. O PDF baixado pelo site usa a versão completa.
+function blocoCorRio(r, { somenteDoDia = false } = {}) {
+  const estado = r.corRio;
+  if (!estado) return "";
+  const s = CorRio.situacao(estado);
+  const documentoCompleto = informativoProgramado(tipoDocumentoDoRelatorio(r));
+  // O COR-Rio não usa os nomes NORMAL/ATENÇÃO do protocolo. Para exibição,
+  // apenas o nível 1 é condição normal; níveis 2–5 continuam visíveis sem
+  // mudar a classificação oficial recebida e armazenada.
+  const exibirEstagio = documentoCompleto || !s.nivel || Number(s.nivel) > 1;
+  const exibirCalor = documentoCompleto || !s.nivelCalor || Number(s.nivelCalor) > 1;
+  if (!exibirEstagio && !exibirCalor) return "";
+  const doDia = somenteDoDia && s.comunicados === "disponivel"
+    ? comunicadoDoDia(s.itens, { geradoEm: r.geradoEmISO || Date.now() })
+    : null;
+  const semComunicadoDoDia = somenteDoDia && s.comunicados !== "indisponivel" && !doDia;
+  const est = estado.estagio || {};
+  const com = estado.comunicados || {};
+  const cor = exibirEstagio && s.estagio ? s.estagio.cor : exibirCalor && s.calor ? s.calor.cor : CorRio.NEUTRO.cor;
+  const fundo = (exibirEstagio && s.estagio) || (exibirCalor && s.calor) ? CorRio.tomClaro(cor, 0.1) : CorRio.NEUTRO.fundo;
+  const selo = !exibirEstagio ? "" : s.nivel
+    ? `<span class="cor-selo" style="background:${s.estagio.cor};color:${CorRio.TINTA};">ESTÁGIO ${s.nivel}</span>`
+    : `<span class="cor-selo cor-selo-neutro">ESTÁGIO INDISPONÍVEL</span>`;
+  const corCalor = s.calor ? s.calor.cor : CorRio.NEUTRO.cor;
+  const seloCalor = !exibirCalor ? "" : s.nivelCalor
+    ? `<span class="cor-selo cor-selo-calor" style="background:${corCalor};color:${CorRio.TINTA};">ESTÁGIO DE CALOR ${s.nivelCalor}</span>`
+    : `<span class="cor-selo cor-selo-neutro cor-selo-calor">CALOR INDISPONÍVEL</span>`;
+  const abrirCard = (titulo, extraClasse = "") => `<div class="evento-card cor-card${extraClasse}" style="border-color:${cor};background:${fundo};">
+    <div class="cor-topo"><div class="cor-titulo">${titulo}</div><div class="cor-selos">${selo}${seloCalor}</div></div>`;
+  const desatualizado = (rotulo, iso) => `<p class="cor-desatualizado"><strong>Dados desatualizados</strong> — a consulta ao COR-Rio falhou nesta geração. Última consulta bem-sucedida ${rotulo}: ${esc(dataHoraBrasilia(iso))}.</p>`;
+
+  // Estágio: informação própria, com seus horários.
+  const linhaEstagio = !exibirEstagio ? "" : s.nivel
+    ? `<p class="evento-linha"><strong>Estágio operacional da cidade:</strong> Estágio ${s.nivel}${est.dados.vigenteDesde ? `, em vigor desde ${esc(dataHoraBrasilia(est.dados.vigenteDesde))}` : ""}. Consulta à fonte: ${esc(dataHoraBrasilia(est.consultadoEm))}.</p>
+      ${(est.dados.mensagens || []).map((m) => `<p class="evento-linha"><strong>Mensagem oficial do COR-Rio:</strong> ${textoOficialHtml(m)}</p>`).join("")}
+      ${s.estagioDesatualizado ? desatualizado("do estágio", est.consultadoEm) : ""}`
+    : `<p class="evento-linha"><strong>Estágio indisponível</strong> — não há consulta válida ao estágio operacional do COR-Rio${est.falha ? ` (${esc(est.falha)})` : ""}. Nenhum estágio é presumido.</p>`;
+
+  const calor = estado.calor || {};
+  const linhaCalor = !exibirCalor ? "" : s.nivelCalor
+    ? `<p class="evento-linha"><strong>Estágio de calor:</strong> Estágio de Calor ${s.nivelCalor}. Consulta à fonte: ${esc(dataHoraBrasilia(calor.consultadoEm))}. Protocolo independente do estágio operacional da cidade.</p>
+      ${s.calorDesatualizado ? desatualizado("do estágio de calor", calor.consultadoEm) : ""}`
+    : `<p class="evento-linha"><strong>Estágio de calor indisponível</strong> — não há consulta válida ao Protocolo de Calor do COR-Rio${calor.falha ? ` (${esc(calor.falha)})` : ""}. Nenhum nível é presumido.</p>`;
+
+  const linkEstagios = exibirEstagio ? linkCorRioHtml(est.dados?.urlPublica || "https://cor.rio/estagios-operacionais-da-cidade/", "Estágios operacionais no cor.rio") : "";
+  const linkCalor = exibirCalor ? linkCorRioHtml(calor.dados?.urlPublica || "https://cor.rio/niveis-de-calor/", "Níveis de calor no cor.rio") : "";
+
+  if (s.comunicados !== "disponivel" || semComunicadoDoDia) {
+    const texto = semComunicadoDoDia
+      ? `<p class="cor-com-titulo"><strong>Nenhum comunicado do dia disponível até o horário da consulta.</strong></p>
+         <p class="evento-linha">Consulta à fonte: ${esc(dataHoraBrasilia(com.consultadoEm))}.</p>
+         ${s.comunicadosDesatualizados ? desatualizado("dos comunicados", com.consultadoEm) : ""}`
+      : s.comunicados === "nenhum"
+      ? `<p class="cor-com-titulo"><strong>Nenhum comunicado vigente disponibilizado pela fonte.</strong></p>
+         <p class="evento-linha">O COR-Rio não publicou nem atualizou comunicados nas últimas ${esc(com.janelaHoras)} h. Consulta à fonte: ${esc(dataHoraBrasilia(com.consultadoEm))}.</p>
+         ${s.comunicadosDesatualizados ? desatualizado("dos comunicados", com.consultadoEm) : ""}`
+      : `<p class="cor-com-titulo"><strong>Não foi possível consultar os comunicados do COR-Rio nesta geração${com.falha ? ` (${esc(com.falha)})` : ""}.</strong></p>`;
+    return `${abrirCard("Comunicado oficial COR-Rio", s.nivel ? "" : " cor-card-neutro")}
+      ${texto}
+      <div class="cor-separador"></div>
+      ${linhaEstagio}
+      ${linhaCalor}
+      <p class="evento-linha"><strong>Abrangência:</strong> ${esc(estado.abrangencia || "Município do Rio de Janeiro")} &nbsp;|&nbsp; <strong>Fonte:</strong> COR-Rio${linkEstagios ? ` &nbsp;|&nbsp; ${linkEstagios}` : ""}${linkCalor ? ` &nbsp;|&nbsp; ${linkCalor}` : ""}</p>
+    </div>`;
+  }
+
+  const c = somenteDoDia ? doDia : s.itens[0];
+  const outros = somenteDoDia ? [] : s.itens.slice(1);
+  const partes = dividirEmPartes(c.paragrafos?.length ? c.paragrafos : [{ texto: c.resumo || "" }]);
+  const atualizado = c.atualizadoEm && formatarDataBrasilia(c.atualizadoEm) !== formatarDataBrasilia(c.publicadoEm)
+    ? ` · atualizado em ${esc(dataHoraBrasilia(c.atualizadoEm))}` : "";
+  const anteriorAoEstagio = exibirEstagio && s.nivel && est.dados.vigenteDesde && Date.parse(c.publicadoEm) < Date.parse(est.dados.vigenteDesde);
+  const relacao = exibirEstagio
+    ? `<p class="cor-nota">O selo indica o estágio da cidade informado pelo COR-Rio na consulta de ${esc(dataHoraBrasilia(est.consultadoEm || com.consultadoEm))}; estágio e comunicado são publicados separadamente.${anteriorAoEstagio ? ` <strong>Este comunicado foi publicado antes do início do estágio atual</strong> e não deve ser lido como o comunicado desse estágio.` : ""}</p>`
+    : "";
+  const linkPublicacao = linkCorRioHtml(c.link, "Consultar publicação oficial");
+  const total = partes.length;
+  const outrosHtml = outros.length
+    ? `<div class="cor-outros" style="border-left-color:${cor};"><strong>Outros comunicados vigentes do COR-Rio</strong> (consulta em ${esc(dataHoraBrasilia(com.consultadoEm))}):<ul>${outros.map((o) => `<li>${esc(o.titulo)} — publicado em ${esc(dataHoraBrasilia(o.publicadoEm))}${linkCorRioHtml(o.link, "Consultar publicação oficial") ? ` · ${linkCorRioHtml(o.link, "Consultar publicação oficial")}` : ""}</li>`).join("")}</ul></div>`
+    : "";
+
+  return partes.map((paragrafos, i) => {
+    const primeira = i === 0;
+    const ultima = i === total - 1;
+    const titulo = primeira ? "Comunicado oficial COR-Rio" : `Comunicado oficial COR-Rio — continuação (parte ${i + 1} de ${total})`;
+    return `${abrirCard(titulo, primeira ? "" : " cor-card-continuacao")}
+      <p class="cor-com-titulo"><strong>${esc(c.titulo)}</strong>${primeira ? "" : " <span class=\"cor-cont\">(continuação)</span>"}</p>
+      ${primeira ? `<table class="cor-meta"><tbody>
+        <tr><th>Abrangência</th><td>${esc(c.abrangencia || estado.abrangencia)}</td></tr>
+        <tr><th>Publicação</th><td>${esc(dataHoraBrasilia(c.publicadoEm))}${atualizado}</td></tr>
+        <tr><th>Fonte</th><td>${esc(estado.fonte || "COR-Rio — Centro de Operações e Resiliência (Prefeitura do Rio)")}</td></tr>
+        <tr><th>Consulta à fonte</th><td>${esc(dataHoraBrasilia(com.consultadoEm))}</td></tr>
+        <tr><th>Publicação oficial</th><td>${linkPublicacao || "Link não disponibilizado pela fonte"}</td></tr>
+      </tbody></table>
+      ${s.comunicadosDesatualizados ? desatualizado("dos comunicados", com.consultadoEm) : ""}
+      <p class="cor-rotulo">Conteúdo divulgado pelo COR-Rio${total > 1 ? ` (parte 1 de ${total})` : ""}:</p>` : ""}
+      ${paragrafosCorRioHtml(paragrafos)}
+      ${ultima ? `${total > 1 && linkPublicacao ? `<p class="evento-linha">Fim do comunicado · ${linkPublicacao}</p>` : ""}
+      <div class="cor-separador"></div>
+      ${linhaEstagio}
+      ${linhaCalor}
+      ${relacao}` : `<p class="cor-continua">Continua na próxima parte.</p>`}
+    </div>`;
+  }).join("") + outrosHtml;
+}
+
+function valorTemperaturaUmidade(valor, unidade) {
+  return Number.isFinite(valor) ? `${esc(String(valor).replace(".", ","))}${unidade}` : `<span class="nd">Não disponível</span>`;
+}
+
+function tabelaTemperatura(linhas) {
+  if (!linhas?.length) return "";
+  const l = linhas[0];
+  return `<table class="tabela-temp-umidade">
+    <colgroup><col style="width:25%"><col style="width:25%"><col style="width:25%"><col style="width:25%"></colgroup>
+    <thead><tr><th>Temp. Mínima</th><th>Temp. Máxima</th><th>Umidade Mínima</th><th>Umidade Máxima</th></tr></thead>
+    <tbody><tr>
+      <td>${valorTemperaturaUmidade(l.tempMin, "°C")}</td><td>${valorTemperaturaUmidade(l.tempMax, "°C")}</td>
+      <td>${valorTemperaturaUmidade(l.umidadeMin, "%")}</td><td>${valorTemperaturaUmidade(l.umidadeMax, "%")}</td>
+    </tr></tbody>
+  </table>`;
+}
+
+function blocoChuvaEstimada(r) {
+  const itens = [
+    ["Chuva acumulada estimada", r.chuvaEstimadaDiaMm],
+    ["Chuva estimada na última hora completa", r.chuvaEstimadaHoraMm],
+    ["Chuva estimada nas últimas 24 h", r.chuvaEstimada24hMm],
+  ].filter(([, valor]) => Number.isFinite(valor));
+  if (!itens.length) return "";
+  return blocoTabela({
+    titulo: `<h4 class="subsecao">Chuva acumulada estimada</h4>`,
+    tabela: `<table class="chuva-estimada"><thead><tr><th>Indicador</th><th>Valor (mm)</th></tr></thead><tbody>${itens
+      .map(([nome, valor]) => `<tr><td>${nome}</td><td>${numeroBr(valor, 1)}</td></tr>`).join("")}</tbody></table>`,
+    fonte: `ESTIMATIVA OPEN-METEO — precipitação modelada; referência ${esc(r.chuvaEstimadaReferencia || "indisponível")}.`,
+  });
+}
+
+function celulaPeriodo(p) {
+  return `${esc(p.periodo)}${p.janela ? `<br/><small>${esc(p.janela)}</small>` : ""}`;
+}
+
+function textoOuIndisponivel(valor) {
+  return valor === null || valor === undefined || valor === "" || valor === "—"
+    ? "Não disponível"
+    : esc(valor);
+}
+
+function tabelaVento(periodos) {
+  if (!periodos?.length) return "";
+  return `<table class="tabela-periodo tabela-vento-periodo">
+    <colgroup><col style="width:17%"><col style="width:16%"><col style="width:33%"><col style="width:34%"></colgroup>
+    <thead><tr><th>Período</th><th>Direção</th><th>Vento (velocidade média)</th><th>Rajada prevista (máx.)</th></tr></thead>
+    <tbody>
+      ${periodos
+        .map(
+          (p, i) => `<tr class="${i % 2 === 1 ? "zebra" : ""}">
+            <td><strong>${celulaPeriodo(p)}</strong></td><td>${textoOuIndisponivel(p.direcao)}</td><td>${Number.isFinite(p.velocidadeMediaKmh) ? `${numeroBr(p.velocidadeMediaKmh, 1)} km/h` : "Não disponível"}</td>
+            <td>${Number.isFinite(p.rajadaMaxKmh) ? formatarRajadaPrevista(p.rajadaMaxKmh) : "Não disponível"}</td>
+          </tr>`
+        )
+        .join("")}
+    </tbody>
+  </table>`;
+}
+
+function tabelaChuvaPorPeriodo(periodos) {
+  if (!periodos?.length) return "";
+  return `<table class="tabela-periodo tabela-chuva-periodo">
+    <colgroup><col style="width:20%"><col style="width:25%"><col style="width:55%"></colgroup>
+    <thead><tr><th>Período</th><th>Probabilidade máxima</th><th>Acumulado previsto (mm)</th></tr></thead>
+    <tbody>${periodos.map((p, i) => `<tr class="${i % 2 === 1 ? "zebra" : ""}">
+      <td><strong>${celulaPeriodo(p)}</strong></td>
+      <td>${Number.isFinite(p.probabilidade) ? `${numeroBr(p.probabilidade, 0)}%` : "Não disponível"}</td>
+      <td>${Number.isFinite(p.precipitacaoMm) ? `${numeroBr(p.precipitacaoMm, 1)} mm` : "Não disponível"}</td>
+    </tr>`).join("")}</tbody>
+  </table>`;
+}
+
+function tabelaCalor(r) {
+  const dadosBrutos = r.climaSaude?.dados || null;
+  const dataCiclo = dataLocal(r.geradoEmISO || Date.now(), r.cidade?.fuso);
+  const calor = calorPorData(r.climaSaude, dataCiclo);
+  const dados = calor ? dadosBrutos : null;
+  return blocoTabela({
+    titulo: `<h4 class="subsecao">Excesso de calor</h4>`,
+    tabela: `<table class="tabela-calor"><thead><tr><th>Período</th><th>EHF</th><th>Classificação EHF</th><th>Nível CIM</th><th>Risco combinado</th></tr></thead><tbody><tr><td>${esc(dataCiclo || "Dia indisponível")}</td><td>${Number.isFinite(dados?.ehf?.valor) ? esc(dados.ehf.valor) : "Não disponível"}</td><td>${esc(dados?.ehf?.classificacao || "Não disponível")}</td><td>${esc(calor?.rotulo || "Não disponível")}</td><td>${esc(dados?.riscoCombinado || "Não disponível")}</td></tr></tbody></table>`,
+    fonte: dados ? `Fonte de dados: Clima e Saúde — Ministério da Saúde; EHF de ${esc(dataCiclo)}; consulta ${esc(dados.consultadoEm || "horário indisponível")}.`
+      : "Fonte prioritária consultada: Clima e Saúde. Classificação EHF da data indisponível nesta emissão.",
+  });
+}
+
+function tabelaAvisosInmet(r) {
+  const avisos = (r.avisosInmet || []).filter(Boolean);
+  const base = String(r.cidade?.nome || "base").replace(/\s*\([^)]*\)\s*/g, " ").trim().toUpperCase();
+  const titulo = `<h4 class="subsecao">Avisos oficiais do INMET — ${esc(base)}/${esc(r.cidade?.uf)}</h4>`;
+  if (!avisos.length) return blocoTabela({
+    titulo,
+    tabela: `<p class="nota">${r.avisosInmetStatus === "indisponivel" ? "Consulta aos avisos oficiais do INMET indisponível nesta emissão; não é possível confirmar a ausência de avisos." : "Nenhum aviso oficial do INMET aplicável à base no período consultado."}</p>`,
+    fonte: "Fonte: INMET — Avisos de Perigo.",
+  });
+  return blocoTabela({
+    titulo,
+    tabela: `<table><thead><tr><th>Fenômeno</th><th>Severidade</th><th>Vigência</th></tr></thead><tbody>${avisos.map((a, i) => `<tr class="${i % 2 ? "zebra" : ""}"><td>${esc(a.descricao)}</td><td>${esc(a.severidade)}</td><td>${esc(a.inicio)} — ${esc(a.fim)}</td></tr>`).join("")}</tbody></table>`,
+    fonte: `Fonte: INMET — avisos oficiais filtrados pelo código IBGE da base e pela janela desta edição; severidade preservada exatamente como publicada.`,
+  });
+}
+
+function tabelaMar(mar, fontesPorCampo = {}) {
+  if (!mar?.periodos?.length) return "";
+  const fonte = fontesPorCampo["mar.alturaMaxDiaM"] && fontesPorCampo["mar.alturaMaxDiaM"] !== "Indisponível"
+    ? fontesPorCampo["mar.alturaMaxDiaM"]
+    : mar.fonte || "Informação indisponível";
+  const temperatura = mar.temperaturaMarC != null
+    ? ` Temperatura média da superfície do mar: ${mar.temperaturaMarC}°C (${esc(fontesPorCampo["mar.temperaturaMarC"] || "Informação indisponível")}).`
+    : "";
+  const alturaPeriodo = (periodo) => {
+    if (periodo.alturaOndaM != null && periodo.alturaMaxM != null) return `${periodo.alturaOndaM} m (máx. ${periodo.alturaMaxM} m)`;
+    if (periodo.alturaMaxM != null) return `${periodo.alturaMaxM} m`;
+    if (periodo.alturaOndaM != null) return `${periodo.alturaOndaM} m`;
+    return "—";
+  };
+  const periodoOnda = (periodo) => {
+    if (periodo.periodoOndaS != null && periodo.periodoPicoOndaS != null) return `${periodo.periodoOndaS} s (pico ${periodo.periodoPicoOndaS} s)`;
+    if (periodo.periodoOndaS != null) return `${periodo.periodoOndaS} s`;
+    if (periodo.periodoPicoOndaS != null) return `Pico ${periodo.periodoPicoOndaS} s`;
+    return "—";
+  };
+  return blocoTabela({
+    titulo: `<h4 class="subsecao">Condições de mar${mar.referenciaPonto ? ` (ponto de referência: ${esc(mar.referenciaPonto)})` : ""}</h4>`,
+    antes: mar.desatualizado ? `<p class="nota"><strong>Dado armazenado.</strong> Última atualização válida: ${esc(formatarDataBrasilia(mar.ultimaAtualizacao) || "horário indisponível")}.</p>` : "",
+    fonte: `Fonte de dados: ${esc(fonte)}. Altura de onda e altura máxima permanecem conceitos distintos quando ambas são publicadas; marulho representa a ondulação separada.${temperatura}`,
+    tabela: `<table>
+    <thead><tr><th>Período</th><th>Estado do mar</th><th>Altura máx.</th><th>Período de onda</th><th>Direção</th><th>Marulho</th></tr></thead>
+    <tbody>
+      ${mar.periodos
+        .map(
+          (p, i) => `<tr class="${i % 2 === 1 ? "zebra" : ""}">
+            <td>${esc(p.periodo)}</td><td>${esc(p.estadoMar)}</td>
+            <td>${alturaPeriodo(p)}</td>
+            <td>${periodoOnda(p)}</td>
+            <td>${esc(p.direcaoOnda)}</td>
+            <td>${p.marulhoMaxM == null ? "—" : p.marulhoMaxM + " m"}</td>
+          </tr>`
+        )
+        .join("")}
+    </tbody>
+  </table>`,
+  });
+}
+
+function tabelaQualidadeAr(qa, indiceUv, fontesPorCampo = {}) {
+  qa ||= {};
+  const fontePm = fontesPorCampo["ar.usAqi"] && !/indisponível/i.test(fontesPorCampo["ar.usAqi"])
+    ? fontesPorCampo["ar.usAqi"]
+    : Number.isFinite(qa.usAqi) ? (qa.fonte || "Open-Meteo — estimativa modelada") : "Informação indisponível";
+  const classificacaoAr = Number.isFinite(qa.usAqi) ? qa.classificacao : null;
+  const uvDisponivel = Number.isFinite(indiceUv?.valorAtual) && Boolean(indiceUv?.classificacao);
+  const uvValor = uvDisponivel ? indiceUv.valorAtual : "Índice UV indisponível";
+  const uvClassificacao = uvDisponivel ? indiceUv.classificacao : "Não disponível";
+  const uvReferencia = uvDisponivel
+    ? `Valor atual modelado em ${indiceUv.referenciaEm || "horário não informado"}; classificação interna.`
+    : "A fonte integrada de índice UV não retornou um valor válido nesta atualização.";
+  return blocoTabela({
+    titulo: `<h4 class="subsecao">Qualidade do Ar e Índice UV</h4>`,
+    fonte: `${Number.isFinite(qa.usAqi) ? "Classificação simplificada interna baseada em US AQI — Open-Meteo/CAMS" : "Qualidade do ar indisponível"}. Referência: ${esc(qa.referenciaEm || "indisponível")}. ${esc(fontePm)}. ${uvDisponivel ? "Índice UV atual modelado disponível." : "Índice UV indisponível nesta atualização."}`,
+    tabela: `<table>
+    <thead><tr><th>Indicador</th><th>Valor</th><th>Classificação</th><th>Referência</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Classificação simplificada (base US AQI)</td>
+        <td>${classificacaoAr ? esc(qa.usAqi) : "—"}</td>
+        <td>${classificacaoAr ? `<strong style="color:${esc(classificacaoAr.cor)}">${esc(classificacaoAr.exibicao)}</strong>` : "Informação indisponível"}</td>
+        <td>${classificacaoAr ? `Faixa interna de US AQI · ${esc(qa.fonte || "Open-Meteo")} · ${esc(qa.referenciaEm || "horário indisponível")}` : esc(qa.motivoIndisponibilidade || "Sem dados suficientes/licença")}</td>
+      </tr>
+      <tr class="zebra">
+        <td>Índice UV</td>
+        <td>${esc(uvValor)}</td>
+        <td>${esc(uvClassificacao)}</td>
+        <td>${esc(uvReferencia)}</td>
+      </tr>
+    </tbody>
+  </table>`,
+  });
+}
+
+// Fontes apresentadas em tabela, por nome e uso — sem URL: as chamadas de
+// API trazem a query completa e poluíam o documento sem servir ao leitor.
+function blocoFontes(r) {
+  // Relatórios antigos (antes da separação em dois grupos) só tinham `fontes`.
+  const automatizadas = r.fontesAutomatizadas || r.fontes || [];
+  const manuais = r.fontesManuais || [];
+
+  const linhas = (lista) =>
+    lista
+      .map(
+        (f, i) => `<tr class="${i % 2 === 1 ? "zebra" : ""}">
+          <td style="width:32%;"><strong>${esc(f.nome)}</strong></td>
+          <td>${esc(f.uso || "")}</td>
+        </tr>`
+      )
+      .join("");
+
+  const tabelaAutomatizadas = automatizadas.length ? `<table>
+    <thead><tr><th>Fonte</th><th>Uso neste informativo</th></tr></thead>
+    <tbody>${linhas(automatizadas)}</tbody>
+  </table>` : "";
+  const tabelaManuais = manuais.length ? `<table>
+    <thead><tr><th>Fonte</th><th>Observação</th></tr></thead>
+    <tbody>${linhas(manuais)}</tbody>
+  </table>` : "";
+  return `${blocoTabela({
+    titulo: `<h4 class="subsecao">Fontes Consultadas</h4>`,
+    antes: tabelaAutomatizadas ? `<p class="rotulo-tabela"><strong>Integradas à coleta automática:</strong></p>` : "",
+    tabela: tabelaAutomatizadas || `<p class="rotulo-tabela">Nenhuma fonte automática respondeu nesta emissão.</p>`,
+  })}
+  ${blocoTabela({
+    antes: `<p class="rotulo-tabela"><strong>Verificação manual (não integradas):</strong></p>`,
+    tabela: tabelaManuais,
+  })}
+  ${blocoSitesOficiaisConsulta(r)}
+  ${blocoFontesMonitorSecas(r.monitorSecas)}
+  ${blocoDivergencias(r.divergencias)}`;
+}
+
+function blocoSitesOficiaisConsulta(r) {
+  const sites = [
+    ["INMET — previsão e avisos meteorológicos", r.cidade?.links?.inmet || "https://portal.inmet.gov.br/"],
+    ["ANA — Monitor de Secas por região", monitorSecas.PORTAL_URL],
+    ["ANA — tabela de classificação de severidade da seca", monitorSecas.CLASSIFICACAO_URL],
+    ["Ministério da Saúde — Excesso de Calor (EHF e risco combinado)", "https://clima.saude.gov.br/"],
+    r.cidade?.integracaoCorRio && ["COR — Centro de Operações e Resiliência", "https://cor.rio/"],
+  ].filter(Boolean);
+  return blocoTabela({
+    antes: `<p class="rotulo-tabela"><strong>Sites oficiais para consulta:</strong></p>`,
+    tabela: `<table class="fontes-consulta">
+      <thead><tr><th>Fonte</th><th>Endereço oficial</th></tr></thead>
+      <tbody>${sites.map(([nome, url], i) => `<tr class="${i % 2 ? "zebra" : ""}"><td style="width:42%;">${esc(nome)}</td><td class="ms-url"><a href="${escAtributo(url)}">${esc(url)}</a></td></tr>`).join("")}</tbody>
+    </table>`,
+  });
+}
+
+// Endereços oficiais efetivamente usados na seção do Monitor de Secas.
+function blocoFontesMonitorSecas(ms) {
+  if (!ms?.urls?.pagina) return "";
+  const linhas = [
+    ["Portal do Monitor de Secas", ms.urls.portal || monitorSecas.PORTAL_URL],
+    ["Tabela oficial de classificação S0–S4", ms.urls.classificacao || monitorSecas.CLASSIFICACAO_URL],
+    [`Página do mapa estadual (${ms.uf || "UF"}) no portal`, ms.urls.pagina],
+    ms.urls.listagem && ["Listagem pública do bucket da ANA (meses e mapas estaduais publicados)", ms.urls.listagem],
+    ms.urls.api && ["API pública consumida pelo portal: texto e áreas por categoria da UF", ms.urls.api],
+    ms.urls.mapa && ["Mapa estadual oficial (imagem reproduzida)", ms.urls.mapa],
+  ].filter(Boolean);
+  return blocoTabela({
+    antes: `<p class="rotulo-tabela"><strong>Monitor de Secas — ANA (${esc(ms.nomeUf || ms.uf || "UF")}, ${esc(ms.competencia?.rotulo || "referência indisponível")}):</strong></p>`,
+    tabela: `<table class="ms-fontes">
+    <thead><tr><th>Uso</th><th>Endereço</th></tr></thead>
+    <tbody>${linhas.map(([uso, url], i) => `<tr class="${i % 2 ? "zebra" : ""}"><td style="width:38%;">${esc(uso)}</td><td class="ms-url"><a href="${escAtributo(url)}">${esc(url)}</a></td></tr>`).join("")}</tbody>
+  </table>`,
+  });
+}
+
+function dataElaboracaoMs(valor) {
+  const partes = String(valor || "").match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return partes ? `${partes[3]}/${partes[2]}/${partes[1]}` : null;
+}
+
+const IMPACTOS_MS = Object.freeze({ C: "Curto prazo (C)", L: "Longo prazo (L)", CL: "Curto e longo prazo (CL)" });
+const VERBOS_EVOLUCAO_MS = /avan[çc]|recu|agrav|surg|desapare|intensific|abrand|atenu|passou|passando|deixou|amplia|pior|melhor|expan|retra/i;
+// Movimentos em relação ao mês anterior, só quando o texto oficial os cita.
+const MOVIMENTOS_MS = Object.freeze([
+  ["Avanço", /avan[çc]/i],
+  ["Recuo", /recu[oa]/i],
+  ["Intensificação", /intensific|agrav|piorou/i],
+  ["Abrandamento", /abrand|atenu|ameniz/i],
+  ["Surgimento", /surgi/i],
+  ["Desaparecimento", /desapare|deixou de registrar/i],
+]);
+const DIRECOES_MS = "extremo norte|extremo sul|extremo leste|extremo oeste|centro-oeste|centro-norte|centro-sul|centro-leste|nordeste|noroeste|sudeste|sudoeste|norte|sul|leste|oeste|centro";
+const REGIOES_NOMEADAS_MS = /\b(Sertão|Agreste|Zona da Mata|Recôncavo|Litoral(?: [A-ZÀ-Ú][a-zà-ú]+)?|Pantanal|Semiárido|Triângulo Mineiro|Vale do [A-ZÀ-Ú][a-zà-ú]+|Região Metropolitana(?: de [A-ZÀ-Ú][a-zà-ú]+)?|divisa com (?:o|a|os|as) [A-ZÀ-Ú][a-zà-ú]+(?: (?:do|da|de) [A-ZÀ-Ú][a-zà-ú]+)*)/g;
+
+// Regiões do estado citadas literalmente no texto oficial, na ordem em que
+// aparecem. Nomes de UF ("Rio Grande do Norte") não contam como direção.
+function regioesCitadasMs(texto) {
+  let limpo = String(texto || "");
+  for (const [, nome] of Object.values(monitorSecas.UFS)) {
+    if (/\b(Norte|Sul)\b/.test(nome)) limpo = limpo.split(nome).join(" ".repeat(nome.length));
+  }
+  const achados = [];
+  for (const m of limpo.matchAll(REGIOES_NOMEADAS_MS)) achados.push([m.index, m[1]]);
+  const direcoes = new RegExp(`(?<![\\wÀ-ú-])(${DIRECOES_MS})(?![\\wÀ-ú-])`, "gi");
+  for (const m of limpo.matchAll(direcoes)) achados.push([m.index, m[1].toLowerCase()]);
+  return [...new Set(achados.sort((a, b) => a[0] - b[0]).map(([, nome]) => nome))];
+}
+
+// Reorganiza o texto oficial da UF sem reescrevê-lo: cada frase vai, inteira,
+// para "Situação", "Evolução" ou "Impactos". Intensidades, impactos,
+// movimentos e regiões destacados são só os citados literalmente no texto.
+function analisarResumoMs(texto) {
+  const original = String(texto || "");
+  const frases = original.split(/(?<=\.)\s+/).map((f) => f.trim()).filter(Boolean);
+  const grupos = { situacao: [], evolucao: [], impactos: [] };
+  for (const frase of frases) {
+    if (/impacto/i.test(frase)) grupos.impactos.push(frase);
+    else if (VERBOS_EVOLUCAO_MS.test(frase)) grupos.evolucao.push(frase);
+    else grupos.situacao.push(frase);
+  }
+  const codigos = new Set([...original.matchAll(/\((S[0-4])\)/g)].map((m) => m[1].toLowerCase()));
+  if (/\(SSR\)|sem seca relativa/i.test(original)) codigos.add("si");
+  const intensidades = Object.keys(monitorSecas.CATEGORIAS).filter((chave) => codigos.has(chave));
+  const ordemImpactos = Object.keys(IMPACTOS_MS);
+  const impactos = [...new Set([...original.matchAll(/\((CL|C|L)\)/g)].map((m) => m[1]))]
+    .sort((a, b) => ordemImpactos.indexOf(a) - ordemImpactos.indexOf(b));
+  const movimentos = MOVIMENTOS_MS.filter(([, padrao]) => padrao.test(original)).map(([rotulo]) => rotulo);
+  return { grupos, intensidades, impactos, movimentos, regioes: regioesCitadasMs(original) };
+}
+
+const percentualMs = (valor) => `${valor.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 1 })}%`;
+
+function tabelaAreaMs(percentuais, rotulo) {
+  const linhas = ["si", "s0", "s1", "s2", "s3", "s4"].map((chave) => {
+    const cat = monitorSecas.CATEGORIAS[chave];
+    const valor = percentuais[chave];
+    return `<tr class="${valor > 0 ? "" : "ms-area-zero"}"><td><span class="ms-chip" style="background:${cat.cor};"></span>${chave === "si" ? "" : `${cat.codigo} `}${esc(cat.nome)}</td><td class="ms-area-pct">${percentualMs(valor)}</td></tr>`;
+  }).join("");
+  return `<div class="ms-grupo"><div class="ms-grupo-titulo">Área do estado por categoria — ${esc(rotulo)}</div>
+    <table class="ms-area">${linhas}</table>
+    <p class="ms-nota-pct">Dados tabulares oficiais da ANA (áreas acumuladas S0–S4, S1–S4…), separados por categoria como no portal.</p></div>`;
+}
+
+function blocoResumoUfMs(resumo, rotulo, cidade) {
+  const cabecalho = `<div class="ms-uf-titulo">Situação no estado</div>
+    <div class="ms-uf-abrangencia">Análise estadual publicada pela ANA para ${esc(resumo.nome)} (${esc(resumo.uf)}). Não é uma classificação específica para a base ${esc(cidade?.nome || "")}: a fonte não publica classificação municipal.</div>`;
+  const area = resumo.percentuais ? tabelaAreaMs(resumo.percentuais, rotulo) : "";
+  if (!resumo.texto) {
+    return `${cabecalho}${area}<p class="ms-uf-paragrafo">Texto oficial da ANA não disponível para este estado em ${esc(rotulo.toLowerCase())}. A ausência de texto não indica ausência de seca.</p>`;
+  }
+  const { grupos, intensidades, impactos, movimentos, regioes } = analisarResumoMs(resumo.texto);
+  const destaque = (titulo, itens) => itens.length
+    ? `<div class="ms-destaque"><span class="ms-destaque-rotulo">${titulo}</span>${itens.join("")}</div>`
+    : "";
+  const destaques = [
+    // Sem dados de área, as categorias presentes vêm só do que o texto cita.
+    !resumo.percentuais && destaque("Intensidades citadas", intensidades.map((chave) => {
+      const cat = monitorSecas.CATEGORIAS[chave];
+      return `<span class="ms-tag"><span class="ms-chip" style="background:${cat.cor};"></span>${chave === "si" ? "" : `${cat.codigo} `}${esc(cat.nome)}</span>`;
+    })),
+    destaque("Em relação ao mês anterior", movimentos.map((m) => `<span class="ms-tag">${esc(m)}</span>`)),
+    destaque("Regiões citadas", regioes.map((r) => `<span class="ms-tag">${esc(r)}</span>`)),
+    destaque("Tipos de impacto citados", impactos.map((c) => `<span class="ms-tag">${esc(IMPACTOS_MS[c])}</span>`)),
+  ].filter(Boolean).join("");
+  const grupo = (titulo, frases) => frases.length
+    ? `<div class="ms-grupo"><div class="ms-grupo-titulo">${titulo}</div>${frases.map((f) => `<p class="ms-uf-paragrafo">${esc(f)}</p>`).join("")}</div>`
+    : "";
+  return `${cabecalho}
+    ${area}
+    ${destaques ? `<div class="ms-destaques">${destaques}</div>` : ""}
+    ${grupo("Situação", grupos.situacao)}
+    ${grupo("Evolução em relação ao mês anterior", grupos.evolucao)}
+    ${grupo("Impactos", grupos.impactos)}`;
+}
+
+// Seção "Monitor de Secas — <Estado> / <UF>": mapa ESTADUAL oficial da UF da
+// base à esquerda e, à direita, a situação no estado do MESMO mês. Bases da
+// mesma UF recebem o mesmo mapa e a mesma publicação.
+function blocoMonitorSecas(r) {
+  const ms = r.monitorSecas;
+  if (!ms) return "";
+  const uf = r.cidade?.uf || ms.uf;
+  const nomeUf = monitorSecas.UFS[uf]?.[1] || ms.nomeUf || uf;
+  const titulo = `<h4 class="subsecao ms-titulo">Monitor de Secas — ${esc(nomeUf)} / ${esc(uf)}</h4>`;
+  const resumo = (ms.resumosUf || []).find((item) => item.uf === uf);
+  const mapa = ms.status === "indisponivel" || ms.uf !== uf ? null : monitorSecas.mapaUfDataUri(ms.competencia, uf);
+  const consulta = ms.urls?.pagina || monitorSecas.PORTAL_URL;
+  if (!mapa || !resumo || !ms.competencia) {
+    return `<div class="ms-bloco">${titulo}
+    <p class="clima-indisponivel">Monitor de Secas temporariamente indisponível para este estado. A ausência do mapa não indica ausência de seca.</p>
+    <p class="ms-ref"><strong>Fonte:</strong> ANA — Monitor de Secas. Consulta: <a href="${escAtributo(consulta)}">${esc(consulta)}</a></p></div>`;
+  }
+
+  const rotulo = ms.competencia.rotulo;
+  const elaborado = dataElaboracaoMs(ms.dataElaboracao);
+  const coletado = formatarDataBrasilia(ms.coletadoEm);
+  const verificado = formatarDataBrasilia(ms.verificadoEm);
+  const legenda = ["si", "s0", "s1", "s2", "s3", "s4"].map((chave) => {
+    const cat = monitorSecas.CATEGORIAS[chave];
+    return `<span class="ms-leg-item"><span class="ms-chip" style="background:${cat.cor};"></span>${chave === "si" ? "" : `${cat.codigo} `}${esc(cat.nome)}</span>`;
+  }).join("");
+
+  return `<div class="ms-bloco">${titulo}
+  <p class="ms-referencia"><strong>Referência:</strong> ${esc(rotulo)} — publicação mensal da ANA${elaborado ? ` (mapa final elaborado em ${esc(elaborado)})` : ""}. Retrata a condição de seca acumulada no mês de referência; não é previsão meteorológica diária.</p>
+  ${ms.aviso ? `<p class="ms-aviso"><strong>Atualização não confirmada.</strong> ${esc(ms.aviso)}</p>` : ""}
+  <table class="ms-layout" role="presentation"><tr>
+    <td class="ms-col-mapa">
+      <img class="ms-mapa" src="${mapa}" alt="Mapa oficial do Monitor de Secas — ${escAtributo(nomeUf)} — ${escAtributo(rotulo)}" />
+      <div class="ms-legenda"><strong>Legenda (reproduzida do mapa oficial):</strong><br>${legenda}<br>
+        <strong>Códigos de impacto usados pela ANA:</strong> C = curto prazo (ex.: agricultura, pastagem); L = longo prazo (ex.: hidrologia, ecologia).</div>
+    </td>
+    <td class="ms-col-info">${blocoResumoUfMs(resumo, rotulo, r.cidade)}</td>
+  </tr></table>
+  <p class="ms-ref"><strong>Fonte:</strong> ANA — Monitor de Secas. Mapa estadual e texto da mesma publicação (${esc(rotulo)}).
+    Mapa obtido em ${esc(coletado || "—")} (horário de Brasília)${ms.status === "cache" || ms.status === "nao_confirmado" ? ", cópia validada armazenada" : ""}${verificado && ms.status !== "nao_confirmado" ? `; publicação mais recente confirmada em ${esc(verificado)}` : ""}.
+    <a href="${escAtributo(consulta)}">${esc(consulta)}</a></p>
+  </div>`;
+}
+
+function dataCurta(dataIso) {
+  const partes = String(dataIso || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return partes ? `${partes[3]}/${partes[2]}/${partes[1]}` : dataIso;
+}
+
+const grausC = (valor) => (Number.isFinite(valor) ? `${Math.round(valor)}°C` : "—");
+
+// Tabela da previsão de hoje na janela da edição, sem título próprio: abre a seção
+// "1. Previsão" e fica no mesmo bloco que o título da seção. Os dias
+// seguintes têm seção própria no fim do informativo.
+function blocoPrevisaoAgendada(r, tituloSecao = "") {
+  if (!r.previsaoDias?.length) return "";
+  const fonteAgrupada = (campos, padrao) => {
+    const fontes = [...new Set(campos
+      .map((campo) => r.fontesPorCampo?.[campo])
+      .filter((fonte) => fonte && fonte !== "Indisponível"))];
+    return esc(fontes.join(" / ") || padrao);
+  };
+  const linhas = r.previsaoDias.map((dia, i) => `<tr class="${i % 2 ? "zebra" : ""}">
+    <td>${esc(dia.periodo)}<br/><small>${esc(dataCurta(dia.data))}</small></td>
+    <td class="previsao-condicao">${esc(r.condicaoGeral || "Condição indisponível")}</td>
+    <td>${grausC(dia.tempMin)} / ${grausC(dia.tempMax)}</td>
+    <td>${Number.isFinite(dia.umidadeMin) || Number.isFinite(dia.umidadeMax) ? `${celulaNumero(dia.umidadeMin)}% / ${celulaNumero(dia.umidadeMax)}%` : "—"}</td>
+    <td class="previsao-chuva">
+      <span>${Number.isFinite(dia.chuvaMm) ? `${numeroBr(dia.chuvaMm, 1)} mm` : "—"}</span>
+      <small><strong>Probabilidade de chuva:</strong> ${Number.isFinite(r.probabilidadeChuvaPrevista) ? `${numeroBr(r.probabilidadeChuvaPrevista, 0)}%` : "Indisponível"}</small>
+    </td>
+    <td>${Number.isFinite(dia.rajadaKmh) ? formatarRajadaPrevista(dia.rajadaKmh) : "—"}</td>
+    <td>${celulaCalor(r.climaSaude, dia.data)}</td>
+  </tr>`).join("");
+  return blocoTabela({
+    titulo: tituloSecao,
+    tabela: `<table class="previsao-hoje"><thead><tr><th>Período</th><th>Condição</th><th>Temperatura mín./máx.</th><th>Umidade mín./máx.</th><th>Chuva prevista/dia</th><th>Rajada prevista</th><th>Calor</th></tr></thead><tbody>${linhas}</tbody></table>`,
+    fonte: `Fontes por campo: condição — ${fonteAgrupada(["condicaoGeral"], "Dado indisponível")}; temperatura — ${fonteAgrupada(["tempMin", "tempMax"], "Dado indisponível")}; umidade — ${fonteAgrupada(["umidadeMin", "umidadeMax"], "Dado indisponível")}; chuva — ${fonteAgrupada(["precipitacaoTotalMm"], "Dado indisponível")}; probabilidade de chuva — ${fonteAgrupada(["probabilidadeChuvaPrevista"], "Dado indisponível")}; rajada — ${fonteAgrupada(["rajadaMaxKmh"], "Dado indisponível")}; calor — ${esc(fonteCalor(r.climaSaude, formatarDataBrasilia))}. Cada campo permanece associado à sua fonte efetiva; avisos oficiais são do INMET.`,
+  });
+}
+
+const NAO_DISPONIVEL = `<span class="p3d-nd">Não disponível</span>`;
+
+// Classificação de calor da data, na cor do nível; sem dado → "Indisponível".
+function celulaCalor(climaSaude, dataIso) {
+  const calor = calorPorData(climaSaude, dataIso);
+  if (!calor) return `<span class="calor-nd">Indisponível</span>`;
+  return `<span class="calor-nivel" style="color:${visualNivel(calor.grau).texto};">${esc(calor.rotulo)}</span>`;
+}
+
+function numeroBr(valor, casas) {
+  return valor.toLocaleString("pt-BR", { minimumFractionDigits: casas, maximumFractionDigits: casas });
+}
+
+function celulaNumero(valor, casas = 0) {
+  return valor == null ? NAO_DISPONIVEL : numeroBr(valor, casas);
+}
+
+function dataHoraLocal(iso, fuso) {
+  const instante = new Date(iso);
+  if (!iso || Number.isNaN(instante.getTime())) return null;
+  const partes = new Intl.DateTimeFormat("pt-BR", {
+    timeZone: fuso, day: "2-digit", month: "2-digit", year: "numeric",
+    hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZoneName: "shortOffset",
+  }).formatToParts(instante);
+  const p = Object.fromEntries(partes.map(({ type, value }) => [type, value]));
+  return `${p.day}/${p.month}/${p.year} às ${p.hour}:${p.minute} (${p.timeZoneName})`;
+}
+
+function dataD3ComAnoCurto(valor) {
+  const partes = String(valor || "").match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  return partes ? `${partes[1]}/${partes[2]}/${partes[3].slice(-2)}` : String(valor || "");
+}
+
+// Seção final "Previsão para os próximos 3 dias": título e tabela num mesmo
+// bloco indivisível — se não couberem no fim da página, vão juntos para a
+// próxima. Valor ausente na fonte aparece como "Não disponível", nunca zero.
+function blocoPrevisaoProximosDias(r, numeroSecao) {
+  const p = r.previsaoProximosDias;
+  if (!p?.dias?.length) return "";
+  const local = `${esc(p.localidade?.nome || r.cidade.nome)} — ${esc(p.localidade?.uf || r.cidade.uf)}`;
+  const linhas = p.dias.map((d, i) => {
+    const temperatura = d.tempMaxC == null && d.tempMinC == null
+      ? NAO_DISPONIVEL
+      : `<span class="p3d-max">${celulaNumero(d.tempMaxC)}</span><span class="p3d-sep">/</span><span class="p3d-min">${celulaNumero(d.tempMinC)}</span>`;
+    return `<tr class="${i % 2 === 1 ? "zebra" : ""}">
+      <td class="p3d-data"><strong>${esc(dataD3ComAnoCurto(d.dataFormatada))}</strong><span>${esc(d.diaSemana)}</span></td>
+      <td class="p3d-num">${temperatura}</td>
+      <td class="p3d-num">${Number.isFinite(d.umidadeMinPct) || Number.isFinite(d.umidadeMaxPct) ? `${celulaNumero(d.umidadeMinPct)} / ${celulaNumero(d.umidadeMaxPct)}` : NAO_DISPONIVEL}</td>
+      <td class="p3d-num">${formatarRajadaNumero(d.rajadaMaxKmh, NAO_DISPONIVEL)}</td>
+      <td class="p3d-num">${celulaNumero(d.chuvaMm, 1)}</td>
+      <td class="p3d-num">${Number.isFinite(d.probabilidadeChuvaPct) ? `${numeroBr(d.probabilidadeChuvaPct, 0)}%` : `<span class="p3d-nd">—</span>`}</td>
+      <td class="p3d-num">${celulaNumero(d.uvMax, 1)}</td>
+      <td class="p3d-num">${celulaCalor(r.climaSaude, d.data)}</td>
+      <td>${d.condicao ? esc(d.condicao) : NAO_DISPONIVEL}</td>
+    </tr>`;
+  }).join("");
+
+  const consulta = dataHoraLocal(p.consultadoEm, p.fuso);
+  const ponto = p.pontoGrade
+    ? ` Ponto de grade da fonte mais próximo da localidade: ${numeroBr(p.pontoGrade.latitude, 2)}; ${numeroBr(p.pontoGrade.longitude, 2)}.`
+    : "";
+  const situacao = p.status === "indisponivel"
+    ? `<p class="p3d-aviso"><strong>Fonte indisponível nesta emissão.</strong> ${esc(p.mensagem || "")} Os campos aparecem como "Não disponível"; nenhum valor foi estimado.</p>`
+    : p.status === "parcial"
+      ? `<p class="p3d-aviso">Alguns campos não foram fornecidos pela fonte para esta localidade e aparecem como "Não disponível".</p>`
+      : "";
+
+  return `<div class="p3d-bloco">
+    <h3 class="secao">${numeroSecao}. Previsão para os próximos 3 dias</h3>
+    <p class="p3d-sub">${local} · três dias seguintes à data de geração deste informativo (hoje não incluído).</p>
+    ${situacao}
+    <table class="p3d">
+      <colgroup><col style="width:13%"><col style="width:11.5%"><col style="width:10%"><col style="width:9%"><col style="width:11%"><col style="width:12%"><col style="width:9%"><col style="width:11.5%"><col style="width:13%"></colgroup>
+      <thead><tr>
+        <th>Data</th>
+        <th class="p3d-num">Temperatura Máx./Mín. (°C)</th>
+        <th class="p3d-num">Umidade Mín./Máx. (%)</th>
+        <th class="p3d-num">Rajada prevista (km/h)</th>
+        <th class="p3d-num">Chuva prevista/dia (mm)</th>
+        <th class="p3d-num">Probabilidade de chuva (%)</th>
+        <th class="p3d-num">Índice UV (máx.)</th>
+        <th class="p3d-num">Calor</th>
+        <th>Condição geral</th>
+      </tr></thead>
+      <tbody>${linhas}</tbody>
+    </table>
+    <p class="fonte-tabela">Fontes por campo: temperatura — ${esc(p.fontesCampo?.temperatura || "Informação indisponível")}; umidade — ${esc(p.fontesCampo?.umidade || "Informação indisponível")}; rajada — ${esc(p.fontesCampo?.rajada || "Informação indisponível")}; chuva — ${esc(p.fontesCampo?.chuva || "Informação indisponível")}; probabilidade de chuva — ${esc(p.fontesCampo?.probabilidadeChuva || "Informação indisponível")}; índice UV — ${esc(p.fontesCampo?.uv || "Informação indisponível")}; condição — ${esc(p.fontesCampo?.condicao || "Informação indisponível")}. Local: ${local}.${ponto}
+      ${p.status === "indisponivel" ? "Tentativa de consulta" : "Atualização (horário da consulta à fonte)"}: ${esc(consulta || "horário indisponível")}, horário local.
+      OCEANOP fornece a rajada prevista (Open-Meteo como contingência); Open-Meteo fornece chuva prevista e probabilidade de chuva; INMET fornece avisos e observações. Campos sem fonte válida aparecem como informação indisponível.
+      Fonte de dados de calor: ${esc(fonteCalor(r.climaSaude, formatarDataBrasilia))} — ${DESCRICAO_CALOR}.</p>
+  </div>`;
+}
+
+// Fontes efetivas de um campo nos três períodos (normalmente uma só).
+function fontesPeriodos(r, campo) {
+  const fontes = ["manha", "tarde", "noite"]
+    .map((k) => r.fontesPorCampo?.[`periodos.${k}.${campo}`])
+    .filter((f) => f && f !== "Indisponível");
+  return [...new Set(fontes)].join(" / ") || "Indisponível";
+}
+
+function referenciaConsulta(r) {
+  const fuso = r.cidade?.fuso || "America/Sao_Paulo";
+  return `consulta em ${esc(r.dataFormatadaCurta)} às ${esc(horaConsultaPdf(r.horaConsulta))} (horário de Brasília); janelas no horário local (${esc(fuso)})`;
+}
+
+function blocosPrevisao(r) {
+  const tituloSecao = `<h3 class="secao">1. Previsão</h3>`;
+  const previsao = blocoPrevisaoAgendada(r, tituloSecao);
+  const fontesTemperatura = [...new Set((r.tabelaTemperaturaUmidade || []).map((l) => l.fonte).filter((f) => f && f !== "Indisponível"))].join(" / ");
+  const fontesCampos = (sufixos) => [...new Set(Object.entries(r.fontesPorCampo || {})
+    .filter(([campo, fonte]) => sufixos.some((sufixo) => campo.endsWith(sufixo)) && fonte && fonte !== "Indisponível")
+    .map(([, fonte]) => fonte))].join(" / ") || "Dado indisponível";
+  const fonteVento = fontesCampos([".direcao", ".intensidadeVento", ".velocidadeMediaKmh", ".rajadaMaxKmh"]);
+  const fonteChuva = fontesCampos([".precipitacaoMm", ".probabilidadeChuva"]);
+  const coberturaTemperatura = r.coberturaTemperaturaObservada;
+  const textoCoberturaTemperatura = coberturaTemperatura?.parcial
+    ? ` Cobertura parcial (${coberturaTemperatura.amostras}/${coberturaTemperatura.horasEsperadas} leituras).`
+    : "";
+  const temperatura = blocoTabela({
+    titulo: `${previsao ? "" : tituloSecao}<h4 class="subsecao secao-modelo">Temperatura e umidade</h4><p class="subtitulo-tabela">Indicadores consolidados do período consultado.</p>`,
+    tabela: tabelaTemperatura(r.tabelaTemperaturaUmidade),
+    fonte: `Fonte de dados: ${fontesTemperatura || "Dado indisponível"}. Previsão para ${esc(r.inmetPrevisao?.data || "dia local")}; consulta ${esc(r.inmetPrevisao?.consultadoEm || r.geradoEmISO || "horário indisponível")}.${textoCoberturaTemperatura}`,
+  });
+  const vento = blocoTabela({
+    titulo: `<h4 class="subsecao secao-modelo">Vento por período</h4>`,
+    tabela: tabelaVento(r.ventoPorPeriodo),
+    fonte: fonteVento === "Dado indisponível"
+      ? "Fonte de dados: informação indisponível."
+      : `Fonte de dados: ${fonteVento}. Vento sustentado e rajada são grandezas distintas; rajada prevista usa ${/OCEANOP/.test(fonteVento) ? "a previsão OCEANOP (rajada a 10 m), com Open-Meteo wind_gusts_10m como contingência" : "a variável Open-Meteo wind_gusts_10m"}.`,
+  });
+  const chuvaPeriodo = blocoTabela({
+    titulo: `<h4 class="subsecao secao-modelo">Chuva por período</h4>`,
+    tabela: tabelaChuvaPorPeriodo(r.chuvaPorPeriodo),
+    fonte: fonteChuva === "Dado indisponível"
+      ? `Fonte de dados: informação indisponível. ${referenciaConsulta(r)}.`
+      : `Fonte de dados: ${fonteChuva}. Probabilidade (%) e volume (mm) permanecem separados; campos ausentes não são estimados. ${referenciaConsulta(r)}.`,
+  });
+  const chuvaEstimada = blocoChuvaEstimada(r);
+  return `${previsao}${temperatura || (previsao ? "" : tituloSecao)}${chuvaEstimada}${vento}${chuvaPeriodo}`;
+}
+
+// Compatibilidade com relatórios antigos; a tabela de calor agora sempre
+// explicita a indisponibilidade no próprio campo.
+function blocoClimaSaudeIndisponivel(r) {
+  const integracao = r.climaSaude;
+  if (!integracao || integracao.dados) return "";
+  return `<p class="clima-indisponivel">${esc(integracao.mensagem || "Dados do Clima e Saúde indisponíveis nesta atualização.")}</p>`;
+}
+
+// Cabeçalho institucional exclusivo dos PDFs: CIM à esquerda, título ao centro
+// e a marca Petrobras original à direita. O e-mail e a aplicação não usam esta imagem.
+function cabecalhoPdfCss(margemLateral) {
+  return `
+  .header {
+    width: auto;
+    margin: 0 -${margemLateral}px;
+    background: ${HEADER_VERDE};
+    color: #ffffff;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .header-tabela { width: 100%; border-collapse: collapse; margin: 0; table-layout: fixed; font-size: inherit; }
+  .header-tabela td { border: 0; padding: 0; vertical-align: middle; }
+  .header-tabela td.header-col-cim { width: 236px; padding: 18px 0 18px 26px; text-align: left; }
+  .header-tabela td.header-col-centro { padding: 16px 12px; text-align: center; }
+  .header-tabela td.header-col-petrobras { width: 186px; padding: 18px 26px 18px 0; text-align: right; }
+  .header-logo-cim img { display: block; width: 210px; height: auto; }
+  .header-logo-petrobras { display: inline-block; width: 160px; padding: 10px 12px; border-radius: 8px; background: #ffffff; line-height: 0; }
+  .header-logo-petrobras img { display: block; width: 100%; height: auto; }
+  .header-logo-cim-fallback { color: #ffffff; font: 900 30pt/1 'Arial Black', Arial, sans-serif; letter-spacing: -1px; white-space: nowrap; }
+  .header-logo-cim-fallback span.i { color: #FEBF0A; }
+  .header h1 {
+    font-size: 18pt;
+    font-weight: bold;
+    text-align: center;
+    margin: 0;
+    line-height: 1.2;
+    letter-spacing: 0.3px;
+    color: #ffffff;
+  }
+  .header .header-local {
+    font-size: 10.5pt;
+    font-weight: normal;
+    text-align: center;
+    line-height: 1.35;
+    margin: 6px 0 0 0;
+    color: #ffffff;
+  }
+  .divisor-amarelo {
+    height: 4px;
+    background: ${HEADER_AMARELO};
+    margin: 0 -${margemLateral}px 20px -${margemLateral}px;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }`;
+}
+
+function cabecalhoPdfHtml({ titulo, linhaLocal }) {
+  const cim = logoHeaderDataUri("cim");
+  const petrobras = logoPetrobrasPdfDataUri();
+  const logoCimHtml = cim
+    ? `<div class="header-logo-cim"><img src="${cim}" alt="${escAtributo(LOGOS_HEADER.cim.alt)}" /></div>`
+    : `<div class="header-logo-cim"><div class="header-logo-cim-fallback">C<span class="i">I</span>M</div></div>`;
+  if (!petrobras) throw new Error(`Asset oficial Petrobras ausente: ${PETROBRAS_PDF.arquivo}`);
+  return `<div class="header">
+    <table class="header-tabela" role="presentation"><tr>
+      <td class="header-col-cim">${logoCimHtml}</td>
+      <td class="header-col-centro header-center">
+        <h1>${esc(titulo)}</h1>
+        <div class="header-local">${linhaLocal}</div>
+      </td>
+      <td class="header-col-petrobras"><div class="header-logo-petrobras"><img src="${petrobras}" alt="${escAtributo(PETROBRAS_PDF.alt)}" /></div></td>
+    </tr></table>
+  </div>
+  <div class="divisor-amarelo"></div>`;
+}
+
+/**
+ * @param {object} [opcoes]
+ * @param {boolean} [opcoes.corRioSomenteDoDia] card do COR-Rio só com o
+ *   comunicado do dia (PDF anexado ao e-mail).
+ */
+const { faixaSimulacaoDocumento } = require("./simulationBanner");
+
+function renderPdfHtml(r, opcoes = {}) {
+  const referenciaEdicao = referenciaEdicaoPdf(r);
+  return `<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="cim-snapshot-id" content="${esc(r.snapshotId || "")}" />
+<style>
+  * { box-sizing: border-box; }
+  html { background: #ffffff; }
+  body {
+    font-family: ${brand.fontePrincipal};
+    color: ${brand.cinzaTexto};
+    background: #ffffff;
+    font-size: 11pt;
+    line-height: 1.45;
+    margin: 0;
+    padding: 0 36px 20px 36px;
+  }
+  table.referencia-edicao { width: 100%; margin: 0 0 12px; border-left: 4px solid ${brand.verde}; background: #F3F6F4; border-collapse: collapse; table-layout: fixed; break-inside: avoid; page-break-inside: avoid; }
+  table.referencia-edicao td { width: 50%; border: 0; padding: 9px 12px; vertical-align: middle; }
+  table.referencia-edicao td:last-child { text-align: right; }
+  ${cabecalhoPdfCss(36)}
+  h3.secao {
+    break-after: avoid;
+    page-break-after: avoid;
+    color: ${brand.verde};
+    font-weight: bold;
+    font-size: 14pt;
+    border-bottom: 2px solid ${brand.verde};
+    padding-bottom: 4px;
+    margin-top: 20px;
+    margin-bottom: 10px;
+  }
+  h4.subsecao {
+    break-after: avoid;
+    page-break-after: avoid;
+    font-weight: bold;
+    font-size: 12pt;
+    margin-bottom: 6px;
+    margin-top: 15px;
+  }
+  h4.subsecao.secao-modelo { color: ${brand.verde}; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8px 0 11px 0;
+    font-size: 10pt;
+  }
+  th {
+    background: ${brand.verde};
+    color: #ffffff;
+    text-align: left;
+    padding: 8px 9px;
+  }
+  td {
+    padding: 8px 9px;
+    border-bottom: 1px solid ${brand.cinzaBorda};
+  }
+  tr.zebra { background: ${brand.cinzaClaro}; }
+  /* Paginação: título, tabela e fonte juntos; tabela longa repete o
+     cabeçalho e nunca corta uma linha. */
+  thead { display: table-header-group; }
+  tr { break-inside: avoid; page-break-inside: avoid; }
+  .bloco-tabela { break-inside: avoid; page-break-inside: avoid; }
+  .bloco-lista { break-inside: auto; page-break-inside: auto; }
+  .bloco-lista li { break-inside: avoid; page-break-inside: avoid; }
+  .bloco-tabela > table { margin-bottom: 0; }
+  .bloco-tabela td small { color: #666; font-size: 8.5pt; }
+  .fonte-tabela { font-family: ${brand.fontePrincipal}; font-size: 8.5pt; line-height: 1.45; color: #555; text-align: left; margin: 5px 0 14px 0; }
+  .rotulo-tabela { font-size: 10pt; margin: 10px 0 4px 0; }
+  /* Calor: cabeçalho numa linha só, na mesma altura das demais tabelas. */
+  .tabela-calor th { white-space: nowrap; }
+  /* Temperatura e umidade: quatro colunas da previsão diária oficial. */
+  h4.subsecao + .subtitulo-tabela { margin: -3px 0 0 0; font-size: 9pt; color: #666; }
+  .tabela-temp-umidade { table-layout: fixed; }
+  .tabela-temp-umidade th { text-align: center; }
+  .tabela-temp-umidade td { text-align: center; font-weight: bold; font-size: 11.5pt; background: #ffffff; border: 1px solid ${brand.cinzaBorda}; }
+  .tabela-temp-umidade td .nd { font-weight: normal; font-size: 9.5pt; color: #666; }
+  .previsao-hoje .previsao-condicao { text-align: center; overflow-wrap: anywhere; word-break: normal; }
+  .previsao-hoje .previsao-chuva { text-align: center; }
+  .previsao-hoje .previsao-chuva > span { display: block; font-weight: bold; }
+  .previsao-hoje .previsao-chuva > small { display: block; margin-top: 3px; color: #555; font-size: 8pt; line-height: 1.25; }
+  /* Tabelas aprovadas de vento e chuva: proporções fixas, cabeçalhos e
+     números centralizados; somente a identificação do período fica à esquerda. */
+  .tabela-periodo { table-layout: fixed; }
+  .tabela-periodo th, .tabela-periodo td {
+    border: 1px solid ${brand.cinzaBorda};
+    text-align: center;
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+  .tabela-periodo th:first-child, .tabela-periodo td:first-child { text-align: left; }
+  /* Card de alerta único (alerta + recomendações na mesma borda). Inteiro
+     na próxima página quando cabe nela; maior que uma página, continua com
+     a borda repetida, sem cortar linhas e sem título isolado. */
+  .card-alerta {
+    border: 1.5px solid;
+    border-left-width: 6px;
+    border-radius: 5px;
+    margin: 12px 0;
+    background: #ffffff;
+    font-size: 10.5pt;
+    line-height: 1.45;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .card-alerta-topo { break-inside: avoid; page-break-inside: avoid; }
+  .card-alerta-cab { padding: 9px 15px 10px; border-bottom: 1px solid; border-radius: 3px 3px 0 0; }
+  .card-alerta-meta { font-size: 9pt; color: #555; line-height: 1.3; }
+  .card-alerta-selo { display: inline-block; padding: 2px 9px; margin-right: 6px; border-radius: 3px; font-size: 8.5pt; font-weight: 800; letter-spacing: 0.6px; }
+  .card-alerta-titulo { font-size: 14.5pt; font-weight: 700; line-height: 1.3; margin-top: 5px; }
+  .card-alerta-titulo-longo { font-size: 12pt; }
+  .card-alerta-topo > p, .card-alerta-topo > div.evento-linha { margin: 10px 15px 0; }
+  .card-alerta-corpo { padding: 0 15px 10px; }
+  .card-alerta-corpo:empty { padding-bottom: 4px; }
+  .card-alerta-corpo .evento-linha, .card-alerta-corpo .evento-descricao { break-inside: avoid; page-break-inside: avoid; }
+  .card-alerta-corpo ul { margin: 4px 0 0 0; }
+  .card-alerta-rec { margin: 0 15px; padding: 9px 0 10px; border-top: 1px solid ${brand.cinzaBorda}; }
+  .card-alerta-rec-cab { break-after: avoid; page-break-after: avoid; break-inside: avoid; page-break-inside: avoid; }
+  .card-alerta-rec-titulo { font-size: 10.5pt; font-weight: 800; letter-spacing: 0.5px; }
+  .card-alerta-rec-origem { font-size: 8.5pt; color: #555; }
+  .card-alerta-rec ul { margin: 5px 0 0 0; padding-left: 18px; font-size: 10pt; }
+  .card-alerta-rec li { margin-bottom: 4px; break-inside: avoid; page-break-inside: avoid; }
+  .evento-card {
+    width: 100%;
+    border: 1.5px solid;
+    border-left-width: 5px;
+    border-radius: 5px;
+    padding: 14px 17px;
+    margin: 11px 0;
+    font-size: 10.5pt;
+    line-height: 1.48;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    -webkit-column-break-inside: avoid;
+  }
+  .evento-icone { font-size: 11pt; vertical-align: 1px; }
+  .evento-descricao { margin: 0 0 7px 0; line-height: 1.48; }
+  .evento-linha { margin: 6px 0 0 0; line-height: 1.48; }
+  .evento-linha ul { margin-bottom: 0; }
+  .clima-indisponivel { color: #666; font-size: 10pt; margin: 12px 0; }
+  .warning-box {
+    border-left: 4px solid ${brand.vermelhoAlerta};
+    background: #FDF2F1;
+    padding: 8px 14px;
+    margin: 14px 0;
+    font-size: 10pt;
+  }
+  .cor-card { border-width: 1.5px; border-left-width: 7px; border-radius: 6px; -webkit-print-color-adjust: exact; print-color-adjust: exact; color: #1F2A26; }
+  .cor-card-continuacao { margin-top: 10px; }
+  .cor-topo { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 10px; }
+  .cor-titulo { font-size: 15pt; font-weight: 700; line-height: 1.3; color: #1F2A26; }
+  .cor-selo { flex: none; padding: 4px 12px; border-radius: 5px; font-size: 10.5pt; font-weight: 800; letter-spacing: 0.6px; white-space: nowrap; }
+  .cor-selos { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex: none; }
+  .cor-selo-calor { font-size: 9.5pt; }
+  .cor-selo-neutro { background: #DDE3E1; color: #2B3431; border: 1px dashed #8A9894; }
+  .cor-com-titulo { margin: 0 0 8px 0; font-size: 12pt; line-height: 1.4; }
+  .cor-cont { font-weight: normal; font-size: 10pt; color: #555; }
+  table.cor-meta { margin: 6px 0 10px 0; font-size: 9.5pt; background: rgba(255,255,255,0.65); }
+  table.cor-meta th { background: transparent; color: #1F2A26; width: 26%; padding: 4px 8px; vertical-align: top; border-bottom: 1px solid rgba(0,0,0,0.08); }
+  table.cor-meta td { padding: 4px 8px; border-bottom: 1px solid rgba(0,0,0,0.08); overflow-wrap: anywhere; }
+  .cor-card a, .cor-outros a { color: ${brand.verdeEscuro}; font-weight: 600; text-decoration: underline; }
+  .cor-rotulo { margin: 10px 0 2px 0; font-weight: 700; font-size: 10pt; }
+  .cor-par { margin: 6px 0 0 0; line-height: 1.5; overflow-wrap: anywhere; }
+  .cor-par-destaque { font-weight: 700; margin-top: 10px; }
+  .cor-lista { margin: 6px 0 0 0; }
+  .cor-lista li { margin-bottom: 3px; }
+  .cor-separador { border-top: 1px solid rgba(0,0,0,0.12); margin: 12px 0 2px 0; }
+  .cor-nota { margin: 8px 0 0 0; font-size: 9.5pt; color: #3A4541; line-height: 1.5; }
+  .cor-desatualizado { margin: 8px 0 0 0; padding: 6px 10px; border: 1px dashed #B7791F; background: #FFF8E6; font-size: 9.5pt; }
+  .cor-continua { margin: 10px 0 0 0; font-size: 9pt; font-style: italic; color: #555; text-align: right; }
+  .cor-outros { margin: -4px 0 16px 0; padding: 8px 14px; border: 1px solid ${brand.cinzaBorda}; border-left: 4px solid; border-radius: 5px; font-size: 9.5pt; break-inside: avoid; page-break-inside: avoid; }
+  .cor-outros ul { margin: 4px 0 0 0; }
+  ul { margin: 8px 0 14px 0; padding-left: 20px; }
+  li { margin-bottom: 6px; line-height: 1.45; }
+  .ms-bloco { break-inside: avoid; page-break-inside: avoid; }
+  .ms-titulo { border-bottom: 2px solid ${brand.verde}; padding-bottom: 3px; margin-top: 0; }
+  .ms-nota { font-size: 9.5pt; margin: 4px 0 8px 0; }
+  table.ms-layout { margin: 0; font-size: 9pt; table-layout: fixed; break-inside: avoid; page-break-inside: avoid; }
+  table.ms-layout > tbody > tr > td { border: 0; padding: 0; vertical-align: top; }
+  td.ms-col-mapa { width: 54%; padding-right: 12px !important; }
+  img.ms-mapa { display: block; width: 100%; height: auto; border: 1px solid ${brand.cinzaBorda}; }
+  .ms-legenda { font-size: 8pt; line-height: 1.5; margin-top: 5px; }
+  .ms-leg-item { display: inline-block; margin-right: 8px; white-space: nowrap; }
+  .ms-chip { display: inline-block; width: 10px; height: 10px; border: 1px solid #555; margin-right: 4px; vertical-align: -1px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .ms-ref { font-size: 8pt; color: #444; margin: 5px 0 0 0; }
+  .ms-ref a { word-break: break-all; }
+  .ms-referencia { font-size: 9.5pt; margin: 4px 0 8px 0; }
+  .ms-aviso { font-size: 9.5pt; margin: 0 0 8px 0; padding: 6px 10px; border-left: 4px solid ${brand.amarelo}; background: #FFFBE6; }
+  table.ms-area { width: 100%; margin: 0 0 3px 0; font-size: 9.5pt; border: 0; }
+  table.ms-area td { padding: 2px 4px; border: 0; border-bottom: 1px solid ${brand.cinzaClaro}; }
+  table.ms-area td.ms-area-pct { text-align: right; font-weight: bold; white-space: nowrap; width: 22%; }
+  table.ms-area tr.ms-area-zero td { color: #888; font-weight: normal; }
+  .ms-nota-pct { font-size: 7.5pt; color: #666; margin: 0; }
+  td.ms-col-info { padding-left: 6px !important; }
+  .ms-uf-titulo { font-size: 13pt; font-weight: bold; color: ${brand.verde}; line-height: 1.3; margin: 0 0 4px 0; }
+  .ms-uf-abrangencia { font-size: 9pt; font-style: italic; color: #555; margin-bottom: 12px; }
+  .ms-destaques { background: ${brand.cinzaClaro}; border-radius: 4px; padding: 8px 10px; margin-bottom: 12px; }
+  .ms-destaque + .ms-destaque { margin-top: 8px; }
+  .ms-destaque-rotulo { display: block; font-size: 8.5pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.3px; color: #555; margin-bottom: 4px; }
+  .ms-tag { display: inline-block; font-size: 9.5pt; margin: 0 10px 3px 0; white-space: nowrap; }
+  .ms-grupo { margin-bottom: 10px; }
+  .ms-grupo-titulo { font-size: 10pt; font-weight: bold; border-bottom: 1px solid ${brand.cinzaBorda}; padding-bottom: 2px; margin-bottom: 5px; }
+  .ms-uf-paragrafo { font-size: 10.5pt; line-height: 1.55; margin: 0 0 7px 0; }
+  table.ms-fontes { font-size: 8.5pt; }
+  td.ms-url { word-break: break-all; }
+  .p3d-bloco { break-inside: avoid; page-break-inside: avoid; padding-top: 1px; }
+  .p3d-sub { font-size: 10pt; color: #555; margin: 6px 0 4px 0; }
+  table.p3d { table-layout: fixed; font-size: 10.5pt; margin: 8px 0 0 0; border: 1px solid ${brand.cinzaBorda}; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  table.p3d th { background: ${brand.verde}; color: #ffffff; font-size: 9.5pt; line-height: 1.3; padding: 10px 6px; text-align: center; vertical-align: middle; white-space: normal; overflow-wrap: anywhere; word-break: normal; }
+  table.p3d td { padding: 12px 10px; vertical-align: middle; line-height: 1.35; }
+  table.p3d tr { break-inside: avoid; page-break-inside: avoid; }
+  table.p3d .p3d-num { text-align: center; padding-left: 6px; padding-right: 6px; }
+  td.p3d-data strong { display: block; font-size: 11.5pt; color: ${brand.verdeEscuro}; letter-spacing: 0.2px; }
+  td.p3d-data span { display: block; font-size: 8.5pt; color: #666; margin-top: 1px; }
+  .p3d-max { font-weight: bold; color: #B23A12; }
+  .p3d-min { font-weight: bold; color: #1F5F99; }
+  .p3d-sep { color: #999; margin: 0 5px; }
+  .p3d-nd { font-size: 9pt; font-style: italic; color: #666; }
+  .calor-nivel { font-weight: bold; white-space: nowrap; }
+  .calor-nd { font-size: 9pt; font-style: italic; color: #666; white-space: nowrap; }
+  .p3d-aviso { font-size: 9.5pt; margin: 6px 0; padding: 6px 10px; border-left: 4px solid ${brand.amarelo}; background: #FFFBE6; }
+</style>
+</head>
+<body>
+  ${faixaSimulacaoDocumento(r)}
+  ${cabecalhoPdfHtml({
+    titulo: "INFORMATIVO METEOROLÓGICO",
+    linhaLocal: `${esc(r.cidade.nome)} — ${esc(r.cidade.uf)} — ${esc(r.dataFormatadaLonga)}`,
+  })}
+
+  ${referenciaEdicao ? `<table class="referencia-edicao" role="presentation"><tbody><tr>
+    <td>Hora da consulta: ${esc(referenciaEdicao.hora)} (Horário de Brasília)</td>
+    <td>Previsão até ${esc(referenciaEdicao.previsaoAte)}</td>
+  </tr></tbody></table>` : ""}
+
+  ${blocosPrevisao(r)}
+
+  ${tabelaCalor(r)}
+  ${tabelaQualidadeAr(r.qualidadeAr, r.indiceUv, r.fontesPorCampo)}
+  ${tabelaMar(r.mar, r.fontesPorCampo)}
+  ${tabelaAvisosInmet(r)}
+  ${opcoes.incluirCorRio === false ? "" : blocoCorRio(r, { somenteDoDia: opcoes.corRioSomenteDoDia })}
+  ${blocoMonitorSecas(r)}
+  ${blocoPrevisaoProximosDias(r, 2)}
+
+  ${blocoFontes(r)}
+  ${blocoAvisosColeta(r)}
+
+</body>
+</html>`;
+}
+
+function headerTemplateVazio() {
+  return `<div></div>`;
+}
+
+function footerTemplate(r) {
+  // Só as fontes efetivamente integradas entram no rodapé — citar as de
+  // verificação manual aqui daria a entender que foram consultadas.
+  const fontesResumo = (r.fontesAutomatizadas || r.fontes || [])
+    .slice(0, 3)
+    .map((f) => f.nome.split("—")[0].trim())
+    .join(", ");
+  return `<div style="width:100%;font-family:Arial,sans-serif;font-size:7.5pt;color:#666;padding:0 36px;">
+    <div style="border-top:2px solid ${brand.amarelo};padding-top:4px;display:flex;justify-content:space-between;">
+      <span>Documento gerado automaticamente por ferramenta de geração assistida por IA em ${esc(r.dataFormatadaCurta)} às ${esc(horaConsultaPdf(r.horaConsulta))}. Sujeito a revisão humana antes de uso operacional. Fontes: ${esc(fontesResumo)} e outras listadas no corpo do documento.</span>
+      <span style="white-space:nowrap;margin-left:12px;"><span class="pageNumber"></span>/<span class="totalPages"></span></span>
+    </div>
+  </div>`;
+}
+
+module.exports = { renderPdfHtml, headerTemplateVazio, footerTemplate, esc, cabecalhoPdfCss, cabecalhoPdfHtml };

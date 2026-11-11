@@ -1,0 +1,500 @@
+﻿// O .env só é carregado quando o servidor é executado diretamente
+// (node server.js). Nos testes, que importam criarApp(), o .env real nunca é
+// lido.
+const executadoDiretamente = require.main === module;
+if (executadoDiretamente) require("dotenv").config();
+require("./src/security/certificados");
+
+const express = require("express");
+const http = require("http");
+const https = require("https");
+const path = require("path");
+const fs = require("fs");
+
+const { getCidade, CIDADES } = require("./src/config/cities");
+const { executarPipeline, PASTA_SAIDA } = require("./src/pipeline");
+const { criarAtualizadorDados } = require("./src/logic/atualizacaoDados");
+const { comConteudoEmail } = require("./src/logic/conteudoEmailPainel");
+const { servicoCorRioPadrao } = require("./src/sources/corRio");
+const {
+  iniciarAgendamentoDiario,
+  agendarEnvioUnicoHoje,
+  iniciarMonitorAlertas,
+  iniciarAtualizacaoAutomatica,
+  iniciarVerificacaoFontes,
+  estadoMonitorAvisosInmet,
+  iniciarMonitorColetaAvisosInmet,
+} = require("./src/scheduler");
+const { auditarRegistroCidades } = require("./src/logic/cityRegistryAudit");
+const responsaveis = require("./src/config/recipients");
+const { BASES_DISTRIBUICAO, getBaseDistribuicao } = require("./src/config/distributionBases");
+const { problemaSenhaConfigurada, criarComparadorSenha } = require("./src/security/senha");
+const { cabecalhosSeguranca } = require("./src/security/cabecalhos");
+const { tratadorDeErros, naoEncontrado } = require("./src/security/erros");
+const { criarLinksRelatorio, senhaDoBasicAuth } = require("./src/security/linksRelatorio");
+const { criarControleTentativas, valorTrustProxy } = require("./src/security/tentativas");
+const { opcoesDeRede, carregarPfx, redirecionarParaHttps } = require("./src/security/https");
+const { validarDocumentoOperacional } = require("./src/logic/documentProvenance");
+
+// Hospedagens em nuvem (Render, Railway, etc.) definem PORT automaticamente —
+// PORTA continua valendo para rodar local/Windows sem mexer no .env.
+const PORTA = process.env.PORT || process.env.PORTA || 3210;
+
+/**
+ * Monta o app Express com todas as rotas. Não abre porta nem inicia
+ * agendamentos — isso fica em iniciarServidor(). Separado para os testes.
+ */
+function criarApp({
+  senhaPainel = process.env.DASHBOARD_PASSWORD,
+  cidadeAtiva = process.env.CIDADE || undefined,
+  pastaRelatorios = PASTA_SAIDA,
+  trustProxy = process.env.TRUST_PROXY,
+  opcoesTentativas = {},
+  executarPipelineRelatorio = executarPipeline,
+  atualizadorDados = criarAtualizadorDados(),
+  servicoCorRio = servicoCorRioPadrao(),
+} = {}) {
+  const senhaConfere = criarComparadorSenha(senhaPainel);
+  const controleTentativas = criarControleTentativas(opcoesTentativas);
+  async function verificarSenha(req, senha = req.body?.senha) {
+    return controleTentativas.verificar(req.ip, () => senhaConfere(senha));
+  }
+  const app = express();
+  // V-08: não anunciar a tecnologia e aplicar cabeçalhos de segurança
+  // (CSP, nosniff, X-Frame-Options, Referrer-Policy) em todas as respostas.
+  app.disable("x-powered-by");
+  // TRUST_PROXY (padrão desligado): só ative atrás de um proxy reverso
+  // (IIS/nginx) para que req.ip seja o IP real do cliente, e não o do proxy.
+  const confiancaProxy = valorTrustProxy(trustProxy);
+  if (confiancaProxy !== false) app.set("trust proxy", confiancaProxy);
+  app.use(cabecalhosSeguranca());
+  app.use(express.json({ limit: "100kb" }));
+  app.use(express.static(path.join(__dirname, "public"), { index: "dashboard.html" }));
+  // Ativos visuais do CIM ficam em Logo/, na raiz do projeto.
+  app.use("/logo", express.static(path.join(__dirname, "Logo")));
+
+  const CIDADE_ATIVA = cidadeAtiva; // usada como base padrão do seletor
+
+  // -----------------------------------------------------------------------
+  // Dados do painel (cards da TV), por base. O servidor renova este cache
+  // sozinho a cada INTERVALO_ATUALIZACAO_MIN (iniciarAtualizacaoAutomatica em
+  // src/scheduler.js); o navegador só lê o que já está pronto.
+  // -----------------------------------------------------------------------
+  app.locals.atualizadorDados = atualizadorDados;
+
+  // Respostas de erro das rotas (V-10/V-09): só mensagens marcadas como
+  // públicas (fixas, sem dado interno) vão para o cliente; o resto vira uma
+  // mensagem genérica e o detalhe fica só no console do servidor.
+  function responderErro(res, erro, contexto, mensagemGenerica = "Erro interno. Consulte o log do servidor.") {
+    if (erro && erro.publico) {
+      return res.status(erro.status || 400).json({ ok: false, erro: erro.message });
+    }
+    console.error(`[CIM] ${contexto}:`, erro);
+    return res.status(500).json({ ok: false, erro: mensagemGenerica });
+  }
+
+  app.get("/api/preview", async (req, res) => {
+    let cidade;
+    try {
+      cidade = getCidade(req.query.cidade || CIDADE_ATIVA);
+    } catch (erro) {
+      return res.status(400).json({ ok: false, erro: "Base inválida." });
+    }
+    try {
+      // `atualizacao` informa o horário da última consulta bem-sucedida e se
+      // a renovação está pendente (falha nas fontes: dados anteriores mantidos).
+      const { report, ...atualizacao } = await atualizadorDados.obter(cidade);
+      res.set("Cache-Control", "no-store");
+      // O painel recebe também o conteúdo do e-mail, para exibi-lo nos cards.
+      res.json({ ok: true, report: comConteudoEmail(report), atualizacao });
+    } catch (erro) {
+      console.error("[CIM] Erro ao montar o preview:", erro);
+      res.status(502).json({ ok: false, erro: "Não foi possível obter os dados meteorológicos agora." });
+    }
+  });
+
+  app.get("/api/monitoramento/saude", async (req, res) => {
+    const monitor = estadoMonitorAvisosInmet();
+    const auditoria = await auditarRegistroCidades(CIDADES);
+    const totalAvisos = Object.values(monitor.alerts || {}).reduce((total, avisos) =>
+      total + (Array.isArray(avisos) ? avisos.length : 0), 0);
+    res.set("Cache-Control", "no-store");
+    res.json({
+      ok: true,
+      monitor: {
+        status: monitor.status,
+        integracaoStatus: monitor.integracaoStatus,
+        startedAt: monitor.startedAt,
+        lastAttemptAt: monitor.lastAttemptAt,
+        lastSuccessAt: monitor.lastSuccessAt,
+        nextAttemptAt: monitor.nextAttemptAt,
+        ageMs: monitor.ageMs,
+        stale: monitor.stale,
+        expired: monitor.expired,
+        cachedPreviousSuccess: monitor.cachedPreviousSuccess,
+        monitoredInstallations: monitor.monitoredInstallations,
+        affectedInstallations: monitor.affectedInstallations,
+        totalActiveAlerts: totalAvisos,
+        badCoordinateRegistrations: monitor.badCoordinateRegistrations,
+        recentError: monitor.recentError,
+      },
+      registroGeografico: {
+        total: auditoria.total,
+        invalidos: auditoria.invalidos,
+        pendentes: auditoria.pendentes,
+        escopoCoordenadasNaoVerificado: auditoria.escopoCoordenadasNaoVerificado,
+        coordenadasDuplicadas: auditoria.coordenadasDuplicadas,
+      },
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // Comunicados e estágio operacional do COR-Rio — só para bases com
+  // integracaoCorRio (município do Rio). Estágio e comunicados vêm com status,
+  // horário da última consulta válida e motivo da falha, cada um separado.
+  // -----------------------------------------------------------------------
+  app.get("/api/cor-rio", async (req, res) => {
+    let cidade;
+    try {
+      cidade = getCidade(req.query.cidade || CIDADE_ATIVA);
+    } catch (erro) {
+      return res.status(400).json({ ok: false, erro: "Base inválida." });
+    }
+    res.set("Cache-Control", "no-store");
+    if (!cidade.integracaoCorRio) return res.json({ ok: true, aplicavel: false });
+    try {
+      res.json({ ok: true, aplicavel: true, ...(await servicoCorRio.obter()) });
+    } catch (erro) {
+      console.error("[CIM] Erro ao consultar o COR-Rio:", erro);
+      res.status(502).json({ ok: false, erro: "Não foi possível consultar o COR-Rio agora." });
+    }
+  });
+
+  // -----------------------------------------------------------------------
+  // Senha operacional (botão Gerar e enviar, responsáveis, PDFs). V-05:
+  // atraso progressivo por IP em vez de bloqueio — a senha correta nunca é
+  // recusada por causa de erros de outra pessoa no mesmo IP.
+  // -----------------------------------------------------------------------
+  app.locals.controleTentativas = controleTentativas;
+
+  // -----------------------------------------------------------------------
+  // PDFs gerados (V-07). Antes eram servidos por express.static sem
+  // autenticação e com nome previsível. Agora só com:
+  //   - link temporário (?token=...) criado em /api/gerar-relatorio, válido
+  //     por 24 h e só para aquele arquivo; ou
+  //   - a senha operacional via HTTP Basic (o navegador pede a senha; o nome
+  //     de usuário é ignorado), com o mesmo controle de tentativas.
+  // -----------------------------------------------------------------------
+  const linksRelatorio = criarLinksRelatorio();
+  app.locals.linksRelatorio = linksRelatorio;
+  const arquivosOperacionais = new Set();
+  app.locals.arquivosOperacionais = arquivosOperacionais;
+  const NOME_PDF_VALIDO = /^[A-Za-z0-9][A-Za-z0-9._-]{0,199}\.pdf$/;
+
+  app.get("/relatorios/:arquivo", async (req, res, next) => {
+    const { arquivo } = req.params;
+    if (!NOME_PDF_VALIDO.test(arquivo)) {
+      return res.status(404).json({ ok: false, erro: "Não encontrado." });
+    }
+    const token = req.query.token;
+    const tokenValido = typeof token === "string" && linksRelatorio.valido(token, arquivo);
+    if (!tokenValido) {
+      const senha = senhaDoBasicAuth(req);
+      const checagem = senha === undefined ? { ok: false, status: 401 } : await verificarSenha(req, senha);
+      if (!checagem.ok) {
+        if (checagem.status === 401) {
+          res.setHeader("WWW-Authenticate", 'Basic realm="Relatorios CIM", charset="UTF-8"');
+        }
+        return res.status(checagem.status).json({ ok: false, erro: checagem.erro || "Não autorizado." });
+      }
+    }
+    if (!tokenValido && !arquivosOperacionais.has(arquivo)) {
+      return res.status(404).json({ ok: false, erro: "Não encontrado." });
+    }
+
+    res.sendFile(
+      arquivo,
+      { root: pastaRelatorios, dotfiles: "deny", headers: { "Cache-Control": "private, no-store" } },
+      (erro) => {
+        if (erro && !res.headersSent) next(erro.status === 404 || erro.code === "ENOENT" ? Object.assign(erro, { status: 404 }) : erro);
+      }
+    );
+  });
+
+  let geracaoEmAndamento = false;
+
+  app.post("/api/gerar-relatorio", async (req, res) => {
+    console.log("[RELATORIO] Iniciando geração");
+    console.log("[RELATORIO] Validando autorização");
+    const checagem = await verificarSenha(req);
+    if (!checagem.ok) {
+      console.warn("[RELATORIO] Autorização recusada");
+      return res.status(checagem.status).json({
+        ok: false,
+        stage: "authorization",
+        message: checagem.erro,
+        erro: checagem.erro,
+      });
+    }
+    console.log("[RELATORIO] Autorização validada");
+
+    if (geracaoEmAndamento) {
+      const mensagem = "Já existe uma geração de relatório em andamento. Aguarde a conclusão.";
+      return res.status(409).json({
+        ok: false,
+        stage: "processing",
+        message: mensagem,
+        erro: mensagem,
+      });
+    }
+
+    const tipoEnvio = req.body?.tipoEnvio === "cor_rio" ? "cor_rio" : "informativo";
+    let cidadeChave;
+    try {
+      cidadeChave = tipoEnvio === "cor_rio"
+        ? "rio_de_janeiro"
+        : getCidade(req.body?.cidade || CIDADE_ATIVA).chave;
+    } catch (erro) {
+      return res.status(400).json({ ok: false, erro: "Base inválida." });
+    }
+
+    geracaoEmAndamento = true;
+    try {
+      const resultado = await executarPipelineRelatorio({ cidadeChave, enviarEmail: true, tipoEnvio });
+      validarDocumentoOperacional(resultado.report, "publicação pelo servidor", {
+        exigirCamposCriticos: tipoEnvio === "informativo",
+      });
+      // atualiza o cache dessa base na hora, sem esperar o próximo /api/preview
+      if (tipoEnvio === "informativo") atualizadorDados.registrar(resultado.report);
+      if (resultado.arquivoPdf) arquivosOperacionais.add(resultado.arquivoPdf);
+      // Link de download com token aleatório, válido por 24 h (V-07).
+      const link = resultado.arquivoPdf ? linksRelatorio.gerar(resultado.arquivoPdf) : null;
+      res.json({
+        ok: true,
+        message: tipoEnvio === "cor_rio"
+          ? "Aviso COR-RIO enviado com sucesso."
+          : "Relatório gerado e enviado com sucesso.",
+        arquivo: resultado.arquivoPdf,
+        urlArquivo: link
+          ? `/relatorios/${encodeURIComponent(resultado.arquivoPdf)}?token=${link.token}`
+          : null,
+        linkExpiraEmISO: link ? link.expiraEmISO : null,
+        destinatarios: resultado.envio?.destinatarios || [],
+        geradoEmISO: resultado.report.geradoEmISO,
+        avisosColeta: resultado.report.avisosColeta,
+      });
+      console.log("[RELATORIO] Fluxo concluído com sucesso");
+    } catch (erro) {
+      const stage = erro?.etapa || "unknown";
+      const message = erro?.mensagemPublica || "Não foi possível concluir o envio do relatório.";
+      const status = stage === "weather" || stage === "email" ? 502 : 500;
+      console.error("[RELATORIO][ERRO][ROTA]", {
+        mensagem: erro?.message || String(erro),
+        stack: erro?.stack,
+        funcao: "POST /api/gerar-relatorio",
+        etapa: stage,
+        erroOriginal: erro?.cause || erro,
+      });
+      res.status(status).json({ ok: false, stage, message, erro: message });
+    } finally {
+      geracaoEmAndamento = false;
+    }
+  });
+
+  app.get("/api/cidades", (req, res) => {
+    res.json({
+      ativa: CIDADE_ATIVA || require("./src/config/cities").CIDADE_PADRAO,
+      disponiveis: Object.values(CIDADES).map((c) => ({
+        chave: c.chave,
+        nome: c.nome,
+        uf: c.uf,
+        ...(c.integracaoCorRio ? { corRio: true } : {}),
+      })),
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // Responsáveis (nome + e-mail) que recebem o informativo de cada base.
+  // Leitura pública devolve SÓ OS NOMES (ficam à mostra no painel da TV).
+  // E-mails (dado pessoal, V-06) só com a senha operacional, via
+  // POST /api/responsaveis/consultar; cadastrar/remover também exige senha.
+  // -----------------------------------------------------------------------
+  const somenteNomes = (lista) => lista.map((r) => ({ nome: r?.nome }));
+
+  function basesResponsaveis(cidadeChave, { comEmail }) {
+    const formatar = comEmail ? (l) => l : somenteNomes;
+    if (cidadeChave) {
+      const base = getBaseDistribuicao(cidadeChave);
+      return [{ chave: base.chave, nome: base.nome, uf: base.uf, responsaveis: formatar(responsaveis.listarPorCidade(base.chave)) }];
+    }
+    return responsaveis.listarTodos().map((b) => ({ ...b, responsaveis: formatar(b.responsaveis) }));
+  }
+  app.post("/api/verificar-senha", async (req, res) => {
+    const checagem = await verificarSenha(req);
+    if (!checagem.ok) {
+      return res.status(checagem.status).json({ ok: false, erro: checagem.erro });
+    }
+    res.json({ ok: true });
+  });
+
+  app.get("/api/responsaveis", (req, res) => {
+    try {
+      res.json({ ok: true, bases: basesResponsaveis(req.query.cidade, { comEmail: false }) });
+    } catch (erro) {
+      responderErro(res, erro, "Erro ao listar responsáveis");
+    }
+  });
+
+  app.post("/api/responsaveis/consultar", async (req, res) => {
+    const checagem = await verificarSenha(req);
+    if (!checagem.ok) {
+      return res.status(checagem.status).json({ ok: false, erro: checagem.erro });
+    }
+    try {
+      res.json({
+        ok: true,
+        bases: basesResponsaveis(req.body?.cidade, { comEmail: true }),
+        responsaveis: responsaveis.listarResponsaveis(),
+        basesDisponiveis: Object.values(BASES_DISTRIBUICAO).map(({ chave, nome, uf, tipo }) => ({ chave, nome, uf, tipo })),
+      });
+    } catch (erro) {
+      responderErro(res, erro, "Erro ao consultar responsáveis");
+    }
+  });
+
+  app.post("/api/responsaveis", async (req, res) => {
+    const checagem = await verificarSenha(req);
+    if (!checagem.ok) {
+      return res.status(checagem.status).json({ ok: false, erro: checagem.erro });
+    }
+    try {
+      const { cidade, nome, email } = req.body || {};
+      if (cidade) {
+        const lista = responsaveis.adicionar(cidade, nome, email);
+        return res.json({ ok: true, responsaveis: lista });
+      }
+      const pessoa = responsaveis.cadastrarResponsavel(nome, email);
+      res.json({ ok: true, responsavel: pessoa });
+    } catch (erro) {
+      responderErro(res, erro, "Erro ao cadastrar responsável");
+    }
+  });
+
+  app.put("/api/responsaveis", async (req, res) => {
+    const checagem = await verificarSenha(req);
+    if (!checagem.ok) {
+      return res.status(checagem.status).json({ ok: false, erro: checagem.erro });
+    }
+    try {
+      const pessoa = responsaveis.atualizarBases(req.body?.email, req.body?.bases);
+      res.json({ ok: true, responsavel: pessoa });
+    } catch (erro) {
+      responderErro(res, erro, "Erro ao vincular bases ao responsável");
+    }
+  });
+
+  app.delete("/api/responsaveis", async (req, res) => {
+    const checagem = await verificarSenha(req);
+    if (!checagem.ok) {
+      return res.status(checagem.status).json({ ok: false, erro: checagem.erro });
+    }
+    try {
+      const { cidade, email } = req.body || {};
+      if (cidade) {
+        const lista = responsaveis.remover(cidade, email);
+        return res.json({ ok: true, responsaveis: lista });
+      }
+      const lista = responsaveis.removerResponsavel(email);
+      res.json({ ok: true, responsaveis: lista });
+    } catch (erro) {
+      responderErro(res, erro, "Erro ao remover responsável");
+    }
+  });
+
+  // V-09: 404 em JSON para rotas desconhecidas e handler final que nunca
+  // expõe stack trace (JSON malformado, corpo grande demais etc.).
+  app.use(naoEncontrado);
+  app.use(tratadorDeErros);
+
+  return app;
+}
+
+function iniciarServidor() {
+  // V-02: sem senha forte definida no ambiente, o painel não sobe.
+  const problema = problemaSenhaConfigurada(process.env.DASHBOARD_PASSWORD);
+  if (problema) {
+    console.error(
+      `[CIM] ${problema} O servidor não foi iniciado. Defina no .env ou no ambiente ` +
+        "uma DASHBOARD_PASSWORD com pelo menos 12 caracteres (recomendado: 16+ aleatórios)."
+    );
+    process.exit(1);
+  }
+
+  const rede = opcoesDeRede(process.env);
+  if (rede.modo === "erro") {
+    console.error(`[CIM] ${rede.erro} O servidor não foi iniciado.`);
+    process.exit(1);
+  }
+
+  const app = criarApp();
+  const publicarSnapshotInformativo = (erro, resultado) => {
+    if (erro || !resultado?.report?.snapshotId || !resultado?.report?.cidade?.chave) return;
+    try { app.locals.atualizadorDados.registrar(resultado.report); }
+    catch (falha) { console.error("[ATUALIZACAO] Não foi possível publicar no painel o snapshot enviado:", falha.message); }
+  };
+  let agendamentosIniciados = false;
+  const iniciarAgendamentos = () => {
+    if (agendamentosIniciados) return;
+    agendamentosIniciados = true;
+    iniciarAgendamentoDiario(publicarSnapshotInformativo);
+    agendarEnvioUnicoHoje(publicarSnapshotInformativo);
+    iniciarMonitorColetaAvisosInmet();
+    iniciarMonitorAlertas();
+    iniciarAtualizacaoAutomatica(app.locals.atualizadorDados);
+    iniciarVerificacaoFontes();
+  };
+  const hostLog = rede.host || "localhost";
+
+  if (rede.modo === "https") {
+    // V-03: HTTPS com o certificado .pfx da CA corporativa + HSTS
+    // (cabecalhos.js envia Strict-Transport-Security em req.secure).
+    const { pfx, erro } = carregarPfx(rede.caminhoPfx);
+    if (erro) {
+      console.error(`[CIM] ${erro} O servidor não foi iniciado.`);
+      process.exit(1);
+    }
+    let servidorHttps;
+    try {
+      servidorHttps = https.createServer({ pfx, passphrase: rede.senhaPfx, minVersion: "TLSv1.2" }, app);
+    } catch (erroPfx) {
+      console.error("[CIM] Certificado .pfx inválido ou HTTPS_PFX_SENHA incorreta. O servidor não foi iniciado.");
+      process.exit(1);
+    }
+    servidorHttps.listen(rede.portaHttps, rede.host, () => {
+      console.log(`[CIM] Painel disponível em https://${hostLog}:${rede.portaHttps}`);
+      iniciarAgendamentos();
+    });
+    // HTTP na porta antiga só redireciona para HTTPS (link da TV continua valendo).
+    http
+      .createServer(redirecionarParaHttps(rede.portaHttps, (process.env.HTTPS_HOST_PUBLICO || "").trim() || undefined))
+      .listen(PORTA, rede.host, () => {
+        console.log(`[CIM] http://${hostLog}:${PORTA} redireciona para HTTPS.`);
+      });
+    return;
+  }
+
+  app.listen(PORTA, rede.host, () => {
+    console.log(`[CIM] Painel disponível em http://${hostLog}:${PORTA}`);
+    if (process.env.NODE_ENV === "production" && valorTrustProxy(process.env.TRUST_PROXY) === false) {
+      console.warn(
+        "[CIM] AVISO: servindo só HTTP. Configure HTTPS_PFX_PATH/HTTPS_PFX_SENHA ou publique atrás de um " +
+          "proxy reverso com TLS (ver INSTALACAO_SERVIDOR_PETROBRAS.md)."
+      );
+    }
+    iniciarAgendamentos();
+  });
+}
+
+if (executadoDiretamente) iniciarServidor();
+
+module.exports = { criarApp, iniciarServidor };
