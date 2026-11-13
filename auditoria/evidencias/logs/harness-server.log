@@ -1,0 +1,931 @@
+[CERTIFICADOS] CAs do Windows: 47 aceitas de 75 (28 descartadas por assinatura fraca, 0 vencidas).
+[AUDIT] http://127.0.0.1:3999 senha=senha-de-auditoria-forte-123 tmp=C:\Users\PROJ75~1\AppData\Local\Temp\cim-audit-ZThU48
+[ATUALIZACAO] Rio de Janeiro: consulta iniciada (painel).
+[CLIMA-SAÚDE] Consultando Rio de Janeiro/RJ
+[INMET-PREVISAO] {
+  url: 'https://apiprevmet3.inmet.gov.br/previsao/3304557',
+  tentativa: '1/3'
+}
+[INMET-PREVISAO] { tentativa: '1/3', http: 200, tempoMs: 360 }
+[OPEN-METEO-WEATHER] {
+  url: 'https://api.open-meteo.com/v1/forecast?latitude=-22.9068&longitude=-43.1729&current=temperature_2m%2Crelative_humidity_2m%2Cweather_code%2Cis_day%2Cuv_index&hourly=temperature_2m%2Crelative_humidity_2m%2Cprecipitation_probability%2Cprecipitation%2Cwind_speed_10m%2Cwind_direction_10m%2Cwind_gusts_10m%2Cweather_code%2Cuv_index&daily=temperature_2m_max%2Ctemperature_2m_min%2Cprecipitation_sum%2Cprecipitation_probability_max%2Cwind_speed_10m_max%2Cwind_gusts_10m_max%2Cweather_code%2Cuv_index_max&wind_speed_unit=kmh&precipitation_unit=mm&timezone=America%2FSao_Paulo&forecast_days=4&past_days=1&models=best_match',
+  tentativa: '1/3'
+}
+[COR-RIO] Consulta concluída: estágio 1; calor 1; comunicados 10.
+[CLIMA-SAÚDE] HTTP 200
+[CLIMA-SAÚDE] EHF=Sem excesso; Risco=Normal; dados armazenados.
+[OPEN-METEO-WEATHER] { tentativa: '1/3', http: 200, tempoMs: 639 }
+[OPEN-METEO] {
+  localidade: 'Rio de Janeiro/RJ',
+  latitude: -22.9068,
+  longitude: -43.1729,
+  consultadoEm: '2026-11-13T11:28:56.351Z',
+  endpoint: 'https://api.open-meteo.com/v1/forecast',
+  modeloSolicitado: 'best_match',
+  modeloUtilizado: 'best_match',
+  indicador: 'Rajada prevista (horária)',
+  status: 'operacional',
+  statusHttp: 200,
+  tempoMs: 641,
+  valorRetornado: 42.1,
+  motivo: null,
+  cacheIdadeMs: null
+}
+[OPEN-METEO] {
+  localidade: 'Rio de Janeiro/RJ',
+  latitude: -22.9068,
+  longitude: -43.1729,
+  consultadoEm: '2026-11-13T11:28:56.351Z',
+  endpoint: 'https://api.open-meteo.com/v1/forecast',
+  modeloSolicitado: 'best_match',
+  modeloUtilizado: 'best_match',
+  indicador: 'Rajada prevista (diária)',
+  status: 'operacional',
+  statusHttp: 200,
+  tempoMs: 641,
+  valorRetornado: 42.1,
+  motivo: null,
+  cacheIdadeMs: null
+}
+[OPEN-METEO] {
+  localidade: 'Rio de Janeiro/RJ',
+  latitude: -22.9068,
+  longitude: -43.1729,
+  consultadoEm: '2026-11-13T11:28:56.351Z',
+  endpoint: 'https://api.open-meteo.com/v1/forecast',
+  modeloSolicitado: 'best_match',
+  modeloUtilizado: 'best_match',
+  indicador: 'Chuva acumulada prevista no período',
+  status: 'operacional',
+  statusHttp: 200,
+  tempoMs: 641,
+  valorRetornado: 0.2,
+  motivo: null,
+  cacheIdadeMs: null
+}
+[OPEN-METEO] {
+  localidade: 'Rio de Janeiro/RJ',
+  latitude: -22.9068,
+  longitude: -43.1729,
+  consultadoEm: '2026-11-13T11:28:56.351Z',
+  endpoint: 'https://api.open-meteo.com/v1/forecast',
+  modeloSolicitado: 'best_match',
+  modeloUtilizado: 'best_match',
+  indicador: 'Chuva acumulada prevista/dia',
+  status: 'operacional',
+  statusHttp: 200,
+  tempoMs: 641,
+  valorRetornado: 0.2,
+  motivo: null,
+  cacheIdadeMs: null
+}
+[OPEN-METEO] {
+  localidade: 'Rio de Janeiro/RJ',
+  latitude: -22.9068,
+  longitude: -43.1729,
+  consultadoEm: '2026-11-13T11:28:56.352Z',
+  endpoint: 'https://api.open-meteo.com/v1/forecast',
+  modeloSolicitado: 'best_match',
+  modeloUtilizado: 'best_match',
+  indicador: 'Probabilidade de chuva no período',
+  status: 'operacional',
+  statusHttp: 200,
+  tempoMs: 641,
+  valorRetornado: 91,
+  motivo: null,
+  cacheIdadeMs: null
+}
+[OPEN-METEO] {
+  localidade: 'Rio de Janeiro/RJ',
+  latitude: -22.9068,
+  longitude: -43.1729,
+  consultadoEm: '2026-11-13T11:28:56.352Z',
+  endpoint: 'https://api.open-meteo.com/v1/forecast',
+  modeloSolicitado: 'best_match',
+  modeloUtilizado: 'best_match',
+  indicador: 'Probabilidade máxima diária de chuva',
+  status: 'operacional',
+  statusHttp: 200,
+  tempoMs: 641,
+  valorRetornado: 91,
+  motivo: null,
+  cacheIdadeMs: null
+}
+[INMET-OBSERVACAO] {
+  url: 'https://apiprevmet3.inmet.gov.br/estacao/proxima/3304557',
+  tentativa: '1/3'
+}
+[INMET-OBSERVACAO] { tentativa: '1/3', http: 200, tempoMs: 1152 }
+[INMET-AVISOS] {
+  url: 'https://apiprevmet3.inmet.gov.br/avisos/ativos',
+  tentativa: '1/3'
+}
+[INMET-AVISOS] { tentativa: '1/3', http: 200, tempoMs: 111 }
+[OCEANOP] {
+  url: 'https://oceanop-api-disp.petrobras.com.br/api/v1/previsao/JsonPrevisaoPorListaDePontosLatLonAsync',
+  tentativa: '1/3'
+}
+[OCEANOP][ERRO] {
+  type: 'dns',
+  code: 'ENOTFOUND',
+  httpStatus: null,
+  message: 'Petrobras — OCEANOP: falha de resolução DNS (ENOTFOUND)',
+  cause: { name: 'TypeError', code: 'ENOTFOUND', message: 'fetch failed' },
+  tentativa: '1/3',
+  tempoMs: 26,
+  stack: 'ExternalSourceError: Petrobras — OCEANOP: falha de resolução DNS (ENOTFOUND)\n' +
+    '    at criarErro (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\httpJsonClient.js:65:16)\n' +
+    '    at erroNormalizado (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\httpJsonClient.js:87:10)\n' +
+    '    at buscarJsonComRetentativa (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\httpJsonClient.js:224:20)\n' +
+    '    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n' +
+    '    at async C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\oceanop.js:189:18\n' +
+    '    at async C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\oceanop.js:158:95\n' +
+    '    at async consultarComCache (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\oceanop.js:164:16)\n' +
+    '    at async montarRelatorio (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\reportBuilder.js:260:32)\n' +
+    '    at async Object.obter (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\atualizacaoDados.js:126:7)\n' +
+    '    at async C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\server.js:106:42'
+}
+[OCEANOP][ERRO] {
+  type: 'dns',
+  code: 'ENOTFOUND',
+  httpStatus: null,
+  message: 'Petrobras — OCEANOP: falha de resolução DNS (ENOTFOUND) após 1 tentativas',
+  cause: {
+    name: 'ExternalSourceError',
+    code: 'ENOTFOUND',
+    message: 'Petrobras — OCEANOP: falha de resolução DNS (ENOTFOUND)'
+  },
+  stack: 'ExternalSourceError: Petrobras — OCEANOP: falha de resolução DNS (ENOTFOUND) após 1 tentativas\n' +
+    '    at criarErro (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\httpJsonClient.js:65:16)\n' +
+    '    at buscarJsonComRetentativa (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\httpJsonClient.js:241:9)\n' +
+    '    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n' +
+    '    at async C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\oceanop.js:189:18\n' +
+    '    at async C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\oceanop.js:158:95\n' +
+    '    at async consultarComCache (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\oceanop.js:164:16)\n' +
+    '    at async montarRelatorio (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\reportBuilder.js:260:32)\n' +
+    '    at async Object.obter (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\atualizacaoDados.js:126:7)\n' +
+    '    at async C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\server.js:106:42'
+}
+[ATUALIZACAO] Rio de Janeiro: dados atualizados com 2 aviso(s) de coleta (consulta às 08:28, 2902 ms).
+[ATUALIZACAO] Macaé: consulta iniciada (painel).
+[CLIMA-SAÚDE] Consultando Macaé/RJ
+[INMET-PREVISAO] {
+  url: 'https://apiprevmet3.inmet.gov.br/previsao/3302403',
+  tentativa: '1/3'
+}
+[INMET-PREVISAO] { tentativa: '1/3', http: 200, tempoMs: 307 }
+[CLIMA-SAÚDE] HTTP 200
+[CLIMA-SAÚDE] EHF=Sem excesso; Risco=Normal; dados armazenados.
+[OPEN-METEO-WEATHER] {
+  url: 'https://api.open-meteo.com/v1/forecast?latitude=-22.2828305&longitude=-41.9649091&current=temperature_2m%2Crelative_humidity_2m%2Cweather_code%2Cis_day%2Cuv_index&hourly=temperature_2m%2Crelative_humidity_2m%2Cprecipitation_probability%2Cprecipitation%2Cwind_speed_10m%2Cwind_direction_10m%2Cwind_gusts_10m%2Cweather_code%2Cuv_index&daily=temperature_2m_max%2Ctemperature_2m_min%2Cprecipitation_sum%2Cprecipitation_probability_max%2Cwind_speed_10m_max%2Cwind_gusts_10m_max%2Cweather_code%2Cuv_index_max&wind_speed_unit=kmh&precipitation_unit=mm&timezone=America%2FSao_Paulo&forecast_days=4&past_days=1&models=best_match',
+  tentativa: '1/3'
+}
+[OPEN-METEO-WEATHER] { tentativa: '1/3', http: 200, tempoMs: 583 }
+[OPEN-METEO] {
+  localidade: 'Macaé/RJ',
+  latitude: -22.2828305,
+  longitude: -41.9649091,
+  consultadoEm: '2026-11-13T11:29:43.169Z',
+  endpoint: 'https://api.open-meteo.com/v1/forecast',
+  modeloSolicitado: 'best_match',
+  modeloUtilizado: 'best_match',
+  indicador: 'Rajada prevista (horária)',
+  status: 'operacional',
+  statusHttp: 200,
+  tempoMs: 584,
+  valorRetornado: 33.8,
+  motivo: null,
+  cacheIdadeMs: null
+}
+[OPEN-METEO] {
+  localidade: 'Macaé/RJ',
+  latitude: -22.2828305,
+  longitude: -41.9649091,
+  consultadoEm: '2026-11-13T11:29:43.170Z',
+  endpoint: 'https://api.open-meteo.com/v1/forecast',
+  modeloSolicitado: 'best_match',
+  modeloUtilizado: 'best_match',
+  indicador: 'Rajada prevista (diária)',
+  status: 'operacional',
+  statusHttp: 200,
+  tempoMs: 584,
+  valorRetornado: 33.8,
+  motivo: null,
+  cacheIdadeMs: null
+}
+[OPEN-METEO] {
+  localidade: 'Macaé/RJ',
+  latitude: -22.2828305,
+  longitude: -41.9649091,
+  consultadoEm: '2026-11-13T11:29:43.170Z',
+  endpoint: 'https://api.open-meteo.com/v1/forecast',
+  modeloSolicitado: 'best_match',
+  modeloUtilizado: 'best_match',
+  indicador: 'Chuva acumulada prevista no período',
+  status: 'operacional',
+  statusHttp: 200,
+  tempoMs: 584,
+  valorRetornado: 1.4,
+  motivo: null,
+  cacheIdadeMs: null
+}
+[OPEN-METEO] {
+  localidade: 'Macaé/RJ',
+  latitude: -22.2828305,
+  longitude: -41.9649091,
+  consultadoEm: '2026-11-13T11:29:43.170Z',
+  endpoint: 'https://api.open-meteo.com/v1/forecast',
+  modeloSolicitado: 'best_match',
+  modeloUtilizado: 'best_match',
+  indicador: 'Chuva acumulada prevista/dia',
+  status: 'operacional',
+  statusHttp: 200,
+  tempoMs: 584,
+  valorRetornado: 1.4,
+  motivo: null,
+  cacheIdadeMs: null
+}
+[OPEN-METEO] {
+  localidade: 'Macaé/RJ',
+  latitude: -22.2828305,
+  longitude: -41.9649091,
+  consultadoEm: '2026-11-13T11:29:43.170Z',
+  endpoint: 'https://api.open-meteo.com/v1/forecast',
+  modeloSolicitado: 'best_match',
+  modeloUtilizado: 'best_match',
+  indicador: 'Probabilidade de chuva no período',
+  status: 'operacional',
+  statusHttp: 200,
+  tempoMs: 584,
+  valorRetornado: 98,
+  motivo: null,
+  cacheIdadeMs: null
+}
+[OPEN-METEO] {
+  localidade: 'Macaé/RJ',
+  latitude: -22.2828305,
+  longitude: -41.9649091,
+  consultadoEm: '2026-11-13T11:29:43.170Z',
+  endpoint: 'https://api.open-meteo.com/v1/forecast',
+  modeloSolicitado: 'best_match',
+  modeloUtilizado: 'best_match',
+  indicador: 'Probabilidade máxima diária de chuva',
+  status: 'operacional',
+  statusHttp: 200,
+  tempoMs: 584,
+  valorRetornado: 98,
+  motivo: null,
+  cacheIdadeMs: null
+}
+[INMET-OBSERVACAO] {
+  url: 'https://apiprevmet3.inmet.gov.br/estacao/proxima/3302403',
+  tentativa: '1/3'
+}
+[INMET-OBSERVACAO] { tentativa: '1/3', http: 200, tempoMs: 1071 }
+[INMET-AVISOS] {
+  url: 'https://apiprevmet3.inmet.gov.br/avisos/ativos',
+  tentativa: '1/3'
+}
+[INMET-AVISOS] { tentativa: '1/3', http: 200, tempoMs: 173 }
+[OCEANOP] {
+  url: 'https://oceanop-api-disp.petrobras.com.br/api/v1/previsao/JsonPrevisaoAreaAsync?local=maca%C3%A9',
+  tentativa: '1/3'
+}
+[OCEANOP][ERRO] {
+  type: 'dns',
+  code: 'ENOTFOUND',
+  httpStatus: null,
+  message: 'Petrobras — OCEANOP: falha de resolução DNS (ENOTFOUND)',
+  cause: { name: 'TypeError', code: 'ENOTFOUND', message: 'fetch failed' },
+  tentativa: '1/3',
+  tempoMs: 29,
+  stack: 'ExternalSourceError: Petrobras — OCEANOP: falha de resolução DNS (ENOTFOUND)\n' +
+    '    at criarErro (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\httpJsonClient.js:65:16)\n' +
+    '    at erroNormalizado (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\httpJsonClient.js:87:10)\n' +
+    '    at buscarJsonComRetentativa (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\httpJsonClient.js:224:20)\n' +
+    '    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n' +
+    '    at async C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\oceanop.js:216:18\n' +
+    '    at async C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\oceanop.js:158:95\n' +
+    '    at async consultarComCache (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\oceanop.js:164:16)\n' +
+    '    at async montarRelatorio (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\reportBuilder.js:260:32)\n' +
+    '    at async Object.obter (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\atualizacaoDados.js:126:7)\n' +
+    '    at async C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\server.js:106:42'
+}
+[OCEANOP][ERRO] {
+  type: 'dns',
+  code: 'ENOTFOUND',
+  httpStatus: null,
+  message: 'Petrobras — OCEANOP: falha de resolução DNS (ENOTFOUND) após 1 tentativas',
+  cause: {
+    name: 'ExternalSourceError',
+    code: 'ENOTFOUND',
+    message: 'Petrobras — OCEANOP: falha de resolução DNS (ENOTFOUND)'
+  },
+  stack: 'ExternalSourceError: Petrobras — OCEANOP: falha de resolução DNS (ENOTFOUND) após 1 tentativas\n' +
+    '    at criarErro (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\httpJsonClient.js:65:16)\n' +
+    '    at buscarJsonComRetentativa (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\httpJsonClient.js:241:9)\n' +
+    '    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n' +
+    '    at async C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\oceanop.js:216:18\n' +
+    '    at async C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\oceanop.js:158:95\n' +
+    '    at async consultarComCache (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\oceanop.js:164:16)\n' +
+    '    at async montarRelatorio (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\reportBuilder.js:260:32)\n' +
+    '    at async Object.obter (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\atualizacaoDados.js:126:7)\n' +
+    '    at async C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\server.js:106:42'
+}
+[ATUALIZACAO] Macaé: dados atualizados com 2 aviso(s) de coleta (consulta às 08:29, 2342 ms).
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização recusada
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização recusada
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização validada
+[RELATORIO][ERRO][ROTA] {
+  mensagem: 'Documento sem registro interno de procedência; publicação pelo servidor bloqueada.',
+  stack: 'ErroProcedencia: Documento sem registro interno de procedência; publicação pelo servidor bloqueada.\n' +
+    '    at validarDocumentoOperacional (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\documentProvenance.js:185:11)\n' +
+    '    at C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\server.js:264:7',
+  funcao: 'POST /api/gerar-relatorio',
+  etapa: 'unknown',
+  erroOriginal: ErroProcedencia: Documento sem registro interno de procedência; publicação pelo servidor bloqueada.
+      at validarDocumentoOperacional (C:\Users\PROJ 758\Documents\Protocolo-Meteorologico-CIM-2026-11-11\src\logic\documentProvenance.js:185:11)
+      at C:\Users\PROJ 758\Documents\Protocolo-Meteorologico-CIM-2026-11-11\server.js:264:7 {
+    code: 'UNREGISTERED_DOCUMENT'
+  }
+}
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização validada
+[RELATORIO][ERRO][ROTA] {
+  mensagem: 'Documento sem registro interno de procedência; publicação pelo servidor bloqueada.',
+  stack: 'ErroProcedencia: Documento sem registro interno de procedência; publicação pelo servidor bloqueada.\n' +
+    '    at validarDocumentoOperacional (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\documentProvenance.js:185:11)\n' +
+    '    at C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\server.js:264:7',
+  funcao: 'POST /api/gerar-relatorio',
+  etapa: 'unknown',
+  erroOriginal: ErroProcedencia: Documento sem registro interno de procedência; publicação pelo servidor bloqueada.
+      at validarDocumentoOperacional (C:\Users\PROJ 758\Documents\Protocolo-Meteorologico-CIM-2026-11-11\src\logic\documentProvenance.js:185:11)
+      at C:\Users\PROJ 758\Documents\Protocolo-Meteorologico-CIM-2026-11-11\server.js:264:7 {
+    code: 'UNREGISTERED_DOCUMENT'
+  }
+}
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização recusada
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização recusada
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização recusada
+[CIM] Requisição rejeitada (400) em POST /api/responsaveis: entity.parse.failed
+[CIM] Requisição rejeitada (413) em POST /api/responsaveis: entity.too.large
+[CIM] Requisição rejeitada (413) em POST /api/verificar-senha: entity.too.large
+[CIM] Requisição rejeitada (400) em POST /api/responsaveis: entity.parse.failed
+[CIM] Requisição rejeitada (400) em POST /api/responsaveis: entity.parse.failed
+[CIM] Requisição rejeitada (400) em POST /api/responsaveis: entity.parse.failed
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização validada
+[CIM] Requisição rejeitada (400) em POST /api/responsaveis: entity.parse.failed
+[CIM] Requisição rejeitada (413) em POST /api/responsaveis: entity.too.large
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização validada
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização validada
+[RELATORIO][ERRO][ROTA] {
+  mensagem: 'Documento sem registro interno de procedência; publicação pelo servidor bloqueada.',
+  stack: 'ErroProcedencia: Documento sem registro interno de procedência; publicação pelo servidor bloqueada.\n' +
+    '    at validarDocumentoOperacional (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\documentProvenance.js:185:11)\n' +
+    '    at C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\server.js:264:7',
+  funcao: 'POST /api/gerar-relatorio',
+  etapa: 'unknown',
+  erroOriginal: ErroProcedencia: Documento sem registro interno de procedência; publicação pelo servidor bloqueada.
+      at validarDocumentoOperacional (C:\Users\PROJ 758\Documents\Protocolo-Meteorologico-CIM-2026-11-11\src\logic\documentProvenance.js:185:11)
+      at C:\Users\PROJ 758\Documents\Protocolo-Meteorologico-CIM-2026-11-11\server.js:264:7 {
+    code: 'UNREGISTERED_DOCUMENT'
+  }
+}
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização validada
+[RELATORIO][ERRO][ROTA] {
+  mensagem: 'Documento sem registro interno de procedência; publicação pelo servidor bloqueada.',
+  stack: 'ErroProcedencia: Documento sem registro interno de procedência; publicação pelo servidor bloqueada.\n' +
+    '    at validarDocumentoOperacional (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\documentProvenance.js:185:11)\n' +
+    '    at C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\server.js:264:7',
+  funcao: 'POST /api/gerar-relatorio',
+  etapa: 'unknown',
+  erroOriginal: ErroProcedencia: Documento sem registro interno de procedência; publicação pelo servidor bloqueada.
+      at validarDocumentoOperacional (C:\Users\PROJ 758\Documents\Protocolo-Meteorologico-CIM-2026-11-11\src\logic\documentProvenance.js:185:11)
+      at C:\Users\PROJ 758\Documents\Protocolo-Meteorologico-CIM-2026-11-11\server.js:264:7 {
+    code: 'UNREGISTERED_DOCUMENT'
+  }
+}
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização validada
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização validada
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização validada
+[RELATORIO][ERRO][ROTA] {
+  mensagem: 'Documento sem registro interno de procedência; publicação pelo servidor bloqueada.',
+  stack: 'ErroProcedencia: Documento sem registro interno de procedência; publicação pelo servidor bloqueada.\n' +
+    '    at validarDocumentoOperacional (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\documentProvenance.js:185:11)\n' +
+    '    at C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\server.js:264:7',
+  funcao: 'POST /api/gerar-relatorio',
+  etapa: 'unknown',
+  erroOriginal: ErroProcedencia: Documento sem registro interno de procedência; publicação pelo servidor bloqueada.
+      at validarDocumentoOperacional (C:\Users\PROJ 758\Documents\Protocolo-Meteorologico-CIM-2026-11-11\src\logic\documentProvenance.js:185:11)
+      at C:\Users\PROJ 758\Documents\Protocolo-Meteorologico-CIM-2026-11-11\server.js:264:7 {
+    code: 'UNREGISTERED_DOCUMENT'
+  }
+}
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização validada
+[RELATORIO][ERRO][ROTA] {
+  mensagem: 'Documento sem registro interno de procedência; publicação pelo servidor bloqueada.',
+  stack: 'ErroProcedencia: Documento sem registro interno de procedência; publicação pelo servidor bloqueada.\n' +
+    '    at validarDocumentoOperacional (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\documentProvenance.js:185:11)\n' +
+    '    at C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\server.js:264:7',
+  funcao: 'POST /api/gerar-relatorio',
+  etapa: 'unknown',
+  erroOriginal: ErroProcedencia: Documento sem registro interno de procedência; publicação pelo servidor bloqueada.
+      at validarDocumentoOperacional (C:\Users\PROJ 758\Documents\Protocolo-Meteorologico-CIM-2026-11-11\src\logic\documentProvenance.js:185:11)
+      at C:\Users\PROJ 758\Documents\Protocolo-Meteorologico-CIM-2026-11-11\server.js:264:7 {
+    code: 'UNREGISTERED_DOCUMENT'
+  }
+}
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização recusada
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização recusada
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização recusada
+[CIM] Requisição rejeitada (400) em POST /api/responsaveis: entity.parse.failed
+[CIM] Requisição rejeitada (413) em POST /api/responsaveis: entity.too.large
+[CIM] Requisição rejeitada (413) em POST /api/verificar-senha: entity.too.large
+[CIM] Requisição rejeitada (400) em POST /api/responsaveis: entity.parse.failed
+[CIM] Requisição rejeitada (400) em POST /api/responsaveis: entity.parse.failed
+[CIM] Requisição rejeitada (400) em POST /api/responsaveis: entity.parse.failed
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização validada
+[CIM] Requisição rejeitada (400) em POST /api/responsaveis: entity.parse.failed
+[CIM] Requisição rejeitada (413) em POST /api/responsaveis: entity.too.large
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização validada
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização validada
+[RELATORIO][ERRO][ROTA] {
+  mensagem: 'Documento sem registro interno de procedência; publicação pelo servidor bloqueada.',
+  stack: 'ErroProcedencia: Documento sem registro interno de procedência; publicação pelo servidor bloqueada.\n' +
+    '    at validarDocumentoOperacional (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\documentProvenance.js:185:11)\n' +
+    '    at C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\server.js:264:7',
+  funcao: 'POST /api/gerar-relatorio',
+  etapa: 'unknown',
+  erroOriginal: ErroProcedencia: Documento sem registro interno de procedência; publicação pelo servidor bloqueada.
+      at validarDocumentoOperacional (C:\Users\PROJ 758\Documents\Protocolo-Meteorologico-CIM-2026-11-11\src\logic\documentProvenance.js:185:11)
+      at C:\Users\PROJ 758\Documents\Protocolo-Meteorologico-CIM-2026-11-11\server.js:264:7 {
+    code: 'UNREGISTERED_DOCUMENT'
+  }
+}
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização validada
+[RELATORIO][ERRO][ROTA] {
+  mensagem: 'Documento sem registro interno de procedência; publicação pelo servidor bloqueada.',
+  stack: 'ErroProcedencia: Documento sem registro interno de procedência; publicação pelo servidor bloqueada.\n' +
+    '    at validarDocumentoOperacional (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\documentProvenance.js:185:11)\n' +
+    '    at C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\server.js:264:7',
+  funcao: 'POST /api/gerar-relatorio',
+  etapa: 'unknown',
+  erroOriginal: ErroProcedencia: Documento sem registro interno de procedência; publicação pelo servidor bloqueada.
+      at validarDocumentoOperacional (C:\Users\PROJ 758\Documents\Protocolo-Meteorologico-CIM-2026-11-11\src\logic\documentProvenance.js:185:11)
+      at C:\Users\PROJ 758\Documents\Protocolo-Meteorologico-CIM-2026-11-11\server.js:264:7 {
+    code: 'UNREGISTERED_DOCUMENT'
+  }
+}
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização validada
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização validada
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização validada
+[RELATORIO][ERRO][ROTA] {
+  mensagem: 'Documento sem registro interno de procedência; publicação pelo servidor bloqueada.',
+  stack: 'ErroProcedencia: Documento sem registro interno de procedência; publicação pelo servidor bloqueada.\n' +
+    '    at validarDocumentoOperacional (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\documentProvenance.js:185:11)\n' +
+    '    at C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\server.js:264:7',
+  funcao: 'POST /api/gerar-relatorio',
+  etapa: 'unknown',
+  erroOriginal: ErroProcedencia: Documento sem registro interno de procedência; publicação pelo servidor bloqueada.
+      at validarDocumentoOperacional (C:\Users\PROJ 758\Documents\Protocolo-Meteorologico-CIM-2026-11-11\src\logic\documentProvenance.js:185:11)
+      at C:\Users\PROJ 758\Documents\Protocolo-Meteorologico-CIM-2026-11-11\server.js:264:7 {
+    code: 'UNREGISTERED_DOCUMENT'
+  }
+}
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização validada
+[RELATORIO][ERRO][ROTA] {
+  mensagem: 'Documento sem registro interno de procedência; publicação pelo servidor bloqueada.',
+  stack: 'ErroProcedencia: Documento sem registro interno de procedência; publicação pelo servidor bloqueada.\n' +
+    '    at validarDocumentoOperacional (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\documentProvenance.js:185:11)\n' +
+    '    at C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\server.js:264:7',
+  funcao: 'POST /api/gerar-relatorio',
+  etapa: 'unknown',
+  erroOriginal: ErroProcedencia: Documento sem registro interno de procedência; publicação pelo servidor bloqueada.
+      at validarDocumentoOperacional (C:\Users\PROJ 758\Documents\Protocolo-Meteorologico-CIM-2026-11-11\src\logic\documentProvenance.js:185:11)
+      at C:\Users\PROJ 758\Documents\Protocolo-Meteorologico-CIM-2026-11-11\server.js:264:7 {
+    code: 'UNREGISTERED_DOCUMENT'
+  }
+}
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização recusada
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização recusada
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização recusada
+[CIM] Requisição rejeitada (400) em POST /api/responsaveis: entity.parse.failed
+[CIM] Requisição rejeitada (413) em POST /api/responsaveis: entity.too.large
+[CIM] Requisição rejeitada (413) em POST /api/verificar-senha: entity.too.large
+[CIM] Requisição rejeitada (400) em POST /api/responsaveis: entity.parse.failed
+[CIM] Requisição rejeitada (400) em POST /api/responsaveis: entity.parse.failed
+[CIM] Requisição rejeitada (400) em POST /api/responsaveis: entity.parse.failed
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização validada
+[CIM] Requisição rejeitada (400) em POST /api/responsaveis: entity.parse.failed
+[CIM] Requisição rejeitada (413) em POST /api/responsaveis: entity.too.large
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização validada
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização validada
+[RELATORIO][ERRO][ROTA] {
+  mensagem: 'Documento sem registro interno de procedência; publicação pelo servidor bloqueada.',
+  stack: 'ErroProcedencia: Documento sem registro interno de procedência; publicação pelo servidor bloqueada.\n' +
+    '    at validarDocumentoOperacional (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\documentProvenance.js:185:11)\n' +
+    '    at C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\server.js:264:7',
+  funcao: 'POST /api/gerar-relatorio',
+  etapa: 'unknown',
+  erroOriginal: ErroProcedencia: Documento sem registro interno de procedência; publicação pelo servidor bloqueada.
+      at validarDocumentoOperacional (C:\Users\PROJ 758\Documents\Protocolo-Meteorologico-CIM-2026-11-11\src\logic\documentProvenance.js:185:11)
+      at C:\Users\PROJ 758\Documents\Protocolo-Meteorologico-CIM-2026-11-11\server.js:264:7 {
+    code: 'UNREGISTERED_DOCUMENT'
+  }
+}
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização validada
+[RELATORIO][ERRO][ROTA] {
+  mensagem: 'Documento sem registro interno de procedência; publicação pelo servidor bloqueada.',
+  stack: 'ErroProcedencia: Documento sem registro interno de procedência; publicação pelo servidor bloqueada.\n' +
+    '    at validarDocumentoOperacional (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\documentProvenance.js:185:11)\n' +
+    '    at C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\server.js:264:7',
+  funcao: 'POST /api/gerar-relatorio',
+  etapa: 'unknown',
+  erroOriginal: ErroProcedencia: Documento sem registro interno de procedência; publicação pelo servidor bloqueada.
+      at validarDocumentoOperacional (C:\Users\PROJ 758\Documents\Protocolo-Meteorologico-CIM-2026-11-11\src\logic\documentProvenance.js:185:11)
+      at C:\Users\PROJ 758\Documents\Protocolo-Meteorologico-CIM-2026-11-11\server.js:264:7 {
+    code: 'UNREGISTERED_DOCUMENT'
+  }
+}
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização validada
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização validada
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização validada
+[RELATORIO][ERRO][ROTA] {
+  mensagem: 'Documento sem registro interno de procedência; publicação pelo servidor bloqueada.',
+  stack: 'ErroProcedencia: Documento sem registro interno de procedência; publicação pelo servidor bloqueada.\n' +
+    '    at validarDocumentoOperacional (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\documentProvenance.js:185:11)\n' +
+    '    at C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\server.js:264:7',
+  funcao: 'POST /api/gerar-relatorio',
+  etapa: 'unknown',
+  erroOriginal: ErroProcedencia: Documento sem registro interno de procedência; publicação pelo servidor bloqueada.
+      at validarDocumentoOperacional (C:\Users\PROJ 758\Documents\Protocolo-Meteorologico-CIM-2026-11-11\src\logic\documentProvenance.js:185:11)
+      at C:\Users\PROJ 758\Documents\Protocolo-Meteorologico-CIM-2026-11-11\server.js:264:7 {
+    code: 'UNREGISTERED_DOCUMENT'
+  }
+}
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização validada
+[RELATORIO][ERRO][ROTA] {
+  mensagem: 'Documento sem registro interno de procedência; publicação pelo servidor bloqueada.',
+  stack: 'ErroProcedencia: Documento sem registro interno de procedência; publicação pelo servidor bloqueada.\n' +
+    '    at validarDocumentoOperacional (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\documentProvenance.js:185:11)\n' +
+    '    at C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\server.js:264:7',
+  funcao: 'POST /api/gerar-relatorio',
+  etapa: 'unknown',
+  erroOriginal: ErroProcedencia: Documento sem registro interno de procedência; publicação pelo servidor bloqueada.
+      at validarDocumentoOperacional (C:\Users\PROJ 758\Documents\Protocolo-Meteorologico-CIM-2026-11-11\src\logic\documentProvenance.js:185:11)
+      at C:\Users\PROJ 758\Documents\Protocolo-Meteorologico-CIM-2026-11-11\server.js:264:7 {
+    code: 'UNREGISTERED_DOCUMENT'
+  }
+}
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização recusada
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização recusada
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização recusada
+[CIM] Requisição rejeitada (400) em POST /api/responsaveis: entity.parse.failed
+[CIM] Requisição rejeitada (413) em POST /api/responsaveis: entity.too.large
+[CIM] Requisição rejeitada (413) em POST /api/verificar-senha: entity.too.large
+[CIM] Requisição rejeitada (400) em POST /api/responsaveis: entity.parse.failed
+[CIM] Requisição rejeitada (400) em POST /api/responsaveis: entity.parse.failed
+[CIM] Requisição rejeitada (400) em POST /api/responsaveis: entity.parse.failed
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização validada
+[CIM] Requisição rejeitada (400) em POST /api/responsaveis: entity.parse.failed
+[CIM] Requisição rejeitada (413) em POST /api/responsaveis: entity.too.large
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização validada
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização validada
+[RELATORIO][ERRO][ROTA] {
+  mensagem: 'Documento sem registro interno de procedência; publicação pelo servidor bloqueada.',
+  stack: 'ErroProcedencia: Documento sem registro interno de procedência; publicação pelo servidor bloqueada.\n' +
+    '    at validarDocumentoOperacional (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\documentProvenance.js:185:11)\n' +
+    '    at C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\server.js:264:7',
+  funcao: 'POST /api/gerar-relatorio',
+  etapa: 'unknown',
+  erroOriginal: ErroProcedencia: Documento sem registro interno de procedência; publicação pelo servidor bloqueada.
+      at validarDocumentoOperacional (C:\Users\PROJ 758\Documents\Protocolo-Meteorologico-CIM-2026-11-11\src\logic\documentProvenance.js:185:11)
+      at C:\Users\PROJ 758\Documents\Protocolo-Meteorologico-CIM-2026-11-11\server.js:264:7 {
+    code: 'UNREGISTERED_DOCUMENT'
+  }
+}
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização validada
+[RELATORIO][ERRO][ROTA] {
+  mensagem: 'Documento sem registro interno de procedência; publicação pelo servidor bloqueada.',
+  stack: 'ErroProcedencia: Documento sem registro interno de procedência; publicação pelo servidor bloqueada.\n' +
+    '    at validarDocumentoOperacional (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\documentProvenance.js:185:11)\n' +
+    '    at C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\server.js:264:7',
+  funcao: 'POST /api/gerar-relatorio',
+  etapa: 'unknown',
+  erroOriginal: ErroProcedencia: Documento sem registro interno de procedência; publicação pelo servidor bloqueada.
+      at validarDocumentoOperacional (C:\Users\PROJ 758\Documents\Protocolo-Meteorologico-CIM-2026-11-11\src\logic\documentProvenance.js:185:11)
+      at C:\Users\PROJ 758\Documents\Protocolo-Meteorologico-CIM-2026-11-11\server.js:264:7 {
+    code: 'UNREGISTERED_DOCUMENT'
+  }
+}
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização validada
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização validada
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização validada
+[RELATORIO][ERRO][ROTA] {
+  mensagem: 'Documento sem registro interno de procedência; publicação pelo servidor bloqueada.',
+  stack: 'ErroProcedencia: Documento sem registro interno de procedência; publicação pelo servidor bloqueada.\n' +
+    '    at validarDocumentoOperacional (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\documentProvenance.js:185:11)\n' +
+    '    at C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\server.js:264:7',
+  funcao: 'POST /api/gerar-relatorio',
+  etapa: 'unknown',
+  erroOriginal: ErroProcedencia: Documento sem registro interno de procedência; publicação pelo servidor bloqueada.
+      at validarDocumentoOperacional (C:\Users\PROJ 758\Documents\Protocolo-Meteorologico-CIM-2026-11-11\src\logic\documentProvenance.js:185:11)
+      at C:\Users\PROJ 758\Documents\Protocolo-Meteorologico-CIM-2026-11-11\server.js:264:7 {
+    code: 'UNREGISTERED_DOCUMENT'
+  }
+}
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização validada
+[CIM] Requisição rejeitada (400) em POST /api/verificar-senha: entity.parse.failed
+[CIM] Requisição rejeitada (413) em POST /api/verificar-senha: entity.too.large
+[RELATORIO][ERRO][ROTA] {
+  mensagem: 'Documento sem registro interno de procedência; publicação pelo servidor bloqueada.',
+  stack: 'ErroProcedencia: Documento sem registro interno de procedência; publicação pelo servidor bloqueada.\n' +
+    '    at validarDocumentoOperacional (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\documentProvenance.js:185:11)\n' +
+    '    at C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\server.js:264:7',
+  funcao: 'POST /api/gerar-relatorio',
+  etapa: 'unknown',
+  erroOriginal: ErroProcedencia: Documento sem registro interno de procedência; publicação pelo servidor bloqueada.
+      at validarDocumentoOperacional (C:\Users\PROJ 758\Documents\Protocolo-Meteorologico-CIM-2026-11-11\src\logic\documentProvenance.js:185:11)
+      at C:\Users\PROJ 758\Documents\Protocolo-Meteorologico-CIM-2026-11-11\server.js:264:7 {
+    code: 'UNREGISTERED_DOCUMENT'
+  }
+}
+[ATUALIZACAO] Rio de Janeiro: consulta iniciada (painel).
+[CLIMA-SAÚDE] Consultando Rio de Janeiro/RJ
+[INMET-PREVISAO] {
+  url: 'https://apiprevmet3.inmet.gov.br/previsao/3304557',
+  tentativa: '1/3'
+}
+[INMET-PREVISAO] { tentativa: '1/3', http: 200, tempoMs: 1778 }
+[OPEN-METEO-WEATHER] {
+  url: 'https://api.open-meteo.com/v1/forecast?latitude=-22.9068&longitude=-43.1729&current=temperature_2m%2Crelative_humidity_2m%2Cweather_code%2Cis_day%2Cuv_index&hourly=temperature_2m%2Crelative_humidity_2m%2Cprecipitation_probability%2Cprecipitation%2Cwind_speed_10m%2Cwind_direction_10m%2Cwind_gusts_10m%2Cweather_code%2Cuv_index&daily=temperature_2m_max%2Ctemperature_2m_min%2Cprecipitation_sum%2Cprecipitation_probability_max%2Cwind_speed_10m_max%2Cwind_gusts_10m_max%2Cweather_code%2Cuv_index_max&wind_speed_unit=kmh&precipitation_unit=mm&timezone=America%2FSao_Paulo&forecast_days=4&past_days=1&models=best_match',
+  tentativa: '1/3'
+}
+[CLIMA-SAÚDE] HTTP 200
+[CLIMA-SAÚDE] EHF=Sem excesso; Risco=Normal; dados armazenados.
+[COR-RIO] Consulta concluída: estágio 1; calor 1; comunicados 10.
+[OPEN-METEO-WEATHER] { tentativa: '1/3', http: 200, tempoMs: 1370 }
+[OPEN-METEO] {
+  localidade: 'Rio de Janeiro/RJ',
+  latitude: -22.9068,
+  longitude: -43.1729,
+  consultadoEm: '2026-11-13T12:02:36.750Z',
+  endpoint: 'https://api.open-meteo.com/v1/forecast',
+  modeloSolicitado: 'best_match',
+  modeloUtilizado: 'best_match',
+  indicador: 'Rajada prevista (horária)',
+  status: 'operacional',
+  statusHttp: 200,
+  tempoMs: 1373,
+  valorRetornado: 42.1,
+  motivo: null,
+  cacheIdadeMs: null
+}
+[OPEN-METEO] {
+  localidade: 'Rio de Janeiro/RJ',
+  latitude: -22.9068,
+  longitude: -43.1729,
+  consultadoEm: '2026-11-13T12:02:36.750Z',
+  endpoint: 'https://api.open-meteo.com/v1/forecast',
+  modeloSolicitado: 'best_match',
+  modeloUtilizado: 'best_match',
+  indicador: 'Rajada prevista (diária)',
+  status: 'operacional',
+  statusHttp: 200,
+  tempoMs: 1373,
+  valorRetornado: 42.1,
+  motivo: null,
+  cacheIdadeMs: null
+}
+[OPEN-METEO] {
+  localidade: 'Rio de Janeiro/RJ',
+  latitude: -22.9068,
+  longitude: -43.1729,
+  consultadoEm: '2026-11-13T12:02:36.750Z',
+  endpoint: 'https://api.open-meteo.com/v1/forecast',
+  modeloSolicitado: 'best_match',
+  modeloUtilizado: 'best_match',
+  indicador: 'Chuva acumulada prevista no período',
+  status: 'operacional',
+  statusHttp: 200,
+  tempoMs: 1373,
+  valorRetornado: 0.2,
+  motivo: null,
+  cacheIdadeMs: null
+}
+[OPEN-METEO] {
+  localidade: 'Rio de Janeiro/RJ',
+  latitude: -22.9068,
+  longitude: -43.1729,
+  consultadoEm: '2026-11-13T12:02:36.750Z',
+  endpoint: 'https://api.open-meteo.com/v1/forecast',
+  modeloSolicitado: 'best_match',
+  modeloUtilizado: 'best_match',
+  indicador: 'Chuva acumulada prevista/dia',
+  status: 'operacional',
+  statusHttp: 200,
+  tempoMs: 1373,
+  valorRetornado: 0.2,
+  motivo: null,
+  cacheIdadeMs: null
+}
+[OPEN-METEO] {
+  localidade: 'Rio de Janeiro/RJ',
+  latitude: -22.9068,
+  longitude: -43.1729,
+  consultadoEm: '2026-11-13T12:02:36.750Z',
+  endpoint: 'https://api.open-meteo.com/v1/forecast',
+  modeloSolicitado: 'best_match',
+  modeloUtilizado: 'best_match',
+  indicador: 'Probabilidade de chuva no período',
+  status: 'operacional',
+  statusHttp: 200,
+  tempoMs: 1373,
+  valorRetornado: 91,
+  motivo: null,
+  cacheIdadeMs: null
+}
+[OPEN-METEO] {
+  localidade: 'Rio de Janeiro/RJ',
+  latitude: -22.9068,
+  longitude: -43.1729,
+  consultadoEm: '2026-11-13T12:02:36.750Z',
+  endpoint: 'https://api.open-meteo.com/v1/forecast',
+  modeloSolicitado: 'best_match',
+  modeloUtilizado: 'best_match',
+  indicador: 'Probabilidade máxima diária de chuva',
+  status: 'operacional',
+  statusHttp: 200,
+  tempoMs: 1373,
+  valorRetornado: 91,
+  motivo: null,
+  cacheIdadeMs: null
+}
+[INMET-OBSERVACAO] {
+  url: 'https://apiprevmet3.inmet.gov.br/estacao/proxima/3304557',
+  tentativa: '1/3'
+}
+[INMET-OBSERVACAO][ERRO] {
+  type: 'connection_reset',
+  code: 'ECONNRESET',
+  httpStatus: null,
+  message: 'INMET (observação da estação mais próxima): conexão interrompida (ECONNRESET)',
+  cause: { name: 'TypeError', code: 'ECONNRESET', message: 'fetch failed' },
+  tentativa: '1/3',
+  tempoMs: 225151,
+  stack: 'ExternalSourceError: INMET (observação da estação mais próxima): conexão interrompida (ECONNRESET)\n' +
+    '    at criarErro (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\httpJsonClient.js:65:16)\n' +
+    '    at erroNormalizado (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\httpJsonClient.js:87:10)\n' +
+    '    at buscarJsonComRetentativa (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\httpJsonClient.js:224:20)\n' +
+    '    at async buscarObservacaoInmet (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\inmetObservations.js:430:21)\n' +
+    '    at async montarRelatorio (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\reportBuilder.js:229:21)\n' +
+    '    at async Object.obter (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\atualizacaoDados.js:126:7)\n' +
+    '    at async C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\server.js:106:42'
+}
+[ATUALIZACAO] Rio de Janeiro: falha na consulta (painel) — Rio de Janeiro: coleta excedeu 180s. Mantidos os últimos dados válidos.
+[INMET-OBSERVACAO] {
+  url: 'https://apiprevmet3.inmet.gov.br/estacao/proxima/3304557',
+  tentativa: '2/3'
+}
+[INMET-OBSERVACAO] { tentativa: '2/3', http: 200, tempoMs: 1223 }
+[INMET-AVISOS] {
+  url: 'https://apiprevmet3.inmet.gov.br/avisos/ativos',
+  tentativa: '1/3'
+}
+[INMET-AVISOS] { tentativa: '1/3', http: 200, tempoMs: 344 }
+[OCEANOP] {
+  url: 'https://oceanop-api-disp.petrobras.com.br/api/v1/previsao/JsonPrevisaoPorListaDePontosLatLonAsync',
+  tentativa: '1/3'
+}
+[OCEANOP][ERRO] {
+  type: 'dns',
+  code: 'ENOTFOUND',
+  httpStatus: null,
+  message: 'Petrobras — OCEANOP: falha de resolução DNS (ENOTFOUND)',
+  cause: { name: 'TypeError', code: 'ENOTFOUND', message: 'fetch failed' },
+  tentativa: '1/3',
+  tempoMs: 24,
+  stack: 'ExternalSourceError: Petrobras — OCEANOP: falha de resolução DNS (ENOTFOUND)\n' +
+    '    at criarErro (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\httpJsonClient.js:65:16)\n' +
+    '    at erroNormalizado (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\httpJsonClient.js:87:10)\n' +
+    '    at buscarJsonComRetentativa (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\httpJsonClient.js:224:20)\n' +
+    '    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n' +
+    '    at async C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\oceanop.js:189:18\n' +
+    '    at async C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\oceanop.js:158:95\n' +
+    '    at async consultarComCache (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\oceanop.js:164:16)\n' +
+    '    at async montarRelatorio (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\reportBuilder.js:260:32)'
+}
+[OCEANOP][ERRO] {
+  type: 'dns',
+  code: 'ENOTFOUND',
+  httpStatus: null,
+  message: 'Petrobras — OCEANOP: falha de resolução DNS (ENOTFOUND) após 1 tentativas',
+  cause: {
+    name: 'ExternalSourceError',
+    code: 'ENOTFOUND',
+    message: 'Petrobras — OCEANOP: falha de resolução DNS (ENOTFOUND)'
+  },
+  stack: 'ExternalSourceError: Petrobras — OCEANOP: falha de resolução DNS (ENOTFOUND) após 1 tentativas\n' +
+    '    at criarErro (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\httpJsonClient.js:65:16)\n' +
+    '    at buscarJsonComRetentativa (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\httpJsonClient.js:241:9)\n' +
+    '    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n' +
+    '    at async C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\oceanop.js:189:18\n' +
+    '    at async C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\oceanop.js:158:95\n' +
+    '    at async consultarComCache (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\oceanop.js:164:16)\n' +
+    '    at async montarRelatorio (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\reportBuilder.js:260:32)'
+}

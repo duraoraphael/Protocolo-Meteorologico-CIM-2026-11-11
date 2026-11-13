@@ -1,0 +1,132 @@
+[     158ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:3999/:1
+[     158ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:3999/:1
+[   14400ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:3999/:1
+[   14400ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:3999/:1
+[   16943ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:3999/:1
+[   16943ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:3999/:1
+[   19311ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:3999/:1
+[   19311ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:3999/:1
+[   21750ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:3999/:1
+[   21750ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:3999/:1
+[   24191ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:3999/:1
+[   24191ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:3999/:1
+[   45131ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:3999/:1
+[   45131ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:3999/:1
+[   58663ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:3999/:1
+[   58663ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:3999/:1
+[   97544ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:3999/:1
+[   97544ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:3999/:1
+[  100017ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:3999/api/gerar-relatorio:1
+[  110321ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:3999/:1
+[  110321ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:3999/:1
+[  114843ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:3999/:1
+[  114843ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:3999/:1
+[ 2023947ms] [ERROR] Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[ 2694862ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[ 3054853ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[ 3834854ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[ 4134868ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[ 4494852ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[ 4854856ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[ 5214863ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[ 5394864ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[ 5574858ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[ 5754850ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[ 5934863ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[ 6114859ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[ 6294860ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[ 6414867ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[ 6654857ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[ 6774853ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[ 7014849ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[ 7134855ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[ 7314859ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[ 7494867ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[ 7674861ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[ 7854852ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[ 8034857ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[ 8214855ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[ 8334869ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[ 8514868ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[ 8694860ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[ 8874853ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[ 9054853ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[ 9234862ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[ 9354867ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[ 9594854ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[ 9714855ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[ 9954863ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[10074854ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[10314857ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[10374868ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[10614868ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[10734854ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[10974859ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[11094853ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[11334864ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[11454861ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[11694858ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[11814857ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[12054857ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[12174851ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[12414852ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[12534868ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[12714863ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[12894856ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[13074862ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[13254859ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[13374868ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[13614855ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[13734856ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[13974855ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[14094866ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[14334866ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[14454860ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[14694867ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[14814868ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[15054868ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[15174868ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[15414868ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[15534855ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[15774856ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[15894855ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[16134865ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[16254867ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[16494869ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[16614855ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[16854859ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[16974853ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[17214851ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[17274862ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[17574855ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[17634858ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[17934867ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[17934875ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[18294857ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[18294861ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[18654866ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[18654871ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[19014867ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[19014872ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[19374858ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[19374860ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[19734858ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[19734863ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[20094867ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[20094871ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[20454856ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[20454861ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[20814867ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[20814872ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[21174863ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[21174867ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[21534862ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[21534866ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[21894854ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[21894859ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[22194861ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[22254862ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[22554858ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[22614863ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1
+[23294483ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/preview?cidade=rio_de_janeiro:1
+[23294522ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3999/api/cor-rio?cidade=rio_de_janeiro:1

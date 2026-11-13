@@ -1,0 +1,61 @@
+- generic [active] [ref=e1]:
+  - link "Pular para os dados meteorológicos" [ref=e2] [cursor=pointer]:
+    - /url: "#conteudo"
+  - banner [ref=e3]:
+    - navigation "Navegação principal" [ref=e4]:
+      - link "CIM — início" [ref=e5] [cursor=pointer]:
+        - /url: "#inicio"
+        - generic [aria-hidden] [ref=e6]: CIM
+      - generic [ref=e7]:
+        - link "Início" [ref=e8] [cursor=pointer]:
+          - /url: "#inicio"
+        - button "Monitoramento" [ref=e9] [cursor=pointer]
+        - button "Responsáveis" [ref=e10] [cursor=pointer]
+        - button "Gerar e enviar" [ref=e11] [cursor=pointer]
+        - button "Sobre o CIM" [ref=e12] [cursor=pointer]
+      - img "Petrobras" [ref=e14]
+    - generic [ref=e15]:
+      - generic [ref=e16]:
+        - paragraph [ref=e17]: CENTRO INTEGRADO DE MONITORAMENTO
+        - heading "PROTOCOLO METEOROLÓGICO" [level=1] [ref=e18]: PROTOCOLOMETEOROLÓGICO
+        - paragraph [ref=e19]: Monitoramento em tempo real para apoiara tomada de decisão operacional.
+        - generic [ref=e20]:
+          - generic [ref=e21]:
+            - generic [ref=e26]: Selecionar base
+            - combobox "Selecionar base" [ref=e27]:
+              - option "Rio de Janeiro — RJ" [selected]
+              - option "Macaé — RJ"
+              - option "Brasília — DF"
+              - option "Manaus — AM"
+              - option "Santos — SP"
+              - option "Aracaju — SE"
+              - option "Natal — RN"
+              - option "Oiapoque — AP"
+              - option "Vitória — ES"
+              - option "Araucária — PR"
+              - option "Anchieta — ES"
+              - option "Linhares — ES"
+              - option "São Bernardo do Campo — SP"
+              - option "Doutor Ulysses — PR"
+              - option "Itaboraí — RJ"
+              - option "Caraguatatuba — SP"
+              - option "Barra do Furado — RJ"
+              - option "Betim — MG"
+              - option "Ipojuca — PE"
+              - option "Criciúma — SC"
+              - option "Imbituba — SC"
+              - option "Canoas — RS"
+              - option "Barra dos Coqueiros — SE"
+              - option "Duque de Caxias — RJ"
+              - option "Aeroporto de Maricá — RJ"
+              - option "Salvador — BA"
+          - time [ref=e33]: sexta-feira, 13 de novembro de 2026
+        - paragraph [ref=e34]: Informações meteorológicas integradas para operações mais seguras e eficientes.
+      - generic [ref=e35]:
+        - generic [ref=e36]: Horário oficial
+        - generic [ref=e37]: 08:28:55
+        - generic [ref=e38]: Horário de Brasília
+        - generic [ref=e39]: Atualizando dados…
+        - region "Condições atuais" [ref=e40]: Atualizando condições…
+  - main [ref=e41]:
+    - status [ref=e42]: Carregando dados meteorológicos…

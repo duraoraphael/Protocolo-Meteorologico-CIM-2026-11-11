@@ -1,0 +1,1245 @@
+
+> protocolo-meteorologico-cim@1.0.0 test
+> node --test "tests/**/*.test.js"
+
+✔ classifica as três faixas US AQI simplificadas e rejeita índice inválido (3.1812ms)
+✔ valida AQI atual, horário local com UTC offset, coordenadas e partículas (3.2387ms)
+✔ não normaliza AQI ausente, fora da faixa ou desatualizado (2.1313ms)
+✔ UV atual inválido não aparece mesmo quando US AQI é válido (0.5528ms)
+✔ consulta current US AQI, PM2.5 e PM10, no fuso automático, e reaproveita cache fresco (95.7054ms)
+✔ bloqueia chamada sem credencial comercial e cobre as onze localidades no contrato (26.7346ms)
+✔ vento interno em ATENÇÃO e ALERTA exibe só informe e recomendações proporcionais (23.2226ms)
+✔ vento representa redução e agravamento somente com classificação anterior válida (84.4922ms)
+✔ chuva interna apresenta recomendação específica e vários fenômenos permanecem separados (52.2356ms)
+✔ aviso oficial prevalece sem repetir metadados no card resumido (13.041ms)
+✔ ausência de dados não cria alerta nem simula redução (1.3793ms)
+✔ histórico e dados de uma base não interferem em outra (1.0804ms)
+✔ UV e qualidade do ar usam títulos humanos sem metadados técnicos (2.3773ms)
+✔ gera os alertas operacionais com título, cor e 100% das recomendações cadastradas (106.5287ms)
+✔ calor NORMAL gera card somente quando representa normalização comunicável (5.5627ms)
+✔ padroniza os demais nomes de parâmetro e exibe emergencial sem alterar o grau interno (4.7021ms)
+✔ card não mostra origem, significado CIM nem atribuição de Instalações (3.9585ms)
+✔ alerta da base Rio lista os sites oficiais de consulta solicitados (5.6008ms)
+[CERTIFICADOS] CAs do Windows: 47 aceitas de 75 (28 descartadas por assinatura fraca, 0 vencidas).
+[CIM] Monitor de alertas ativo: verificação a cada 5 min, das 00:00 às 24:00; coleta INMET a cada 10 min.
+✔ agendamento do monitor de e-mail é criado uma única vez sem disparar SMTP (2.1968ms)
+[CERTIFICADOS] CAs do Windows: 47 aceitas de 75 (28 descartadas por assinatura fraca, 0 vencidas).
+[AGENDADOR] Rio de Janeiro: gatilhos sem mudança; nenhum alerta enviado.
+[AGENDADOR] Rio de Janeiro: gatilhos sem mudança; nenhum alerta enviado.
+[AGENDADOR] Santos: gatilhos sem mudança; nenhum alerta enviado.
+[AGENDADOR] Macaé: linha de base registrada; nenhum alerta retroativo enviado.
+[CIM] Monitor de alertas ativo: verificação a cada 5 min, das 00:00 às 24:00; coleta INMET a cada 10 min.
+✔ cenário A: somente Macaé alterada produz um evento da própria base (49.4143ms)
+✔ cenários B e C: duas mudanças são independentes e nenhuma mudança não gera evento (2.9441ms)
+✔ cenário D: agravamento de alerta para emergência é comunicado (0.7287ms)
+✔ cenário E: falha de fonte preserva o estado e não comunica normalização (0.9228ms)
+✔ cenários F e G: falha permanece pendente e reinício não reenvia evento confirmado (78.7576ms)
+✔ novo ciclo após normalização recebe outro ID e não é descartado como duplicado (2.0523ms)
+✔ normalização de vento apresenta o nome do gatilho em português no informe (4.0997ms)
+✔ normaliza um fenômeno sem encerrar outro risco ativo da mesma base (0.7812ms)
+✔ histórico persistente registra os campos auditáveis da transição (13.4187ms)
+✔ cenário H: atualização material do mesmo aviso INMET gera nova versão (3.6185ms)
+✔ primeiro ciclo registra linha de base sem disparo em massa (1.6318ms)
+✔ processamento usa somente destinatários da base e confirma após SMTP (1.2086ms)
+✔ monitor extraordinário agenda cinco minutos, dia inteiro e sem sobreposição (0.9412ms)
+✔ formatador compartilhado produz os quatro títulos canônicos obrigatórios (8.2308ms)
+✔ fenômeno oficial do INMET é preservado sem complemento ou singularização (105.0555ms)
+✔ painel, informativo, PDF extraordinário e Alerta CIM padronizam títulos e omitem cards NORMAL (12.6516ms)
+✔ chuva horária respeita todas as fronteiras sem sobreposição (2.4182ms)
+✔ chuva diária preserva atenção a partir de 20 mm e respeita alerta/emergência (0.9413ms)
+✔ rajada respeita todas as fronteiras em km/h (1.0725ms)
+✔ chuva sempre utiliza o maior grau entre intensidade horária e acumulado (1.7106ms)
+✔ monitor cria classificações internas de chuva e vento quando não há aviso oficial (7.2902ms)
+✔ monitor identifica chuva e vento INMET como observações, não previsões (1.8296ms)
+✔ deduplicação ignora variação no mesmo grau e reavisa quando agrava (17.2231ms)
+✔ mudança de gatilho comunica agravamento, redução e retorno ao normal uma vez (3.245ms)
+✔ estado de alerta só muda ao confirmar explicitamente o envio (1.326ms)
+✔ avisos oficiais usam assinatura própria e acompanham todo o ciclo de severidade (22.9495ms)
+✔ e-mail apresenta fenômeno, grau, fontes, valores e recomendações (6.6305ms)
+✔ aviso oficial mantém a fonte INMET e explica todos os riscos oficiais sem duplicar (3.4303ms)
+✔ normalização oficial isolada comunica encerramento validado pelo INMET (9.7165ms)
+✔ e-mail de alerta mostra identidade CIM e cor do grau comunicado (2.7731ms)
+[CERTIFICADOS] CAs do Windows: 47 aceitas de 75 (28 descartadas por assinatura fraca, 0 vencidas).
+[ATUALIZACAO] INTERVALO_ATUALIZACAO_MIN inválido ("7"; use um divisor de 60) — usando 30 min.
+[ATUALIZACAO] INTERVALO_ATUALIZACAO_MIN inválido ("abc"; use um divisor de 60) — usando 30 min.
+✔ intervalo padrão é 30 min e valores inválidos voltam para 30 (2.3711ms)
+✔ atualização do painel consulta o Clima e Saúde em vez de depender só do cache local (3.9504ms)
+✔ cache dentro do intervalo não consulta as APIs de novo (4.2953ms)
+✔ falha mantém os últimos dados válidos, não altera o horário e marca pendente (2.1445ms)
+✔ horário muda a cada consulta bem-sucedida mesmo com valores iguais (1.3414ms)
+✔ ciclo não se sobrepõe e consultas da mesma base são compartilhadas (1.7254ms)
+✔ cache mantém condição vinculada à base e não reutiliza dado ausente (2.4958ms)
+✔ agendador usa o intervalo configurado e executa só a coleta (2.1579ms)
+[CERTIFICADOS] CAs do Windows: 47 aceitas de 75 (28 descartadas por assinatura fraca, 0 vencidas).
+✔ /, /api/cidades e estáticos trazem CSP, nosniff, XFO e Referrer-Policy (2018.3264ms)
+✔ HSTS só é enviado quando a requisição é HTTPS (0.8989ms)
+✔ FRAME_ANCESTORS só aceita origens https válidas (2.4158ms)
+✔ páginas do painel não usam script/estilo inline nem recursos externos (14.9706ms)
+✔ --no-sandbox só em Linux (2.5027ms)
+✔ só data: e about: são permitidos (0.6464ms)
+✔ prepararPaginaIsolada desliga JS, intercepta e aborta requisições externas (2.9748ms)
+✔ auditoria rejeita coordenadas ausentes, invertidas ou fora dos limites brasileiros (12.3844ms)
+✔ auditoria verifica prefixo IBGE/UF e explicita coordenadas sem escopo e localidade pendente (2.1248ms)
+✔ auditoria consulta API oficial IBGE e sinaliza município/UF divergentes (5.7086ms)
+✔ auditoria de cadastro percorre dinamicamente todas as bases sem alterar coordenadas (1.4094ms)
+✔ auditoria identifica coordenadas duplicadas sem mesclar instalações (3.58ms)
+✔ UTG-C usa as coordenadas confirmadas e permanece pendente de validação da instalação (0.9191ms)
+[CLIMA-SAÚDE] Consultando Petrópolis/RJ
+[CLIMA-SAÚDE:petropolis][ERRO] {
+  type: 'unknown',
+  code: null,
+  httpStatus: null,
+  message: 'rede indisponível',
+  cause: null,
+  stack: 'Error: rede indisponível\n' +
+    '    at Object.assign.name (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\climaSaudeService.test.js:83:25)\n' +
+    '    at consultar (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\climaSaudeService.js:209:30)\n' +
+    '    at TestContext.<anonymous> (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\climaSaudeService.test.js:87:25)\n' +
+    '    at Test.runInAsyncScope (node:async_hooks:227:14)\n' +
+    '    at Test.run (node:internal/test_runner/test:1402:25)\n' +
+    '    at Test.processPendingSubtests (node:internal/test_runner/test:974:18)\n' +
+    '    at Test.postRun (node:internal/test_runner/test:1542:19)\n' +
+    '    at Test.run (node:internal/test_runner/test:1467:12)\n' +
+    '    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)'
+}
+[CLIMA-SAÚDE] Consultando Petrópolis/RJ
+[CLIMA-SAÚDE:petropolis][ERRO] {
+  type: 'timeout',
+  code: null,
+  httpStatus: null,
+  message: 'timeout',
+  cause: null,
+  stack: 'TimeoutError: timeout\n' +
+    '    at status (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\climaSaudeService.test.js:84:39)\n' +
+    '    at consultar (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\climaSaudeService.js:209:30)\n' +
+    '    at TestContext.<anonymous> (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\climaSaudeService.test.js:87:25)\n' +
+    '    at async Test.run (node:internal/test_runner/test:1409:7)\n' +
+    '    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)'
+}
+[CLIMA-SAÚDE] Consultando Petrópolis/RJ
+[CLIMA-SAÚDE] HTTP 503
+[CLIMA-SAÚDE:petropolis][ERRO] {
+  type: 'http',
+  code: null,
+  httpStatus: 503,
+  message: 'HTTP 503',
+  cause: null,
+  stack: 'Error: HTTP 503\n' +
+    '    at consultar (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\climaSaudeService.js:215:56)\n' +
+    '    at async TestContext.<anonymous> (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\climaSaudeService.test.js:87:19)\n' +
+    '    at async Test.run (node:internal/test_runner/test:1409:7)\n' +
+    '    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)'
+}
+[CLIMA-SAÚDE] Consultando Petrópolis/RJ
+✔ EHF define apenas seu próprio nível, com recomendações acumulativas (4.3879ms)
+✔ interpreta HTML SSR semanticamente e deixa ausências como null (95.8731ms)
+✔ HTML alterado ou EHF ausente não vira Sem excesso (6.215ms)
+✔ EHF com data diferente da solicitada é rejeitado como desatualizado (4.1348ms)
+✔ valida URL e não consulta base sem configuração (1.0373ms)
+✔ falha de rede, timeout e HTTP não-200 preservam último válido sem fabricar dado novo (23.9911ms)
+[CLIMA-SAÚDE:petropolis][ERRO] {
+  type: 'timeout',
+  code: 23,
+  httpStatus: null,
+  message: 'The operation was aborted due to timeout',
+  cause: null,
+  stack: 'TimeoutError: The operation was aborted due to timeout\n' +
+    '    at new DOMException (node:internal/per_context/domexception:76:18)\n' +
+    '    at Timeout._onTimeout (node:internal/abort_controller:210:9)\n' +
+    '    at listOnTimeout (node:internal/timers:685:17)\n' +
+    '    at process.processTimers (node:internal/timers:618:7)'
+}
+[CLIMA-SAÚDE] Consultando Petrópolis/RJ
+[CLIMA-SAÚDE] HTTP 200
+[CLIMA-SAÚDE] EHF=Baixo; Risco=Muito Alto; dados armazenados.
+[CLIMA-SAÚDE] Consultando Aeroporto de Maricá/RJ
+[CLIMA-SAÚDE] HTTP 200
+[CLIMA-SAÚDE] EHF=Severo; Risco=Alto; dados armazenados.
+✔ timeout real aborta a requisição dentro do limite (26.0559ms)
+✔ coleta válida persiste e risco combinado não altera grau EHF (4.8493ms)
+✔ base de instalação valida Clima e Saúde pelo município cadastrado (17.9087ms)
+✔ alerta de calor é detectado e só notifica em transição (14.4925ms)
+✔ PDF técnico, e-mail e painel exibem calor sem alterar severidade meteorológica (42.3268ms)
+[CERTIFICADOS] CAs do Windows: 47 aceitas de 75 (28 descartadas por assinatura fraca, 0 vencidas).
+✔ GET /api/responsaveis sem senha devolve só nomes (1952.16ms)
+✔ POST /api/responsaveis/consultar exige a senha (215.5464ms)
+✔ rotas e interface da integração desativada não são expostas (42.2726ms)
+✔ PDF: 401 sem credencial; 200 com senha (Basic) ou token válido (120.3866ms)
+✔ PDF: nomes inválidos e path traversal → 404 (103.8145ms)
+✔ token expira em 24 h e o mapa de tokens tem limite (1.2838ms)
+[CERTIFICADOS] CAs do Windows: 47 aceitas de 75 (28 descartadas por assinatura fraca, 0 vencidas).
+✔ estágio: só o texto oficial 'Estágio N' (1–5) define o nível (30.4131ms)
+✔ calor: só a resposta oficial 'calor N' (1–5) define o estágio independente (1.2534ms)
+✔ comunicados: texto limpo, link só do cor.rio, sem duplicados, mais recente primeiro (37.6035ms)
+✔ comunicados vigentes: publicados ou atualizados nas últimas 24 h (0.5821ms)
+✔ serviço: estágio operacional, calor e comunicados têm horários próprios; falha preserva o último válido (74.0036ms)
+✔ serviço: sem dado válido fica indisponível — nunca assume o estágio 1 (3.3719ms)
+✔ serviço: lista vazia da fonte é 'nenhum comunicado', não falha (3.541ms)
+✔ serviço: retoma a última coleta válida gravada, com o horário original (5.5158ms)
+✔ /api/cor-rio responde só para a base Rio de Janeiro; /api/cidades marca a base (1391.9431ms)
+✔ mapa de cores único e exato para os cinco estágios (28.9183ms)
+✔ cada estágio aplica sua cor ao painel, ao indicador e à escala; só o atual é 'Atual' (81.511ms)
+✔ comunicado: título, resumo, abrangência, data, fonte e botão Ver comunicado (9.4127ms)
+✔ estados vazios e de falha são distintos (21.9117ms)
+✔ falha mantém o último estágio, marcado como desatualizado com o horário da consulta válida (30.6028ms)
+✔ detalhes: conteúdo completo, link original e estágio identificado como informação separada (12.2753ms)
+✔ painel consulta /api/cor-rio só na base do Rio, ao abrir (64.4014ms)
+[CERTIFICADOS] CAs do Windows: 47 aceitas de 75 (28 descartadas por assinatura fraca, 0 vencidas).
+✔ envios geral e COR-RIO usam listas isoladas e sem duplicação (1117.5833ms)
+✔ aviso COR-RIO sem vínculo não usa destinatário geral de fallback (14.0688ms)
+[INFORMAÇÃO INDISPONÍVEL] precipitacaoHorariaMaxMm: A Open-Meteo não publicou valor numérico válido para este indicador.
+✔ classificação lê temperatura e umidade atuais do formato atual do relatório (2.4774ms)
+✔ previsão INMET valida o município, não o nome operacional da instalação (50.3256ms)
+[CERTIFICADOS] CAs do Windows: 47 aceitas de 75 (28 descartadas por assinatura fraca, 0 vencidas).
+✔ tipo explícito do documento prevalece sobre horário de geração (2.1882ms)
+✔ INFORMATIVO_05H: NORMAL, ATENÇÃO, ALERTA e EMERGÊNCIA são elegíveis (0.9641ms)
+✔ INFORMATIVO_15H: NORMAL, ATENÇÃO, ALERTA e EMERGÊNCIA são elegíveis (0.3029ms)
+✔ ALERTA_EXTRAORDINARIO: somente ATENÇÃO, ALERTA e EMERGÊNCIA são elegíveis (0.7838ms)
+✔ ALERTA_CIM: somente ATENÇÃO, ALERTA e EMERGÊNCIA são elegíveis (0.5291ms)
+✔ PDF extraordinário com tudo NORMAL não cria cards nem placeholders de alerta (92.6439ms)
+✔ PDF extraordinário remove todos os cards, inclusive ATENÇÃO ou superior (4.0918ms)
+✔ Alerta CIM misto filtra NORMAL antes de montar os cards (6.2022ms)
+✔ Alerta CIM ordena EMERGÊNCIA, ALERTA e ATENÇÃO; PDF omite os cards (19.2221ms)
+✔ PDF programado também omite todos os cards de alerta (3.2933ms)
+✔ Alerta CIM apenas NORMAL é suprimido antes de destinatários e SMTP (0.8653ms)
+[CERTIFICADOS] CAs do Windows: 47 aceitas de 75 (28 descartadas por assinatura fraca, 0 vencidas).
+✔ objeto não registrado é bloqueado antes do SMTP (4.408ms)
+✔ simulação permanece bloqueada mesmo após remover as marcações visíveis (36.299ms)
+✔ clonar um relatório operacional não copia o selo interno (1.3484ms)
+✔ alterar valor meteorológico depois do registro invalida o documento (0.7966ms)
+✔ alterar indicador do snapshot depois do registro invalida o documento (0.6973ms)
+✔ campo numérico sem fonte verificável bloqueia publicação (0.6358ms)
+✔ ausência de variável crítica bloqueia documento operacional completo (0.6237ms)
+✔ ausência crítica explicitamente indisponível e rastreada não força fallback inventado (0.8815ms)
+✔ rajada e chuva numéricas ausentes usam metadados próprios, separados dos resumos textuais (0.7857ms)
+[CERTIFICADOS] CAs do Windows: 47 aceitas de 75 (28 descartadas por assinatura fraca, 0 vencidas).
+[CIM] Agendamento diário desativado em src/config/email.js.
+[CIM] Envio único desativado em src/config/email.js.
+[CIM] Monitor de alertas desativado em src/config/email.js.
+[AGENDADOR] 08:00, 15:00 (America/Sao_Paulo), 26 bases meteorológicas; aviso COR-RIO em 08:00, 15:00.
+[AGENDADOR] 08:00, 15:00 (America/Sao_Paulo), 26 bases meteorológicas; aviso COR-RIO em 08:00, 15:00.
+[AGENDADOR] 08:00, 15:00 (America/Sao_Paulo), 26 bases meteorológicas; aviso COR-RIO em 08:00, 15:00.
+[AGENDADOR] horárioProgramado=08:00 horárioEfetivo=2026-11-13T11:28:14.883Z data=2026-09-28 status=iniciado.
+[AGENDADOR] executionId=teste:2026-09-28|rio_de_janeiro|08:00 horarioProgramado=08:00 localidade="Rio de Janeiro" status=coleta_iniciada.
+[AGENDADOR] executionId=teste:2026-09-28|rio_de_janeiro|08:00 horarioProgramado=08:00 horarioEfetivo=2026-11-13T11:28:14.884Z localidade="Rio de Janeiro" status=enviado.
+[AGENDADOR] executionId=teste:2026-09-28|cor_rio|08:00 horarioProgramado=08:00 horarioEfetivo=2026-11-13T11:28:14.884Z localidade="COR-RIO" status=enviado.
+[AGENDADOR] 08:00 finalizado.
+[AGENDADOR] horárioProgramado=15:00 horárioEfetivo=2026-11-13T11:28:14.884Z data=2026-09-28 status=iniciado.
+[AGENDADOR] executionId=teste:2026-09-28|rio_de_janeiro|15:00 horarioProgramado=15:00 localidade="Rio de Janeiro" status=coleta_iniciada.
+[AGENDADOR] executionId=teste:2026-09-28|rio_de_janeiro|15:00 horarioProgramado=15:00 horarioEfetivo=2026-11-13T11:28:14.884Z localidade="Rio de Janeiro" status=enviado.
+[AGENDADOR] executionId=teste:2026-09-28|cor_rio|15:00 horarioProgramado=15:00 horarioEfetivo=2026-11-13T11:28:14.884Z localidade="COR-RIO" status=enviado.
+[AGENDADOR] 15:00 finalizado.
+[AGENDADOR] horárioProgramado=08:00 horárioEfetivo=2026-11-13T11:28:14.885Z data=2026-09-28 status=iniciado.
+[AGENDADOR] executionId=teste:2026-09-28|rio_de_janeiro|08:00 horarioProgramado=08:00 localidade="Rio de Janeiro" status=coleta_iniciada.
+[AGENDADOR] executionId=teste:2026-09-28|rio_de_janeiro|08:00 horarioProgramado=08:00 horarioEfetivo=2026-11-13T11:28:14.885Z localidade="Rio de Janeiro" status=enviado.
+[AGENDADOR] executionId=teste:2026-09-28|macae|08:00 horarioProgramado=08:00 localidade="Macaé" status=coleta_iniciada.
+[AGENDADOR] executionId=teste:2026-09-28|macae|08:00 horarioProgramado=08:00 horarioEfetivo=2026-11-13T11:28:14.886Z localidade="Macaé" status=falha erro="Falha de teste".
+[AGENDADOR] executionId=teste:2026-09-28|cor_rio|08:00 horarioProgramado=08:00 horarioEfetivo=2026-11-13T11:28:14.886Z localidade="COR-RIO" status=enviado.
+[AGENDADOR] 08:00 finalizado.
+[AGENDADOR] horárioProgramado=08:00 horárioEfetivo=2026-11-13T11:28:14.886Z data=2026-09-28 status=iniciado.
+[AGENDADOR] Rio de Janeiro: envio das 08:00 já confirmado; ignorado.
+[AGENDADOR] executionId=teste:2026-09-28|macae|08:00 horarioProgramado=08:00 localidade="Macaé" status=coleta_iniciada.
+[AGENDADOR] executionId=teste:2026-09-28|macae|08:00 horarioProgramado=08:00 horarioEfetivo=2026-11-13T11:28:14.886Z localidade="Macaé" status=falha erro="Falha de teste".
+[AGENDADOR] 08:00 finalizado.
+[AGENDADOR] horárioProgramado=15:00 horárioEfetivo=2026-11-13T11:28:14.886Z data=2026-09-28 status=iniciado.
+[AGENDADOR] executionId=teste:2026-09-28|rio_de_janeiro|15:00 horarioProgramado=15:00 localidade="Rio de Janeiro" status=coleta_iniciada.
+[AGENDADOR] executionId=teste:2026-09-28|rio_de_janeiro|15:00 horarioProgramado=15:00 horarioEfetivo=2026-11-13T11:28:14.886Z localidade="Rio de Janeiro" status=enviado.
+[AGENDADOR] executionId=teste:2026-09-28|macae|15:00 horarioProgramado=15:00 localidade="Macaé" status=coleta_iniciada.
+[AGENDADOR] executionId=teste:2026-09-28|macae|15:00 horarioProgramado=15:00 horarioEfetivo=2026-11-13T11:28:14.887Z localidade="Macaé" status=falha erro="Falha de teste".
+[AGENDADOR] executionId=teste:2026-09-28|cor_rio|15:00 horarioProgramado=15:00 horarioEfetivo=2026-11-13T11:28:14.887Z localidade="COR-RIO" status=enviado.
+[AGENDADOR] 15:00 finalizado.
+✔ trava persistente impede dois processos de assumir o mesmo envio (19.8057ms)
+✔ interruptores bloqueiam separadamente cada envio automático (1.4734ms)
+✔ cron agenda exclusivamente 08h e 15h no horário de Brasília (6.024ms)
+✔ edições das 08h e 15h são autônomas e COR-Rio segue os mesmos horários (2.5595ms)
+✔ duas rodadas percorrem bases, isolam falha e não repetem envio confirmado (2.209ms)
+✔ datas citadas: numéricas, por extenso e dias da semana, relativas a hoje (6.2986ms)
+✔ conteúdo do dia: remove a seção dos próximos dias e preserva condições e orientações (24.0796ms)
+✔ conteúdo do dia: seção datada de hoje fica; parágrafo só de amanhã sai mesmo sem subtítulo (0.6618ms)
+✔ seleção: mais recente do dia até a geração; ignora véspera, futuro, não meteorológico e título de outro dia (61.2994ms)
+✔ e-mail: só o comunicado do dia, sem próximos dias e sem outros comunicados; dados e link preservados (42.0526ms)
+✔ e-mail sem publicação do dia: mensagem própria, estágio válido mantido mesmo vigente desde outro dia (29.1206ms)
+✔ e-mail: falha da fonte ≠ ausência do comunicado do dia; sem estágio fica neutro (6.8054ms)
+✔ PDF do mesmo relatório continua completo (alteração restrita ao e-mail) (25.2386ms)
+✔ e-mail de outra base não tem card do COR-Rio (3.3036ms)
+✔ PDF do anexo: só o comunicado do dia, sem próximos dias nem outros comunicados; dados e link preservados (74.2159ms)
+✔ PDF do anexo: várias publicações → a mais recente até a geração (30.0244ms)
+✔ PDF do anexo sem publicação do dia: mensagem própria, sem publicação anterior; estágio mantido (32.7658ms)
+✔ PDF completo (download pelo site) não muda quando a opção não é usada (17.6667ms)
+✔ cabeçalho e quadros mostram os dados sem fontes nem metadados de consulta (75.3569ms)
+✔ resumo do e-mail omite a linha auxiliar do UV atual (10.7184ms)
+✔ e-mail não mostra a fonte dos dados marítimos (1.6097ms)
+✔ e-mail mostra o valor da rajada sem identificar a fonte (1.885ms)
+✔ card de e-mail usa a máxima Open-Meteo da janela, não outra rajada fora dela (8.4654ms)
+✔ edições não regulares não exibem a faixa; edição das 15h usa o horário agendado (1.7995ms)
+✔ indicadores formam uma única grade 3–3–2 sem tabelas técnicas no corpo (12.6289ms)
+✔ terceira linha mantém alinhamento e quebra uma condição geral longa (5.6228ms)
+✔ chuva acumulada/dia usa apenas previsão e nunca o acumulado observado (12.1559ms)
+✔ resumo omite a janela auxiliar das edições agendadas (29.5426ms)
+✔ fallback da probabilidade das 05h considera também o período da noite (0.7706ms)
+✔ card de qualidade do ar exibe somente a classificação sem horário ou fonte (1.961ms)
+✔ card de qualidade do ar não classifica concentração sem US AQI válido (0.9054ms)
+✔ CALOR é a última célula e alertas ficam em severidade decrescente com empate estável (16.6608ms)
+✔ card CALOR usa somente o EHF oficial, sem ser elevado por temperatura ou UV (18.3422ms)
+✔ dados ausentes mostram Dado indisponível sem fabricar números nem fontes (4.5529ms)
+✔ dado marítimo armazenado mantém o valor sem exibir detalhes de validade (0.9462ms)
+✔ alerta, aviso oficial e recomendações aparecem uma vez e na ordem solicitada (13.9721ms)
+✔ aviso oficial INMET reutiliza exatamente o componente visual dos demais cards (9.8702ms)
+✔ aviso oficial identifica INMET e preserva separadamente a fonte numérica (6.0851ms)
+✔ aviso INMET usa a cor do seu nível e a linha dinâmica fica escura sobre o fundo do nível (19.3525ms)
+✔ e-mail omite completamente as previsões dos próximos dias (1.6301ms)
+✔ HTML escapa textos externos sem transformar o e-mail em imagem (0.8143ms)
+✔ todos os tipos de e-mail reutilizam o cabeçalho institucional completo (119.2255ms)
+✔ localidade do informativo é dinâmica e a data não aparece no cabeçalho (3.0283ms)
+✔ identidade CIM permanece completa quando todas as imagens são bloqueadas (25.4587ms)
+✔ normalização isolada gera comunicado específico de encerramento (0.5832ms)
+✔ todas as transições recebem classificação e cor pelo status de destino (1.5766ms)
+✔ mudanças diárias aceitam acentos e três formatos de seta (1.7132ms)
+✔ mudança apenas numérica fica visível com aparência neutra (0.6429ms)
+✔ novo alerta é classificado e campos estruturados continuam escapados (2.1454ms)
+✔ templates mantêm estrutura compatível sem script, flexbox, grid ou SVG inline (1.9475ms)
+[CERTIFICADOS] CAs do Windows: 47 aceitas de 75 (28 descartadas por assinatura fraca, 0 vencidas).
+✔ informativo do e-mail mostra chuva prevista/dia e onda em cards distintos (39.1646ms)
+✔ zero milímetro diário é exibido como dado válido (1.0607ms)
+✔ envio reutiliza o PDF completo em memória como anexo SMTP (191.309ms)
+✔ destinatário avulso exige autorização explícita e não marca o e-mail como teste (3.82ms)
+✔ botão informa progresso, evita clique duplo e confirma o envio (1.5794ms)
+[CERTIFICADOS] CAs do Windows: 47 aceitas de 75 (28 descartadas por assinatura fraca, 0 vencidas).
+✔ JSON malformado → 400 genérico (1787.5498ms)
+✔ corpo > 100 KB → 413 genérico (30.6805ms)
+✔ rota inexistente → 404 JSON; URL malformada não vaza stack (32.6253ms)
+✔ erro inesperado numa rota → 500 genérico e detalhe só no console (1.4851ms)
+✔ Dashboard.escape neutraliza os 5 caracteres especiais (51.5057ms)
+✔ chips de destinatários escapam nome e e-mail (7.6864ms)
+✔ mensagem de erro do servidor é escapada (13.5656ms)
+✔ Monitoramento e fontes exibe o estado de todas as APIs (6.4025ms)
+✔ painel distingue chuva diária da última hora, com a fonte e sem horário de referência (10.0642ms)
+✔ cartão de indicador tem três linhas: título com ícone, valor e fonte (6.9296ms)
+✔ chuva observada indisponível mantém o travessão e identifica a estimativa; zero não vira indisponível (17.7796ms)
+✔ nomes de fonte são legíveis e as tabelas por período mostram a fonte no cabeçalho (7.5423ms)
+✔ calor antigo não recebe selo NORMAL e ar mostra a classe sem US AQI, horários nem nomes longos de fonte (13.4031ms)
+✔ qualidade do ar mostra somente NORMAL, MODERADO ou RUIM (6.5254ms)
+✔ painel mostra indisponibilidade de UV/rajada com a fonte indisponível (6.1781ms)
+✔ painel usa rajada consolidada sem identificar horário ou fonte (6.0363ms)
+✔ condições atuais do painel omitem fonte, estação e horário (4.873ms)
+✔ painel usa o pico diário sem exibir fonte nem data de referência (4.9403ms)
+[AGENDADOR] Macaé: linha de base registrada; nenhum alerta retroativo enviado.
+[AGENDADOR] Macaé: gatilhos sem mudança; nenhum alerta enviado.
+[AGENDADOR] Macaé: gatilhos sem mudança; nenhum alerta enviado.
+[AGENDADOR] Macaé: gatilhos sem mudança; nenhum alerta enviado.
+[AGENDADOR] Macaé: gatilhos sem mudança; nenhum alerta enviado.
+[AGENDADOR] Macaé: gatilhos sem mudança; nenhum alerta enviado.
+[AGENDADOR] Macaé: gatilhos sem mudança; nenhum alerta enviado.
+[AGENDADOR] Macaé: gatilhos sem mudança; nenhum alerta enviado.
+[AGENDADOR] Macaé: gatilhos sem mudança; nenhum alerta enviado.
+[AGENDADOR] Macaé: gatilhos sem mudança; nenhum alerta enviado.
+[AGENDADOR] Macaé: gatilhos sem mudança; nenhum alerta enviado.
+[AGENDADOR] Macaé: gatilhos sem mudança; nenhum alerta enviado.
+[CERTIFICADOS] CAs do Windows: 47 aceitas de 75 (28 descartadas por assinatura fraca, 0 vencidas).
+[AGENDADOR] Macaé: linha de base registrada; nenhum alerta retroativo enviado.
+[AGENDADOR] Macaé: gatilhos sem mudança; nenhum alerta enviado.
+[AGENDADOR] Macaé: gatilhos sem mudança; nenhum alerta enviado.
+[AGENDADOR] Macaé: gatilhos sem mudança; nenhum alerta enviado.
+✔ rajada: fronteiras exatas do protocolo (30, 40, 60 e 60,1 km/h) (5.1804ms)
+✔ chuva horária: 20, 30, 60 e acima de 60 mm/h (1.4206ms)
+✔ chuva diária: 50, 100 e acima de 100 mm; mínimo de ATENÇÃO preservado e sinalizado como pendência (1.0966ms)
+✔ chuva: severidade final é o MAIOR nível, nunca a média (2.4672ms)
+✔ calor: P1/P2/P3 da fonte viram ATENÇÃO/ALERTA/EMERGÊNCIA; sem excesso é NORMAL (1.4142ms)
+✔ herança: cada nível soma os anteriores, na ordem operacional (2.1694ms)
+✔ herança: rajada de 45 km/h = Atenção + Alerta; 65 km/h = os três níveis (1.2236ms)
+✔ textos operacionais da chuva incluem os itens exigidos em cada nível (1.2002ms)
+✔ acúmulo remove duplicidades (acentos/caixa/espaços) preservando a ordem (0.9496ms)
+✔ indicador inválido nunca vira zero nem NORMAL (0.7498ms)
+✔ chuva: um indicador crítico basta, mas NORMAL exige os dois critérios (0.7674ms)
+✔ calor: cache, falha ou nível desconhecido ficam indisponíveis (não NORMAL) (0.7031ms)
+✔ vento: observada e prevista permanecem separadas; previsão gera alerta preventivo (0.9806ms)
+✔ vento: ausência de rajada observada não zera nem inventa valor (1.357ms)
+✔ localidade: severidade geral = maior; recomendações continuam por fenômeno (1.4532ms)
+✔ localidade: fenômeno sem dado não rebaixa os demais nem vira NORMAL (0.7115ms)
+✔ tipos de transição cobrem todas as combinações de nível (0.2767ms)
+✔ histerese: redução exige N leituras válidas e tempo mínimo; elevação é imediata (3.8513ms)
+✔ histerese: destino é o maior nível visto na janela; leitura inválida não conta nem zera (0.4755ms)
+✔ ciclo completo do vento por localidade: elevações imediatas, reduções confirmadas, sem duplicidade (119.5262ms)
+✔ NORMAL -> EMERGÊNCIA dispara notificação crítica imediata com recomendações cumulativas (6.9034ms)
+✔ falha de API não normaliza, não conta leitura e preserva a estabilização (7.886ms)
+✔ persistência: a janela de estabilização sobrevive ao reinício do servidor (20.8064ms)
+✔ localidades e fenômenos têm estado independente (chuva em Macaé não altera vento no Rio) (0.9215ms)
+✔ normalização de chuva só ocorre com os dois critérios disponíveis (6.5067ms)
+✔ detecção: rajada observada gera alerta; previsão gera alerta preventivo identificado (2.1584ms)
+✔ e-mail do alerta mostra recomendações agrupadas por nível e não antecipa o nível seguinte (46.341ms)
+✔ emergência de vento no e-mail traz os três níveis de recomendações (10.8818ms)
+✔ normalização no e-mail não mantém recomendações emergenciais (0.9881ms)
+✔ alerta de calor usa P1/P2/P3 da fonte e herança de P1 em P2 (0.8665ms)
+✔ calor com fonte não operacional não gera alerta nem normaliza (0.4005ms)
+✔ regressão: ASSINATURA_MONITOR e limites oficiais permanecem inalterados (0.2225ms)
+✔ disparo efetivo: monitor -> fila -> envio -> estado; mesmo nível não reenvia e reinício não duplica (710.9564ms)
+[CERTIFICADOS] CAs do Windows: 47 aceitas de 75 (28 descartadas por assinatura fraca, 0 vencidas).
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização recusada
+✔ senha inválida retorna 401 e não executa o pipeline (1790.0673ms)
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização validada
+[RELATORIO] Fluxo concluído com sucesso
+✔ sucesso retorna HTTP 200 e mensagem segura (44.7424ms)
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização validada
+[RELATORIO] Fluxo concluído com sucesso
+✔ envio manual permite selecionar exclusivamente o aviso COR-RIO (46.0889ms)
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização validada
+[RELATORIO][ERRO][ROTA] {
+  mensagem: 'detalhe técnico restrito ao servidor',
+  stack: 'Error: detalhe técnico restrito ao servidor\n' +
+    '    at TestContext.<anonymous> (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\gerarRelatorioApi.test.js:76:18)\n' +
+    '    at Test.runInAsyncScope (node:async_hooks:227:14)\n' +
+    '    at Test.run (node:internal/test_runner/test:1402:25)\n' +
+    '    at Test.processPendingSubtests (node:internal/test_runner/test:974:18)\n' +
+    '    at Test.postRun (node:internal/test_runner/test:1542:19)\n' +
+    '    at Test.run (node:internal/test_runner/test:1467:12)\n' +
+    '    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n' +
+    '    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)',
+  funcao: 'POST /api/gerar-relatorio',
+  etapa: 'pdf',
+  erroOriginal: Error: detalhe técnico restrito ao servidor
+      at TestContext.<anonymous> (C:\Users\PROJ 758\Documents\Protocolo-Meteorologico-CIM-2026-11-11\tests\gerarRelatorioApi.test.js:76:18)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    etapa: 'pdf',
+    mensagemPublica: 'Não foi possível gerar o PDF.'
+  }
+}
+✔ falha na etapa pdf retorna resposta específica sem stack (32.6476ms)
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização validada
+[RELATORIO][ERRO][ROTA] {
+  mensagem: 'detalhe técnico restrito ao servidor',
+  stack: 'Error: detalhe técnico restrito ao servidor\n' +
+    '    at TestContext.<anonymous> (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\gerarRelatorioApi.test.js:76:18)\n' +
+    '    at Test.runInAsyncScope (node:async_hooks:227:14)\n' +
+    '    at Test.run (node:internal/test_runner/test:1402:25)\n' +
+    '    at Test.processPendingSubtests (node:internal/test_runner/test:974:18)\n' +
+    '    at Test.postRun (node:internal/test_runner/test:1542:19)\n' +
+    '    at Test.run (node:internal/test_runner/test:1467:12)\n' +
+    '    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n' +
+    '    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)',
+  funcao: 'POST /api/gerar-relatorio',
+  etapa: 'email',
+  erroOriginal: Error: detalhe técnico restrito ao servidor
+      at TestContext.<anonymous> (C:\Users\PROJ 758\Documents\Protocolo-Meteorologico-CIM-2026-11-11\tests\gerarRelatorioApi.test.js:76:18)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    etapa: 'email',
+    mensagemPublica: 'O PDF foi gerado, mas o envio do e-mail falhou.'
+  }
+}
+✔ falha na etapa email retorna resposta específica sem stack (23.7255ms)
+[CERTIFICADOS] CAs do Windows: 47 aceitas de 75 (28 descartadas por assinatura fraca, 0 vencidas).
+✔ APIs aceitam handshake corporativo superior ao limite padrão de 10 segundos (1.6087ms)
+✔ cliente comum usa a política padrão e se recupera de rede e timeout (5.3561ms)
+✔ cliente comum repete limites, erros do servidor e JSON interrompido (3.685ms)
+✔ cliente comum respeita Retry-After de resposta transitória (66.9829ms)
+✔ cliente comum não repete erro HTTP permanente (1.5487ms)
+✔ cliente comum encerra timeout com mensagem padronizada (1.4853ms)
+✔ diagnóstico preserva DNS, conexão recusada, reset e TLS (0.9771ms)
+✔ HTTP 401, 403 e 404 falham na primeira tentativa (1.321ms)
+✔ resposta vazia recebe código próprio (1.605ms)
+✔ sem variáveis: HTTP em todas as interfaces (padrão atual) (3.3367ms)
+✔ HTTPS só com HTTPS_PFX_PATH e HTTPS_PFX_SENHA juntas (0.4136ms)
+✔ erro ao ler o .pfx não expõe a senha (0.8023ms)
+✔ HTTP responde 308 para a mesma URL em HTTPS e valida o Host (134.9099ms)
+✔ classificação NORMAL não sobrevive sem valor US AQI (37.6304ms)
+✔ snapshot converte EHF da data nos níveis do protocolo (5.4398ms)
+✔ classificador numérico isolado mantém suas fronteiras legadas (5.6442ms)
+✔ fronteiras de chuva e vento seguem exatamente as faixas operacionais do CIM (1.5338ms)
+✔ motor cria classificações internas de chuva e vento com observações oficiais do INMET (2.8633ms)
+✔ rajada complementar permanece identificada como previsão e não como medição INMET (0.8925ms)
+✔ temperatura alta sem excesso de EHF não vira alerta de calor (0.4637ms)
+✔ aviso oficial de calor permanece separado do EHF e conserva a severidade INMET (3.1681ms)
+✔ aviso oficial INMET determina chuva e vento com a severidade oficial (2.0249ms)
+✔ recomendações de chuva e vento continuam acumulativas (1.2128ms)
+✔ UV usa recomendações solares próprias sem alterar seus limites técnicos (2.2795ms)
+✔ mapeamento operacional de UV é parametrizável (2.0002ms)
+✔ qualidade do ar usa as faixas internas US AQI e não trata IQAr/EU como equivalentes (5.1328ms)
+✔ informativo das 08h permanece válido até a edição das 15h em São Paulo (40.2362ms)
+✔ informativo das 15h é atualização e vale até a próxima edição das 08h (1.5998ms)
+✔ edição das 08h prevê até 15h e sua validade documental termina às 15h (2.894ms)
+✔ histórico identifica separadamente a edição inicial e a atualização (4.9818ms)
+✔ somente 08h e 15h compõem o agendamento automático regular (650.1827ms)
+✔ edição das 08h é a edição inicial regular (1.771ms)
+✔ aplica avisos por geocódigo municipal sem ampliar para todo o estado (6.6449ms)
+✔ aplica polígono CAP oficial ao ponto da instalação e respeita buracos (1.6096ms)
+✔ sucesso vazio difere de falha HTTP, DNS e JSON malformado (6.4065ms)
+✔ monitor detecta instalações novas em ciclos posteriores e acompanha mudanças de severidade (9.5142ms)
+✔ resultado vazio é sucesso; falha retém cache com idade e recuperação o substitui (2.8784ms)
+✔ timeout libera ciclos futuros e execução concorrente não duplica a coleta (22.6987ms)
+✔ site usa previsão INMET e mantém o mesmo rótulo do e-mail (165.0047ms)
+[CERTIFICADOS] CAs do Windows: 47 aceitas de 75 (28 descartadas por assinatura fraca, 0 vencidas).
+✔ endpoint de saúde expõe somente contagens e estado sanitizado do monitor (1746.043ms)
+✔ normaliza a observação oficial, preserva UTC e converte vento de m/s para km/h (6.7744ms)
+✔ rejeita estação distante e identifica a estação e a distância no motivo (1.2531ms)
+✔ cache INMET recente exige temperatura, umidade e estação dentro de 75 km (0.6623ms)
+✔ histórico agrupa somente o dia local e identifica cobertura parcial (42.5667ms)
+✔ chuva observada de 00h pertence ao dia anterior (6.0333ms)
+✔ serviço usa endpoints oficiais, persiste histórico e não chama provedor alternativo (5.7776ms)
+✔ falha atual usa somente a última observação INMET armazenada e a marca desatualizada (6.9795ms)
+✔ estação distante armazenada não fornece leitura nem agregados observados (13.1102ms)
+✔ aviso INMET em formato CAP preserva os campos oficiais sem reescrever (4.0947ms)
+✔ aviso INMET legado continua aceito e ausências não viram texto inventado (0.6931ms)
+✔ geocode municipal é recuperado do campo municípios quando a lista dedicada não vem (0.7562ms)
+✔ resposta nova organizada por dia é achatada sem usar metadados (0.4191ms)
+✔ avisos equivalentes são consolidados e preservam o mais grave (1.8894ms)
+✔ superfície operacional mantém somente o aviso mais grave sem misturar textos (1.2326ms)
+✔ avisos do mesmo fenômeno em horários separados continuam distintos (0.5253ms)
+✔ empate de severidade prioriza vigência, início recente e término distante (1.3129ms)
+✔ previsão INMET usa 15 segundos e recupera após falhas transitórias (39.0397ms)
+✔ previsão INMET consolida condições por período em uma descrição diária representativa (1.8478ms)
+✔ previsão INMET não usa outro dia quando a data solicitada está ausente (2.0517ms)
+✔ previsão INMET rejeita resposta HTTP 200 com períodos vazios (1.1762ms)
+✔ avisos INMET repetem falha temporária e filtram o município (2.5721ms)
+✔ avisos são isolados por base e precisam intersectar a janela da edição (2.5512ms)
+✔ INMET não repete erro HTTP permanente (1.1022ms)
+✔ zero observado é distinto de falha e previsão (4.1157ms)
+✔ bloqueia medição antiga e valor sem fonte antes da geração (1.5282ms)
+✔ observação INMET recente armazenada pode ser distribuída como dado degradado (0.7777ms)
+✔ observação INMET antiga não invalida a previsão diária (0.9944ms)
+✔ competência: AAAA-MM validado; sem configuração o modo é automático (3.7597ms)
+✔ as bases ativas estão associadas à UF correta e cada UF tem mapa estadual no portal (0.8639ms)
+✔ interpretarApi: só o mês pedido e final; texto e áreas apenas da UF (tipo_area 1) (2.8055ms)
+✔ listagem do bucket: prefixos de mês e arquivos com tamanho e ETag (1.9827ms)
+✔ PNG: aceita imagem íntegra e rejeita truncada ou corrompida (23.6375ms)
+✔ descoberta: mês mais novo com API final E mapas estaduais; mapa e texto do mesmo mês (65.916ms)
+✔ coleta só a UF pedida, reutiliza entre bases da mesma UF e respeita o intervalo de verificação (81.6983ms)
+✔ nova publicação é adotada após o intervalo; a anterior fica guardada (123.5379ms)
+✔ download que não confere com a listagem não substitui nada e usa a última cópia válida (106.9746ms)
+✔ fonte fora do ar: cópia válida com aviso; sem cópia, indisponível — sem lançar (4594.3267ms)
+✔ UF sem mapa estadual publicado no mês não recebe mapa de outra UF nem o nacional (8.0198ms)
+✔ PDF: cada base mostra só o mapa e a situação da sua UF, uma única vez e no lugar da seção (98.4186ms)
+✔ PDF: áreas oficiais, movimentos, regiões e impactos só do que a fonte publica (57.7393ms)
+✔ PDF: regiões citadas não confundem nomes de UF com direções (21.9018ms)
+✔ PDF: atualização não confirmada mostra o aviso e preserva a referência (1534.1144ms)
+✔ PDF: indisponível ou de outra UF não mostra mapa e não quebra o relatório (19.3889ms)
+✔ PDF lista os sites oficiais de consulta da ANA, Clima Saúde, INMET e COR (1.1403ms)
+✔ Natal e Oiapoque usam cadastro operacional exato (3.1642ms)
+✔ As novas instalações ficam cadastradas e a UTG-C permanece em validação geográfica (2.0907ms)
+✔ códigos IBGE corrigidos correspondem às localidades da API do INMET (0.4557ms)
+✔ POST por coordenadas segue o contrato e aceita Local diferente do ID (PointID confere) (43.2081ms)
+✔ descarta resposta de outro ponto e resposta fora do contrato (4.1883ms)
+✔ rajada em m/s é convertida para km/h e a maior da janela vira o pico (10.4424ms)
+✔ sem unidade válida o ponto é recusado e nada é inventado (3.1609ms)
+✔ OCEANOP usa somente os próprios dados quando a consulta da base tem sucesso (8.9235ms)
+✔ próximos dias recebem a máxima diária OCEANOP e mantêm os demais dias (8.5936ms)
+✔ todas as bases do projeto têm acesso OCEANOP padronizado (1.4381ms)
+✔ OCEANOP consulta Barra dos Coqueiros nas coordenadas fornecidas (2.5323ms)
+✔ OCEANOP consulta o ponto cadastrado Maricá (SMDC) nas coordenadas fornecidas (2.565ms)
+✔ 20,42 nós = 37,8 km/h na base de Santos (4.8661ms)
+✔ datas do OCEANOP são lidas em UTC e a janela usa o fuso local da base (5.1391ms)
+✔ resposta vazia vira 'sem cobertura', não 'ponto errado' (0.9785ms)
+✔ modo área: GET por nome, filtra apenas os locais aceitos (6.6267ms)
+✔ base sem ponto cadastrado não consulta a API (0.6767ms)
+✔ usuário e senha viram HTTP Basic só quando não há chave nem token (0.3988ms)
+✔ Open-Meteo bloqueia consulta sem licença comercial também fora de produção (2.4186ms)
+✔ Open-Meteo bloqueia chamada sem chave comercial (0.4654ms)
+✔ Open-Meteo usa endpoint customer-* e chave comercial (0.5776ms)
+✔ Open-Meteo não devolve a chave comercial em objetos e caches (0.7647ms)
+✔ OPEN_METEO_USAR_API_PUBLICA libera o endpoint público só quando explícito e sem chave (2.1473ms)
+[OPEN-METEO-MARINE][ERRO] {
+  type: 'unknown',
+  code: null,
+  httpStatus: null,
+  message: 'sem resposta',
+  cause: null,
+  stack: 'Error: sem resposta\n' +
+    '    at consultar (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\openMeteoIntegration.test.js:262:56)\n' +
+    '    at buscarMarComFallback (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\marine.js:238:29)\n' +
+    '    at TestContext.<anonymous> (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\openMeteoIntegration.test.js:272:25)\n' +
+    '    at async Test.run (node:internal/test_runner/test:1409:7)\n' +
+    '    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)'
+}
+[OPEN-METEO-MARINE][ERRO] {
+  type: 'unknown',
+  code: null,
+  httpStatus: null,
+  message: 'sem resposta',
+  cause: null,
+  stack: 'Error: sem resposta\n' +
+    '    at consultar (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\openMeteoIntegration.test.js:262:56)\n' +
+    '    at buscarMarComFallback (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\marine.js:238:29)\n' +
+    '    at TestContext.<anonymous> (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\openMeteoIntegration.test.js:274:24)\n' +
+    '    at async Test.run (node:internal/test_runner/test:1409:7)\n' +
+    '    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)'
+}
+[OPEN-METEO-MARINE][ERRO] {
+  type: 'unknown',
+  code: null,
+  httpStatus: null,
+  message: 'sem resposta',
+  cause: null,
+  stack: 'Error: sem resposta\n' +
+    '    at consultar (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\openMeteoIntegration.test.js:262:56)\n' +
+    '    at buscarMarComFallback (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\marine.js:238:29)\n' +
+    '    at TestContext.<anonymous> (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\openMeteoIntegration.test.js:278:25)\n' +
+    '    at async Test.run (node:internal/test_runner/test:1409:7)\n' +
+    '    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)'
+}
+✔ Open-Meteo entrega UV, chuva, vento médio e série de rajada separada (111.3799ms)
+✔ Open-Meteo busca no GFS uma série diária ausente e preserva o dado preenchido (6.0417ms)
+✔ Open-Meteo rejeita grade meteorológica de outra localidade (1.3431ms)
+✔ Open-Meteo preserva zero quando todas as séries solicitadas estão alinhadas (3.3958ms)
+✔ Open-Meteo reutiliza somente cache recente após falha dos modelos (13.361ms)
+✔ rajada modelada usa pico nas janelas locais e a hora final do dia seguinte (9.1683ms)
+✔ chuva acumulada estimada soma apenas intervalos completos do dia local e preserva zero (0.4784ms)
+✔ chuva acumulada estimada fica indisponível com lacunas e não transforma ausência em zero (0.3627ms)
+✔ Marine usa ondas, onda de vento e swell sem conversão de velocidade (3.2548ms)
+✔ Marine não publica cache público ou antigo quando a consulta comercial falha (6.1034ms)
+✔ estimativas respeitam dia local, última hora e 24 horas sem somar componentes (37.1265ms)
+✔ zero válido permanece zero; lacuna e valor implausível não viram zero (2.7194ms)
+✔ à meia-noite não atribui chuva de 23h–00h ao dia novo (1.5199ms)
+✔ série histórica antiga é indisponível com motivo (1.4682ms)
+✔ rejeita timestamps duplicados antes do cálculo (1.783ms)
+✔ offset divergente do fuso não gera estimativa (2.9426ms)
+✔ conteúdo do painel usa exatamente os valores e cards do e-mail (49.9359ms)
+✔ site mostra no card da ocorrência todas as linhas e recomendações do card do e-mail (18.3609ms)
+✔ indicadores do site incluem os valores principais sem textos auxiliares (10.1229ms)
+✔ card do e-mail sem ocorrência correspondente vira card próprio; mudanças do dia aparecem (6.37ms)
+✔ textos da fonte são escapados nos cards do site (8.9682ms)
+✔ relatório sem conteudoEmail (versão antiga) continua renderizando (10.742ms)
+✔ aviso INMET mostra o conteúdo oficial no card e completo em Ver detalhes (86.8626ms)
+✔ aviso sem riscos nem orientações informa a indisponibilidade, sem inventar (9.521ms)
+✔ mesmo aviso repetido vira um só; cópia sem identificador é comparada por conteúdo (2.8657ms)
+✔ avisos sobrepostos do mesmo fenômeno deixam somente o oficial mais grave (8.4891ms)
+✔ chuva e vento derivados do mesmo aviso viram somente o card do fenômeno oficial (12.6487ms)
+✔ aviso INMET que repete evento de outra fonte vira um card com as duas fontes e a diferença explícita (8.1153ms)
+✔ evento criado só pelo texto do aviso não gera card repetido (8.1987ms)
+✔ cards ordenados por gravidade; sem cards vazios; mensagem discreta quando não há eventos (13.1988ms)
+✔ falha na coleta de avisos INMET é informada, não tratada como ausência (10.8048ms)
+✔ Calor e Saúde normal: card neutro com selo Normal, sem destaque e sem lista de dias (7.9399ms)
+✔ Calor e Saúde em ATENÇÃO entra na área de destaque (10.7281ms)
+✔ Calor e Saúde ausente ou desatualizado nunca aparece como Normal (21.1591ms)
+✔ validade: horário sem fuso do INMET é Brasília; avisos expirados ou encerrados saem (0.5437ms)
+✔ coleta filtra por área e validade e remove repetições do mesmo aviso (3.7844ms)
+✔ PDF remove todos os cards e recomendações operacionais (90.6363ms)
+✔ PDF preserva avisos oficiais em tabela técnica, sem card (4.0646ms)
+✔ PDF sem aviso explicita estado da consulta (2.9769ms)
+✔ mapa de cores compartilhado: mesmos HEX do site e texto escuro com contraste ≥ 4,5:1 (3.915ms)
+✔ cada estágio colore faixa, borda e selo; fundo é um tom claro da mesma cor (372.0761ms)
+✔ conteúdo: título, conteúdo/orientações, abrangência, publicação, fonte, consulta e link oficial (33.4068ms)
+✔ card vem depois da tabela técnica de avisos INMET (61.1358ms)
+✔ comunicado anterior ao início do estágio é sinalizado; estágio não é atribuído a ele (62.7344ms)
+✔ sem comunicado vigente, desatualizado e indisponível são estados distintos (107.2911ms)
+✔ comunicado longo: partes de continuação identificadas, sem omitir texto; curto fica num card só (111.1307ms)
+✔ fontes: coleta automática só quando a consulta funcionou; falha vai para verificação manual (82.9566ms)
+✔ outras cidades: sem consulta, sem card e fontes intactas (4.1916ms)
+✔ anexo do informativo geral omite o aviso de distribuição exclusiva COR-RIO (26.2512ms)
+✔ extraordinário omite estágios 1 do COR-Rio, mas o programado os preserva (26.3161ms)
+✔ falha inesperada do serviço não impede o PDF: card indisponível (3.6279ms)
+[CIM] Chromium não iniciou; tentando novamente: Protocol error (Target.setAutoAttach): Target closed
+✔ PDF estático aguarda o carregamento sem depender de networkidle (6.3525ms)
+✔ repete a inicialização do Chromium uma vez após Target closed (3.4701ms)
+✔ PDF e e-mail preservam o identificador do mesmo snapshot sem alterar o layout (136.3814ms)
+✔ faixa do PDF e do e-mail usa a edição agendada, alinha os textos e antecede a previsão (71.897ms)
+✔ PDF exibe rajada Open-Meteo sem coluna de referência por período (33.1093ms)
+✔ PDF exibe o pico diário Open-Meteo sem atribuí-lo a um período (28.2704ms)
+✔ condições de mar aparecem imediatamente após qualidade do ar e índice UV (35.2781ms)
+✔ condições de mar distinguem altura, máxima, período e pico sem alterar a tabela (25.0135ms)
+✔ qualidade do ar mostra número, faixa interna US AQI, fonte e referência temporal (19.8525ms)
+✔ qualidade do ar sem US AQI válido permanece indisponível (31.5334ms)
+✔ temperatura e umidade usam quatro colunas previstas e deixam a fonte na nota (65.0661ms)
+✔ PDFs de 05h e 15h preservam três tabelas sem colunas de referência (63.5866ms)
+✔ previsão usa exatamente a condição geral consolidada (14.2383ms)
+✔ previsão diária mostra probabilidade de chuva abaixo do acumulado sem alterar D+3 (34.6114ms)
+✔ vento e chuva por período exibem valores sem referências em coluna (15.9853ms)
+✔ PDF omite a tabela de chuva estimada até a consulta (4.1831ms)
+✔ tabela de excesso de calor exibe apenas indicadores do Clima e Saúde (17.5258ms)
+✔ chuva observada é removida somente da apresentação do PDF (4.2244ms)
+✔ INMET interpreta velocidade com unidade, converte m/s e preserva zero de chuva (49.5192ms)
+✔ política usa Open-Meteo exclusivamente para rajada e chuva prevista por período (2.6827ms)
+✔ série horária incompleta mantém chuva e vento do período indisponíveis (5.4854ms)
+✔ chuva 05h–12h soma intervalos terminados de 06h a 12h (0.964ms)
+✔ janela modelada restante exclui chuva e vento de horas já decorridas (0.7532ms)
+✔ tabela mantém os três períodos mesmo quando o modelo não cobre um deles (0.6759ms)
+✔ resumo de chuva diária usa o agregado Open-Meteo separado da janela horária (0.5896ms)
+✔ D+1 a D+3 usa os agregados diários Open-Meteo alinhados por data (40.7407ms)
+✔ D+3 usa campos modelados quando o INMET não publica a data (3.1151ms)
+✔ D+3 usa INMET para temperatura, umidade e condição e Open-Meteo só para chuva e UV (2.9374ms)
+✔ D+1 a D+3 preserva faixas e condição oficiais quando a fonte comercial falta (1.1606ms)
+✔ painel e PDF preservam estimativas; e-mail mostra apenas chuva prevista (83.9786ms)
+✔ nome: aceita nomes comuns e normaliza espaços (3.4554ms)
+✔ nome: rejeita vazio, tipo errado, > 100 caracteres e < > " ' (2.0155ms)
+✔ e-mail: aceita endereços válidos e normaliza caixa (0.8489ms)
+✔ e-mail: rejeita < > " ' , espaços, formato inválido e > 254 caracteres (0.7903ms)
+✔ integrações desativadas não permanecem em código ou configuração operacional (155.2923ms)
+✔ Open-Meteo usa endpoint público e pede indicadores de previsão (1.7872ms)
+[OCEANOP][ERRO] {
+  type: 'network',
+  code: 'TEST_SOURCE_UNAVAILABLE',
+  httpStatus: null,
+  message: 'OCEANOP indisponível',
+  cause: null,
+  stack: 'Error: OCEANOP indisponível\n' +
+    '    at falha (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:11:39)\n' +
+    '    at buscarOceanopPorCoordenadas (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:29:54)\n' +
+    '    at montarRelatorio (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\reportBuilder.js:260:38)\n' +
+    '    at async TestContext.<anonymous> (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:19:21)\n' +
+    '    at async Test.run (node:internal/test_runner/test:1409:7)\n' +
+    '    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)'
+}
+[INFORMAÇÃO INDISPONÍVEL] precipitacaoHorariaMaxMm: A Open-Meteo não publicou valor numérico válido para este indicador.
+[INMET-PREVISAO][ERRO] {
+  type: 'network',
+  code: 'TEST_SOURCE_UNAVAILABLE',
+  httpStatus: null,
+  message: 'Fonte indisponível',
+  cause: null,
+  stack: 'Error: Fonte indisponível\n' +
+    '    at falha (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:11:39)\n' +
+    '    at indisponivel (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:49:44)\n' +
+    '    at montarRelatorio (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\reportBuilder.js:176:27)\n' +
+    '    at TestContext.<anonymous> (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:50:27)\n' +
+    '    at Test.runInAsyncScope (node:async_hooks:227:14)\n' +
+    '    at Test.run (node:internal/test_runner/test:1402:25)\n' +
+    '    at Test.processPendingSubtests (node:internal/test_runner/test:974:18)\n' +
+    '    at Test.postRun (node:internal/test_runner/test:1542:19)\n' +
+    '    at Test.run (node:internal/test_runner/test:1467:12)\n' +
+    '    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)'
+}
+[OPEN-METEO-AIR-QUALITY][ERRO] {
+  type: 'network',
+  code: 'TEST_SOURCE_UNAVAILABLE',
+  httpStatus: null,
+  message: 'Open-Meteo Air Quality indisponível',
+  cause: null,
+  stack: 'Error: Open-Meteo Air Quality indisponível\n' +
+    '    at falha (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:11:39)\n' +
+    '    at buscarQualidadeAr (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:55:46)\n' +
+    '    at montarRelatorio (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\reportBuilder.js:187:29)\n' +
+    '    at async TestContext.<anonymous> (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:50:21)\n' +
+    '    at async Test.run (node:internal/test_runner/test:1409:7)\n' +
+    '    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)'
+}
+[OPEN-METEO][ERRO] {
+  type: 'network',
+  code: 'TEST_SOURCE_UNAVAILABLE',
+  httpStatus: null,
+  message: 'Open-Meteo indisponível',
+  cause: null,
+  stack: 'Error: Open-Meteo indisponível\n' +
+    '    at falha (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:11:39)\n' +
+    '    at buscarOpenMeteo (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:54:44)\n' +
+    '    at montarRelatorio (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\reportBuilder.js:206:23)\n' +
+    '    at async TestContext.<anonymous> (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:50:21)\n' +
+    '    at async Test.run (node:internal/test_runner/test:1409:7)\n' +
+    '    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)'
+}
+[INMET-AVISOS][ERRO] {
+  type: 'network',
+  code: 'TEST_SOURCE_UNAVAILABLE',
+  httpStatus: null,
+  message: 'Fonte indisponível',
+  cause: null,
+  stack: 'Error: Fonte indisponível\n' +
+    '    at falha (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:11:39)\n' +
+    '    at indisponivel (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:49:44)\n' +
+    '    at montarRelatorio (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\reportBuilder.js:238:25)\n' +
+    '    at async TestContext.<anonymous> (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:50:21)\n' +
+    '    at async Test.run (node:internal/test_runner/test:1409:7)\n' +
+    '    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)'
+}
+[OCEANOP][ERRO] {
+  type: 'network',
+  code: 'TEST_SOURCE_UNAVAILABLE',
+  httpStatus: null,
+  message: 'OCEANOP indisponível',
+  cause: null,
+  stack: 'Error: OCEANOP indisponível\n' +
+    '    at falha (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:11:39)\n' +
+    '    at buscarOceanopPorCoordenadas (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:56:56)\n' +
+    '    at montarRelatorio (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\reportBuilder.js:260:38)\n' +
+    '    at async TestContext.<anonymous> (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:50:21)\n' +
+    '    at async Test.run (node:internal/test_runner/test:1409:7)\n' +
+    '    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)'
+}
+[INFORMAÇÃO INDISPONÍVEL] precipitacaoHorariaMaxMm: A Open-Meteo não publicou valor numérico válido para este indicador.
+[INMET-PREVISAO][ERRO] {
+  type: 'network',
+  code: 'TEST_SOURCE_UNAVAILABLE',
+  httpStatus: null,
+  message: 'Fonte indisponível',
+  cause: null,
+  stack: 'Error: Fonte indisponível\n' +
+    '    at falha (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:11:39)\n' +
+    '    at indisponivel (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:91:44)\n' +
+    '    at montarRelatorio (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\reportBuilder.js:176:27)\n' +
+    '    at TestContext.<anonymous> (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:92:27)\n' +
+    '    at Test.runInAsyncScope (node:async_hooks:227:14)\n' +
+    '    at Test.run (node:internal/test_runner/test:1402:25)\n' +
+    '    at Test.processPendingSubtests (node:internal/test_runner/test:974:18)\n' +
+    '    at Test.postRun (node:internal/test_runner/test:1542:19)\n' +
+    '    at Test.run (node:internal/test_runner/test:1467:12)\n' +
+    '    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)'
+}
+[OPEN-METEO-AIR-QUALITY][ERRO] {
+  type: 'network',
+  code: 'TEST_SOURCE_UNAVAILABLE',
+  httpStatus: null,
+  message: 'Fonte indisponível',
+  cause: null,
+  stack: 'Error: Fonte indisponível\n' +
+    '    at falha (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:11:39)\n' +
+    '    at indisponivel (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:91:44)\n' +
+    '    at montarRelatorio (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\reportBuilder.js:187:29)\n' +
+    '    at async TestContext.<anonymous> (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:92:21)\n' +
+    '    at async Test.run (node:internal/test_runner/test:1409:7)\n' +
+    '    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)'
+}
+[OCEANOP][ERRO] {
+  type: 'network',
+  code: 'TEST_SOURCE_UNAVAILABLE',
+  httpStatus: null,
+  message: 'Fonte indisponível',
+  cause: null,
+  stack: 'Error: Fonte indisponível\n' +
+    '    at falha (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:11:39)\n' +
+    '    at indisponivel (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:91:44)\n' +
+    '    at montarRelatorio (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\reportBuilder.js:260:38)\n' +
+    '    at async TestContext.<anonymous> (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:92:21)\n' +
+    '    at async Test.run (node:internal/test_runner/test:1409:7)\n' +
+    '    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)'
+}
+[INFORMAÇÃO INDISPONÍVEL] precipitacaoHorariaMaxMm: A Open-Meteo não publicou valor numérico válido para este indicador.
+[INMET-PREVISAO][ERRO] {
+  type: 'network',
+  code: 'TEST_SOURCE_UNAVAILABLE',
+  httpStatus: null,
+  message: 'Fonte indisponível',
+  cause: null,
+  stack: 'Error: Fonte indisponível\n' +
+    '    at falha (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:11:39)\n' +
+    '    at indisponivel (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:128:44)\n' +
+    '    at montarRelatorio (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\reportBuilder.js:176:27)\n' +
+    '    at TestContext.<anonymous> (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:129:27)\n' +
+    '    at Test.runInAsyncScope (node:async_hooks:227:14)\n' +
+    '    at Test.run (node:internal/test_runner/test:1402:25)\n' +
+    '    at Test.processPendingSubtests (node:internal/test_runner/test:974:18)\n' +
+    '    at Test.postRun (node:internal/test_runner/test:1542:19)\n' +
+    '    at Test.run (node:internal/test_runner/test:1467:12)\n' +
+    '    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)'
+}
+[OPEN-METEO-AIR-QUALITY][ERRO] {
+  type: 'network',
+  code: 'TEST_SOURCE_UNAVAILABLE',
+  httpStatus: null,
+  message: 'Fonte indisponível',
+  cause: null,
+  stack: 'Error: Fonte indisponível\n' +
+    '    at falha (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:11:39)\n' +
+    '    at indisponivel (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:128:44)\n' +
+    '    at montarRelatorio (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\reportBuilder.js:187:29)\n' +
+    '    at async TestContext.<anonymous> (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:129:21)\n' +
+    '    at async Test.run (node:internal/test_runner/test:1409:7)\n' +
+    '    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)'
+}
+[OPEN-METEO][ERRO] {
+  type: 'network',
+  code: 'TEST_SOURCE_UNAVAILABLE',
+  httpStatus: null,
+  message: 'Fonte indisponível',
+  cause: null,
+  stack: 'Error: Fonte indisponível\n' +
+    '    at falha (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:11:39)\n' +
+    '    at indisponivel (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:128:44)\n' +
+    '    at montarRelatorio (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\reportBuilder.js:206:23)\n' +
+    '    at async TestContext.<anonymous> (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:129:21)\n' +
+    '    at async Test.run (node:internal/test_runner/test:1409:7)\n' +
+    '    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)'
+}
+[INMET-AVISOS][ERRO] {
+  type: 'network',
+  code: 'TEST_SOURCE_UNAVAILABLE',
+  httpStatus: null,
+  message: 'Fonte indisponível',
+  cause: null,
+  stack: 'Error: Fonte indisponível\n' +
+    '    at falha (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:11:39)\n' +
+    '    at indisponivel (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:128:44)\n' +
+    '    at montarRelatorio (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\reportBuilder.js:238:25)\n' +
+    '    at async TestContext.<anonymous> (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:129:21)\n' +
+    '    at async Test.run (node:internal/test_runner/test:1409:7)\n' +
+    '    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)'
+}
+[OCEANOP][ERRO] {
+  type: 'network',
+  code: 'TEST_SOURCE_UNAVAILABLE',
+  httpStatus: null,
+  message: 'OCEANOP indisponível',
+  cause: null,
+  stack: 'Error: OCEANOP indisponível\n' +
+    '    at falha (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:11:39)\n' +
+    '    at buscarOceanopPorCoordenadas (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:137:68)\n' +
+    '    at montarRelatorio (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\reportBuilder.js:260:38)\n' +
+    '    at async TestContext.<anonymous> (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:129:21)\n' +
+    '    at async Test.run (node:internal/test_runner/test:1409:7)\n' +
+    '    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)'
+}
+[INFORMAÇÃO INDISPONÍVEL] precipitacaoHorariaMaxMm: A Open-Meteo não publicou valor numérico válido para este indicador.
+[INMET-PREVISAO][ERRO] {
+  type: 'network',
+  code: 'TEST_SOURCE_UNAVAILABLE',
+  httpStatus: null,
+  message: 'Fonte indisponível',
+  cause: null,
+  stack: 'Error: Fonte indisponível\n' +
+    '    at falha (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:11:39)\n' +
+    '    at indisponivel (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:148:44)\n' +
+    '    at montarRelatorio (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\reportBuilder.js:176:27)\n' +
+    '    at TestContext.<anonymous> (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:153:27)\n' +
+    '    at Test.runInAsyncScope (node:async_hooks:227:14)\n' +
+    '    at Test.run (node:internal/test_runner/test:1402:25)\n' +
+    '    at Test.processPendingSubtests (node:internal/test_runner/test:974:18)\n' +
+    '    at Test.postRun (node:internal/test_runner/test:1542:19)\n' +
+    '    at Test.run (node:internal/test_runner/test:1467:12)\n' +
+    '    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)'
+}
+[OPEN-METEO-AIR-QUALITY][ERRO] {
+  type: 'network',
+  code: 'TEST_SOURCE_UNAVAILABLE',
+  httpStatus: null,
+  message: 'Fonte indisponível',
+  cause: null,
+  stack: 'Error: Fonte indisponível\n' +
+    '    at falha (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:11:39)\n' +
+    '    at indisponivel (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:148:44)\n' +
+    '    at montarRelatorio (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\reportBuilder.js:187:29)\n' +
+    '    at async TestContext.<anonymous> (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:153:21)\n' +
+    '    at async Test.run (node:internal/test_runner/test:1409:7)\n' +
+    '    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)'
+}
+[OPEN-METEO][ERRO] {
+  type: 'network',
+  code: 'TEST_SOURCE_UNAVAILABLE',
+  httpStatus: null,
+  message: 'Fonte indisponível',
+  cause: null,
+  stack: 'Error: Fonte indisponível\n' +
+    '    at falha (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:11:39)\n' +
+    '    at indisponivel (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:148:44)\n' +
+    '    at montarRelatorio (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\reportBuilder.js:206:23)\n' +
+    '    at async TestContext.<anonymous> (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:153:21)\n' +
+    '    at async Test.run (node:internal/test_runner/test:1409:7)\n' +
+    '    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)'
+}
+[INMET-AVISOS][ERRO] {
+  type: 'network',
+  code: 'TEST_SOURCE_UNAVAILABLE',
+  httpStatus: null,
+  message: 'Fonte indisponível',
+  cause: null,
+  stack: 'Error: Fonte indisponível\n' +
+    '    at falha (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:11:39)\n' +
+    '    at indisponivel (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:148:44)\n' +
+    '    at montarRelatorio (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\reportBuilder.js:238:25)\n' +
+    '    at async TestContext.<anonymous> (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:153:21)\n' +
+    '    at async Test.run (node:internal/test_runner/test:1409:7)\n' +
+    '    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)'
+}
+[INFORMAÇÃO INDISPONÍVEL] precipitacaoHorariaMaxMm: A Open-Meteo não publicou valor numérico válido para este indicador.
+[INMET-PREVISAO][ERRO] {
+  type: 'network',
+  code: 'TEST_SOURCE_UNAVAILABLE',
+  httpStatus: null,
+  message: 'Fonte indisponível',
+  cause: null,
+  stack: 'Error: Fonte indisponível\n' +
+    '    at falha (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:11:39)\n' +
+    '    at falhaFonte (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:175:42)\n' +
+    '    at montarRelatorio (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\reportBuilder.js:176:27)\n' +
+    '    at TestContext.<anonymous> (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:176:27)\n' +
+    '    at Test.runInAsyncScope (node:async_hooks:227:14)\n' +
+    '    at Test.run (node:internal/test_runner/test:1402:25)\n' +
+    '    at Test.processPendingSubtests (node:internal/test_runner/test:974:18)\n' +
+    '    at Test.postRun (node:internal/test_runner/test:1542:19)\n' +
+    '    at Test.run (node:internal/test_runner/test:1467:12)\n' +
+    '    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)'
+}
+[OPEN-METEO-AIR-QUALITY][ERRO] {
+  type: 'network',
+  code: 'TEST_SOURCE_UNAVAILABLE',
+  httpStatus: null,
+  message: 'Fonte indisponível',
+  cause: null,
+  stack: 'Error: Fonte indisponível\n' +
+    '    at falha (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:11:39)\n' +
+    '    at falhaFonte (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:175:42)\n' +
+    '    at montarRelatorio (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\reportBuilder.js:187:29)\n' +
+    '    at async TestContext.<anonymous> (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:176:21)\n' +
+    '    at async Test.run (node:internal/test_runner/test:1409:7)\n' +
+    '    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)'
+}
+[INMET-AVISOS][ERRO] {
+  type: 'network',
+  code: 'TEST_SOURCE_UNAVAILABLE',
+  httpStatus: null,
+  message: 'Fonte indisponível',
+  cause: null,
+  stack: 'Error: Fonte indisponível\n' +
+    '    at falha (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:11:39)\n' +
+    '    at falhaFonte (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:175:42)\n' +
+    '    at montarRelatorio (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\reportBuilder.js:238:25)\n' +
+    '    at async TestContext.<anonymous> (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:176:21)\n' +
+    '    at async Test.run (node:internal/test_runner/test:1409:7)\n' +
+    '    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)'
+}
+[OCEANOP][ERRO] {
+  type: 'network',
+  code: 'TEST_SOURCE_UNAVAILABLE',
+  httpStatus: null,
+  message: 'Fonte indisponível',
+  cause: null,
+  stack: 'Error: Fonte indisponível\n' +
+    '    at falha (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:11:39)\n' +
+    '    at falhaFonte (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:175:42)\n' +
+    '    at montarRelatorio (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\reportBuilder.js:260:38)\n' +
+    '    at async TestContext.<anonymous> (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:176:21)\n' +
+    '    at async Test.run (node:internal/test_runner/test:1409:7)\n' +
+    '    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)'
+}
+[INFORMAÇÃO INDISPONÍVEL] precipitacaoHorariaMaxMm: A Open-Meteo não publicou valor numérico válido para este indicador.
+[CLIMA-SAÚDE] Consultando Brasília/DF
+[INMET-PREVISAO][ERRO] {
+  type: 'network',
+  code: 'TEST_SOURCE_UNAVAILABLE',
+  httpStatus: null,
+  message: 'Fonte indisponível',
+  cause: null,
+  stack: 'Error: Fonte indisponível\n' +
+    '    at falha (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:11:39)\n' +
+    '    at indisponivel (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:193:44)\n' +
+    '    at montarRelatorio (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\reportBuilder.js:176:27)\n' +
+    '    at TestContext.<anonymous> (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:198:27)\n' +
+    '    at Test.runInAsyncScope (node:async_hooks:227:14)\n' +
+    '    at Test.run (node:internal/test_runner/test:1402:25)\n' +
+    '    at Test.processPendingSubtests (node:internal/test_runner/test:974:18)\n' +
+    '    at Test.postRun (node:internal/test_runner/test:1542:19)\n' +
+    '    at Test.run (node:internal/test_runner/test:1467:12)\n' +
+    '    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)'
+}
+[OPEN-METEO-AIR-QUALITY][ERRO] {
+  type: 'network',
+  code: 'TEST_SOURCE_UNAVAILABLE',
+  httpStatus: null,
+  message: 'Fonte indisponível',
+  cause: null,
+  stack: 'Error: Fonte indisponível\n' +
+    '    at falha (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:11:39)\n' +
+    '    at indisponivel (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:193:44)\n' +
+    '    at montarRelatorio (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\reportBuilder.js:187:29)\n' +
+    '    at async TestContext.<anonymous> (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:198:21)\n' +
+    '    at async Test.run (node:internal/test_runner/test:1409:7)\n' +
+    '    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)'
+}
+[OPEN-METEO][ERRO] {
+  type: 'network',
+  code: 'TEST_SOURCE_UNAVAILABLE',
+  httpStatus: null,
+  message: 'Fonte indisponível',
+  cause: null,
+  stack: 'Error: Fonte indisponível\n' +
+    '    at falha (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:11:39)\n' +
+    '    at indisponivel (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:193:44)\n' +
+    '    at montarRelatorio (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\reportBuilder.js:206:23)\n' +
+    '    at async TestContext.<anonymous> (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:198:21)\n' +
+    '    at async Test.run (node:internal/test_runner/test:1409:7)\n' +
+    '    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)'
+}
+[INMET-AVISOS][ERRO] {
+  type: 'network',
+  code: 'TEST_SOURCE_UNAVAILABLE',
+  httpStatus: null,
+  message: 'Fonte indisponível',
+  cause: null,
+  stack: 'Error: Fonte indisponível\n' +
+    '    at falha (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:11:39)\n' +
+    '    at indisponivel (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:193:44)\n' +
+    '    at montarRelatorio (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\reportBuilder.js:238:25)\n' +
+    '    at async TestContext.<anonymous> (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\reportBuilderDegraded.test.js:198:21)\n' +
+    '    at async Test.run (node:internal/test_runner/test:1409:7)\n' +
+    '    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)'
+}
+✔ mesmo snapshot mantém condição INMET e distingue UV atual do pico previsto (58.6068ms)
+✔ primeira carga do painel permanece disponível quando todas as fontes falham (8.3921ms)
+✔ snapshot mantém condição, temperatura e umidade indisponíveis e identifica rajada modelada (67.2639ms)
+✔ OCEANOP indisponível mantém a rajada em Open-Meteo/indisponível e registra a falha (5.7867ms)
+✔ OCEANOP disponível fornece a rajada prioritária do relatório (17.7103ms)
+✔ sem Air Quality o UV atual vem da previsão Open-Meteo, identificado como modelado (6.3477ms)
+[CLIMA-SAÚDE] HTTP 200
+[CLIMA-SAÚDE] EHF=Sem excesso; Risco=Normal; dados armazenados.
+[INFORMAÇÃO INDISPONÍVEL] precipitacaoHorariaMaxMm: A Open-Meteo não publicou valor numérico válido para este indicador.
+✔ OCEANOP: períodos cobrem o dia inteiro e o total do card usa a janela da edição (1206.485ms)
+[CERTIFICADOS] CAs do Windows: 47 aceitas de 75 (28 descartadas por assinatura fraca, 0 vencidas).
+✔ cadastra a pessoa uma vez e depois vincula uma ou várias bases (1723.6514ms)
+✔ formulário de responsáveis identifica nome da pessoa e e-mail (2.3621ms)
+✔ cada setor recebe o próprio contexto e a própria condição oficial (2.5475ms)
+✔ condições iguais publicadas para setores diferentes permanecem iguais (0.5347ms)
+✔ condições diferentes resultam em uma única condição predominante para o dia (0.7485ms)
+✔ empate entre períodos usa a descrição oficial mais completa sem listar períodos (0.3666ms)
+✔ ausência em um setor não reutiliza a condição de outro (1.816ms)
+[CERTIFICADOS] CAs do Windows: 47 aceitas de 75 (28 descartadas por assinatura fraca, 0 vencidas).
+✔ rejeita senha ausente, curta ou igual ao valor padrão antigo (2.1176ms)
+✔ comparador aceita só a senha exata (string), sem confusão de tipo (1.7568ms)
+✔ criarApp recusa senha fraca (1454.4314ms)
+✔ node server.js encerra com código 1 sem DASHBOARD_PASSWORD válida (1984.3133ms)
+[CERTIFICADOS] CAs do Windows: 47 aceitas de 75 (28 descartadas por assinatura fraca, 0 vencidas).
+✔ relay corporativo: rejectUnauthorized true por padrão, sem aviso (402.1791ms)
+✔ SMTP_TLS_INSEGURO=true desliga a validação e avisa no log (5.723ms)
+✔ qualquer outro valor mantém a validação (14.6114ms)
+✔ Gmail usa STARTTLS 587, valida TLS e remove espaços visuais da senha de app (5.4682ms)
+✔ ENVIO_EMAIL_ATIVO=false bloqueia qualquer criação de transportador (4.3388ms)
+✔ health check usa estrutura padronizada sem expor erro técnico na mensagem (5.9582ms)
+✔ health check diferencia operacional, degradado e não configurado (33.4406ms)
+✔ timestamp é exibido no horário de Brasília sem ISO cru (0.8786ms)
+[CERTIFICADOS] CAs do Windows: 47 aceitas de 75 (28 descartadas por assinatura fraca, 0 vencidas).
+✔ atraso progressivo a partir da 3ª falha, com teto (5.8771ms)
+✔ senha correta entra depois de 7 falhas de outra pessoa no mesmo IP (1.1798ms)
+✔ contador é esquecido após 15 min sem falhas (0.6076ms)
+✔ mapa de tentativas tem tamanho máximo (60.4967ms)
+✔ excesso de respostas em espera → 503 sem avaliar a senha (0.8993ms)
+✔ TRUST_PROXY: padrão desligado; aceita true, número e lista (0.7303ms)
+✔ HTTP: 7 erros e depois a senha correta → 200 (sem 429) (1590.5026ms)
+✔ HTTP: sem TRUST_PROXY, X-Forwarded-For não separa contadores (23.8422ms)
+✔ HTTP: com TRUST_PROXY=1, o IP do cliente vem do X-Forwarded-For (12.0132ms)
+[CERTIFICADOS] CAs do Windows: 47 aceitas de 75 (28 descartadas por assinatura fraca, 0 vencidas).
+✔ getCidade aceita chaves cadastradas e usa o padrão quando vazio (2.0913ms)
+✔ getCidade e validarCidade rejeitam protótipo, tipo, formato e tamanho (2.2822ms)
+[RELATORIO] Iniciando geração
+[RELATORIO] Validando autorização
+[RELATORIO] Autorização validada
+✔ rotas devolvem 'Base inválida.' sem erro interno nem lista de bases (1455.0875ms)
+[CERTIFICADOS] CAs do Windows: 47 aceitas de 75 (28 descartadas por assinatura fraca, 0 vencidas).
+[MONITOR-SECAS] Listagem do bucket: HTTP 200, 155 bytes — https://ana-monitor-secas-files.s3.sa-east-1.amazonaws.com/?list-type=2&prefix=uploads%2Fprodutos%2Fsrm_persist%2F&delimiter=%2F
+[MONITOR-SECAS] período=2026-08 API mapa-monitor: HTTP 200, 84 bytes — https://apimsbr.ana.gov.br/rest/cms-msne/mapa-monitor?mes=8&ano=2026&final=true&response_format=apil5&use_fk=true&include_all_obj_fk=true&limit=1&orderBy=id,desc
+[MONITOR-SECAS] Listagem do bucket: HTTP 200, 199 bytes — https://ana-monitor-secas-files.s3.sa-east-1.amazonaws.com/?list-type=2&prefix=uploads%2Fprodutos%2Fsrm_persist%2F202608%2Fms%2F
+[MONITOR-SECAS] período=2026-08 metadados validados: mapa id 1, elaborado em null, 1 mapas estaduais no bucket.
+[MONITOR-SECAS] Listagem do bucket: HTTP 200, 155 bytes — https://ana-monitor-secas-files.s3.sa-east-1.amazonaws.com/?list-type=2&prefix=uploads%2Fprodutos%2Fsrm_persist%2F&delimiter=%2F
+[MONITOR-SECAS] período=2026-08 API mapa-monitor: HTTP 200, 84 bytes — https://apimsbr.ana.gov.br/rest/cms-msne/mapa-monitor?mes=8&ano=2026&final=true&response_format=apil5&use_fk=true&include_all_obj_fk=true&limit=1&orderBy=id,desc
+[MONITOR-SECAS] Listagem do bucket: HTTP 200, 199 bytes — https://ana-monitor-secas-files.s3.sa-east-1.amazonaws.com/?list-type=2&prefix=uploads%2Fprodutos%2Fsrm_persist%2F202608%2Fms%2F
+[MONITOR-SECAS] período=2026-08 metadados validados: mapa id 1, elaborado em null, 1 mapas estaduais no bucket.
+[MONITOR-SECAS] Listagem do bucket: HTTP 200, 155 bytes — https://ana-monitor-secas-files.s3.sa-east-1.amazonaws.com/?list-type=2&prefix=uploads%2Fprodutos%2Fsrm_persist%2F&delimiter=%2F
+[MONITOR-SECAS] período=2026-08 API mapa-monitor: HTTP 200, 84 bytes — https://apimsbr.ana.gov.br/rest/cms-msne/mapa-monitor?mes=8&ano=2026&final=true&response_format=apil5&use_fk=true&include_all_obj_fk=true&limit=1&orderBy=id,desc
+[MONITOR-SECAS] Listagem do bucket: HTTP 200, 199 bytes — https://ana-monitor-secas-files.s3.sa-east-1.amazonaws.com/?list-type=2&prefix=uploads%2Fprodutos%2Fsrm_persist%2F202608%2Fms%2F
+[MONITOR-SECAS] período=2026-08 metadados validados: mapa id 1, elaborado em null, 1 mapas estaduais no bucket.
+[MONITOR-SECAS] Listagem do bucket: HTTP 200, 155 bytes — https://ana-monitor-secas-files.s3.sa-east-1.amazonaws.com/?list-type=2&prefix=uploads%2Fprodutos%2Fsrm_persist%2F&delimiter=%2F
+[MONITOR-SECAS] período=2026-08 API mapa-monitor: HTTP 200, 84 bytes — https://apimsbr.ana.gov.br/rest/cms-msne/mapa-monitor?mes=8&ano=2026&final=true&response_format=apil5&use_fk=true&include_all_obj_fk=true&limit=1&orderBy=id,desc
+[MONITOR-SECAS] Listagem do bucket: HTTP 200, 199 bytes — https://ana-monitor-secas-files.s3.sa-east-1.amazonaws.com/?list-type=2&prefix=uploads%2Fprodutos%2Fsrm_persist%2F202608%2Fms%2F
+[MONITOR-SECAS] período=2026-08 metadados validados: mapa id 1, elaborado em null, 1 mapas estaduais no bucket.
+[CLIMA-SAÚDE] Consultando Rio de Janeiro/RJ
+[CLIMA-SAÚDE] HTTP 200
+[CLIMA-SAÚDE:rio_de_janeiro][ERRO] {
+  type: 'parser',
+  code: null,
+  httpStatus: null,
+  message: 'HTML municipal sem município, UF ou classificação EHF reconhecível.',
+  cause: null,
+  stack: 'ParserError: HTML municipal sem município, UF ou classificação EHF reconhecível.\n' +
+    '    at erroFormato (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\climaSaudeService.js:88:16)\n' +
+    '    at interpretarHtml (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\climaSaudeService.js:127:11)\n' +
+    '    at Object.consultar (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\climaSaudeService.js:218:21)\n' +
+    '    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n' +
+    '    at async Promise.all (index 5)\n' +
+    '    at async executarVerificacao (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\verificacaoFontes.js:224:68)\n' +
+    '    at async TestContext.<anonymous> (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\verificacaoFontes.test.js:97:13)\n' +
+    '    at async Test.run (node:internal/test_runner/test:1409:7)\n' +
+    '    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)'
+}
+[MONITOR-SECAS] Listagem do bucket: HTTP 200, 155 bytes — https://ana-monitor-secas-files.s3.sa-east-1.amazonaws.com/?list-type=2&prefix=uploads%2Fprodutos%2Fsrm_persist%2F&delimiter=%2F
+[MONITOR-SECAS] período=2026-08 API mapa-monitor: HTTP 200, 84 bytes — https://apimsbr.ana.gov.br/rest/cms-msne/mapa-monitor?mes=8&ano=2026&final=true&response_format=apil5&use_fk=true&include_all_obj_fk=true&limit=1&orderBy=id,desc
+[MONITOR-SECAS] Listagem do bucket: HTTP 200, 199 bytes — https://ana-monitor-secas-files.s3.sa-east-1.amazonaws.com/?list-type=2&prefix=uploads%2Fprodutos%2Fsrm_persist%2F202608%2Fms%2F
+[MONITOR-SECAS] período=2026-08 metadados validados: mapa id 1, elaborado em null, 1 mapas estaduais no bucket.
+[CLIMA-SAÚDE] Consultando Rio de Janeiro/RJ
+[CLIMA-SAÚDE] HTTP 503
+[CLIMA-SAÚDE:rio_de_janeiro][ERRO] {
+  type: 'http',
+  code: null,
+  httpStatus: 503,
+  message: 'HTTP 503',
+  cause: null,
+  stack: 'Error: HTTP 503\n' +
+    '    at Object.consultar (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\sources\\climaSaudeService.js:215:56)\n' +
+    '    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n' +
+    '    at async Promise.all (index 5)\n' +
+    '    at async executarVerificacao (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\src\\logic\\verificacaoFontes.js:224:68)\n' +
+    '    at async TestContext.<anonymous> (C:\\Users\\PROJ 758\\Documents\\Protocolo-Meteorologico-CIM-2026-11-11\\tests\\verificacaoFontes.test.js:109:13)\n' +
+    '    at async Test.run (node:internal/test_runner/test:1409:7)\n' +
+    '    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)'
+}
+[MONITOR-SECAS] Listagem do bucket: HTTP 200, 155 bytes — https://ana-monitor-secas-files.s3.sa-east-1.amazonaws.com/?list-type=2&prefix=uploads%2Fprodutos%2Fsrm_persist%2F&delimiter=%2F
+[MONITOR-SECAS] período=2026-08 API mapa-monitor: HTTP 200, 84 bytes — https://apimsbr.ana.gov.br/rest/cms-msne/mapa-monitor?mes=8&ano=2026&final=true&response_format=apil5&use_fk=true&include_all_obj_fk=true&limit=1&orderBy=id,desc
+[MONITOR-SECAS] Listagem do bucket: HTTP 200, 199 bytes — https://ana-monitor-secas-files.s3.sa-east-1.amazonaws.com/?list-type=2&prefix=uploads%2Fprodutos%2Fsrm_persist%2F202608%2Fms%2F
+[MONITOR-SECAS] período=2026-08 metadados validados: mapa id 1, elaborado em null, 1 mapas estaduais no bucket.
+[MONITOR-SECAS] Listagem do bucket: HTTP 200, 155 bytes — https://ana-monitor-secas-files.s3.sa-east-1.amazonaws.com/?list-type=2&prefix=uploads%2Fprodutos%2Fsrm_persist%2F&delimiter=%2F
+[MONITOR-SECAS] período=2026-08 API mapa-monitor: HTTP 200, 84 bytes — https://apimsbr.ana.gov.br/rest/cms-msne/mapa-monitor?mes=8&ano=2026&final=true&response_format=apil5&use_fk=true&include_all_obj_fk=true&limit=1&orderBy=id,desc
+[MONITOR-SECAS] Listagem do bucket: HTTP 200, 199 bytes — https://ana-monitor-secas-files.s3.sa-east-1.amazonaws.com/?list-type=2&prefix=uploads%2Fprodutos%2Fsrm_persist%2F202608%2Fms%2F
+[MONITOR-SECAS] período=2026-08 metadados validados: mapa id 1, elaborado em null, 1 mapas estaduais no bucket.
+[MONITOR-SECAS] Listagem do bucket: HTTP 200, 155 bytes — https://ana-monitor-secas-files.s3.sa-east-1.amazonaws.com/?list-type=2&prefix=uploads%2Fprodutos%2Fsrm_persist%2F&delimiter=%2F
+[MONITOR-SECAS] período=2026-08 API mapa-monitor: HTTP 200, 84 bytes — https://apimsbr.ana.gov.br/rest/cms-msne/mapa-monitor?mes=8&ano=2026&final=true&response_format=apil5&use_fk=true&include_all_obj_fk=true&limit=1&orderBy=id,desc
+[MONITOR-SECAS] Listagem do bucket: HTTP 200, 199 bytes — https://ana-monitor-secas-files.s3.sa-east-1.amazonaws.com/?list-type=2&prefix=uploads%2Fprodutos%2Fsrm_persist%2F202608%2Fms%2F
+[MONITOR-SECAS] período=2026-08 metadados validados: mapa id 1, elaborado em null, 1 mapas estaduais no bucket.
+[MONITOR-SECAS] Listagem do bucket: HTTP 200, 155 bytes — https://ana-monitor-secas-files.s3.sa-east-1.amazonaws.com/?list-type=2&prefix=uploads%2Fprodutos%2Fsrm_persist%2F&delimiter=%2F
+[MONITOR-SECAS] período=2026-08 API mapa-monitor: HTTP 200, 84 bytes — https://apimsbr.ana.gov.br/rest/cms-msne/mapa-monitor?mes=8&ano=2026&final=true&response_format=apil5&use_fk=true&include_all_obj_fk=true&limit=1&orderBy=id,desc
+[MONITOR-SECAS] Listagem do bucket: HTTP 200, 199 bytes — https://ana-monitor-secas-files.s3.sa-east-1.amazonaws.com/?list-type=2&prefix=uploads%2Fprodutos%2Fsrm_persist%2F202608%2Fms%2F
+[MONITOR-SECAS] período=2026-08 metadados validados: mapa id 1, elaborado em null, 1 mapas estaduais no bucket.
+[FONTES] Todas as fontes responderam (1 verificações).
+[FONTES] INDISPONIVEL — X (Y): Z
+[FONTES] 1 problema(s); aviso por e-mail não enviado: teste.
+[FONTES] Falha na verificação preventiva: boom
+✔ todas as fontes saudáveis: nenhum problema; integrações sem configuração não contam como problema (25.1164ms)
+✔ INMET com cache vencido nao e apresentado como observacao atual (9.0605ms)
+✔ cache maritimo vencido aparece como degradado e conta como problema (5.6433ms)
+✔ Clima e Saúde com layout alterado é classificado como formato alterado, não como fora do ar (50.7893ms)
+✔ Clima e Saúde fora do ar é indisponível e informa se há última coleta válida (9.418ms)
+✔ COR-Rio com resposta fora do formato aponta a parte afetada (5.1195ms)
+✔ INMET Observação sem temperatura e umidade atuais, chuva ou rajada gera campos ausentes (3.8316ms)
+✔ ANA informa a publicação mais recente e avisa quando a competência fixada é outra (6.9728ms)
+✔ utilitários: campos faltando e classificação de erro (0.7496ms)
+✔ e-mail técnico: escapa conteúdo, só aceita endereços válidos e não envia sem destinatário (1.6577ms)
+✔ agendador só aciona o aviso quando há problema e não derruba o processo em falha (1.2768ms)
+✔ rajada prevista é arredondada apenas na apresentação (1.8264ms)
+✔ rajada inválida não é apresentada como zero (0.4476ms)
+✔ temperatura e umidade previstas ficam indisponíveis sem INMET e a observação oficial é preservada (7.9455ms)
+✔ faixas diárias previstas vêm do produto municipal INMET e mantêm sua procedência (0.9966ms)
+✔ faixa INMET inválida não é substituída por valores modelados (0.6818ms)
+✔ condição ausente no INMET permanece indisponível (0.8083ms)
+✔ rajada prevista é sempre substituída pela série Open-Meteo sem usar vento sustentado (0.7962ms)
+✔ card de rajada modelada usa apenas pico ainda futuro (0.4792ms)
+✔ resposta OCEANOP disponível não preenche períodos sem dado com Open-Meteo (0.6349ms)
+✔ campos não publicados ficam indisponíveis e geram diagnóstico (0.8965ms)
+✔ observação INMET antiga não é reapresentada como temperatura e umidade atuais (1.1327ms)
+✔ valor atual modelado não substitui observação oficial ausente (2.4565ms)
+✔ última observação INMET recente em cache mantém horário e estado degradado (0.6107ms)
+✔ dia semanal sem indicadores não é classificado como Normal (3.4229ms)
+✔ risco confirmado prevalece mesmo quando outro indicador está ausente (0.5871ms)
+✔ Normal exige todos os indicadores de risco do dia (0.3323ms)
+✔ conversão central preserva km/h e converte m/s e nós (1.8887ms)
+✔ conversão central rejeita unidade ausente ou desconhecida (0.4727ms)
+ℹ tests 499
+ℹ suites 0
+ℹ pass 499
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 11682.3317
+exit=0
