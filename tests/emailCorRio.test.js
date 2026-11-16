@@ -135,6 +135,14 @@ test("e-mail: só o comunicado do dia, sem próximos dias e sem outros comunicad
   assert.match(selo.attr("style"), /background:#FACC15;color:#0B1A12;/);
   assert.equal(td.find("span").filter((_, el) => $(el).text() === "Calor 3").length, 1);
   assert.match(texto, /Estágio de calor: Calor 3\. Consulta à fonte: 02\/10\/2026 10:57/);
+  const linhaEstagio = td.find("div").filter((_, el) =>
+    $(el).children("strong").length > 0 && $(el).text().startsWith("Estágio operacional da cidade:")
+  );
+  const linhaCalor = td.find("div").filter((_, el) =>
+    $(el).children("strong").length > 0 && $(el).text().startsWith("Estágio de calor:")
+  );
+  assert.equal(linhaEstagio.children("strong").text(), "Estágio 2");
+  assert.equal(linhaCalor.children("strong").text(), "Calor 3");
   assert.match($("table").filter((_, el) => /border-left:7px solid #FACC15/.test($(el).attr("style") || "")).attr("style"), /background:#FFFAE8;.*border-radius:8px/);
 });
 

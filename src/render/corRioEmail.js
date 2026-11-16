@@ -179,12 +179,12 @@ function cartaoCorRioEmail(r) {
   }
 
   const estagio = s.nivel
-    ? `<div style="margin-top:10px;font:14px/1.45 Arial,sans-serif;"><strong>Estágio operacional da cidade:</strong> Estágio ${s.nivel}${est.dados.vigenteDesde ? `, em vigor desde ${esc(quando(est.dados.vigenteDesde))}` : ""}. Consulta à fonte: ${esc(quando(est.consultadoEm))}. Estágio e comunicado são publicados separadamente pelo COR-Rio.</div>
+    ? `<div style="margin-top:10px;font:14px/1.45 Arial,sans-serif;">Estágio operacional da cidade: <strong>Estágio ${s.nivel}</strong>${est.dados.vigenteDesde ? `, em vigor desde ${esc(quando(est.dados.vigenteDesde))}` : ""}. Consulta à fonte: ${esc(quando(est.consultadoEm))}. Estágio e comunicado são publicados separadamente pelo COR-Rio.</div>
        ${s.estagioDesatualizado ? aviso(`<strong>Dados desatualizados</strong> — última consulta bem-sucedida do estágio: ${esc(quando(est.consultadoEm))}.`) : ""}`
     : `<div style="margin-top:10px;font:14px/1.45 Arial,sans-serif;"><strong>Estágio indisponível</strong> — não há consulta válida ao estágio operacional do COR-Rio${est.falha ? ` (${esc(est.falha)})` : ""}.</div>`;
   const calorParte = estado.calor || {};
   const calor = s.nivelCalor
-    ? `<div style="margin-top:8px;font:14px/1.45 Arial,sans-serif;"><strong>Estágio de calor:</strong> Calor ${s.nivelCalor}. Consulta à fonte: ${esc(quando(calorParte.consultadoEm))}. Protocolo independente do estágio operacional.</div>
+    ? `<div style="margin-top:8px;font:14px/1.45 Arial,sans-serif;">Estágio de calor: <strong>Calor ${s.nivelCalor}</strong>. Consulta à fonte: ${esc(quando(calorParte.consultadoEm))}. Protocolo independente do estágio operacional.</div>
        ${s.calorDesatualizado ? aviso(`<strong>Dados desatualizados</strong> — última consulta bem-sucedida do estágio de calor: ${esc(quando(calorParte.consultadoEm))}.`) : ""}`
     : `<div style="margin-top:8px;font:14px/1.45 Arial,sans-serif;"><strong>Estágio de calor indisponível</strong> — não há consulta válida ao Protocolo de Calor do COR-Rio${calorParte.falha ? ` (${esc(calorParte.falha)})` : ""}.</div>`;
   const rodape = doDia ? "" : linha("Abrangência", esc(estado.abrangencia || "Município do Rio de Janeiro")) + linha("Fonte", esc(estado.fonte || "COR-Rio"));

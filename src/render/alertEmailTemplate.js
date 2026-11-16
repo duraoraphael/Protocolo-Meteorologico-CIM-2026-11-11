@@ -9,18 +9,24 @@ const {
   renderEmailHeader,
   renderEmailHeaderStyles,
   renderStatusChangeCard,
+  classificacaoMudanca,
 } = require("./emailComponents");
 const { ordenarEventosParaExibicao, prioridadeNivel } = require("./eventOrdering");
 const { TIPOS_DOCUMENTO, deveExibirNoDocumento } = require("../logic/alertPresentation");
 const { formatarRajadaPrevista } = require("../../public/weather-format");
 
 function alertasCimExibiveis(alertas) {
-  return ordenarEventosParaExibicao((Array.isArray(alertas) ? alertas : []).filter((alerta) =>
-    alerta?.motivo === "normalizou" || deveExibirNoDocumento({
-      nivel: normalizarGrau(alerta?.grau),
-      tipoDocumento: TIPOS_DOCUMENTO.ALERTA_CIM,
+  return ordenarEventosParaExibicao(
+    (Array.isArray(alertas) ? alertas : []).filter((alerta) => {
+      if (classificacaoMudanca(alerta?.grauAnterior, alerta?.grau, alerta?.motivo) === "MANUTENÇÃO") {
+        return false;
+      }
+      return alerta?.motivo === "normalizou" || deveExibirNoDocumento({
+        nivel: normalizarGrau(alerta?.grau),
+        tipoDocumento: TIPOS_DOCUMENTO.ALERTA_CIM,
+      });
     })
-  ));
+  );
 }
 
 function blocoAlerta(a) {

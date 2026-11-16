@@ -64,7 +64,7 @@ async function enviarRelatorioPorEmail(report, pdfBuffer, {
 
   const transportador = criarTransportador();
   const prefixoTeste = report.envioTeste ? `[TESTE${report.horarioAgendado ? ` ${report.horarioAgendado}` : ""}] ` : "";
-  const assunto = `${prefixoTeste}Informativo Meteorológico — ${report.cidade.nome} — ${report.dataFormatadaCurta}`;
+  const assunto = `${prefixoTeste}${report.cidade.nome} — Informativo Meteorológico — ${report.dataFormatadaCurta}`;
   // O aviso COR-RIO tem distribuição própria. Destinatários da base
   // meteorológica Rio de Janeiro recebem somente o informativo geral.
   const html = renderEmailHtml(report, { incluirCorRio: false });

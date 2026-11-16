@@ -85,6 +85,7 @@ test("envio reutiliza o PDF completo em memória como anexo SMTP", { concurrency
     const resultado = await enviarRelatorioPorEmail(registrarOperacionalTeste(relatorioBase()), pdfCompleto);
 
     assert.equal(resultado.messageId, "teste-message-id");
+    assert.equal(mensagem.subject, "Rio de Janeiro — Informativo Meteorológico — 28/09/2026");
     const pdfs = mensagem.attachments.filter((anexo) => anexo.contentType === "application/pdf");
     assert.equal(pdfs.length, 1);
     assert.equal(pdfs[0].filename, "Informativo_Meteorologico_TESTE.pdf");
@@ -141,7 +142,7 @@ test("destinatário avulso exige autorização explícita e não marca o e-mail 
       permitirOverrideDestinatarios: true,
     });
     assert.deepEqual(resultado.destinatarios, ["usuario@exemplo.com"]);
-    assert.match(mensagem.subject, /^Informativo Meteorológico/);
+    assert.equal(mensagem.subject, "Rio de Janeiro — Informativo Meteorológico — 28/09/2026");
     assert.doesNotMatch(mensagem.subject, /\[TESTE/);
     assert.equal(mensagem.to, "usuario@exemplo.com");
   } finally {

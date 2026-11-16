@@ -145,3 +145,19 @@ test("Alerta CIM apenas NORMAL é suprimido antes de destinatários e SMTP", asy
     motivo: "sem-alerta-relevante",
   });
 });
+
+test("Alerta CIM de manutenção é suprimido, mas atualização oficial continua elegível", async () => {
+  const alerta = { ...evento("ALERTA"), grauAnterior: "ALERTA", motivo: "manteve" };
+  const base = { chave: "base_sem_destinatario", cidade: report().cidade, report: report(), alertas: [alerta] };
+
+  assert.deepEqual(alertasCimExibiveis([alerta]), []);
+  assert.deepEqual(await enviarAlertaPorEmail(base), {
+    messageId: null,
+    destinatarios: [],
+    ignorado: true,
+    motivo: "sem-alerta-relevante",
+  });
+
+  const atualizacao = { ...alerta, motivo: "atualizou" };
+  assert.deepEqual(alertasCimExibiveis([atualizacao]), [atualizacao]);
+});

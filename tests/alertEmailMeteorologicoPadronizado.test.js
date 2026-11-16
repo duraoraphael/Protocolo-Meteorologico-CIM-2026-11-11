@@ -112,6 +112,7 @@ test("vento representa redução e agravamento somente com classificação anter
   assert.match(html, /VENTO — ALERTA/);
   assert.match(cheerio.load(html)("[data-alert-card='true']").text(), /AGRAVAMENTO: ATENÇÃO → ALERTA/);
   assert.equal(classificacaoMudanca("ALERTA", "ALERTA"), "MANUTENÇÃO");
+  assert.equal(classificacaoMudanca("ALERTA", "ALERTA", "atualizou"), "ATUALIZAÇÃO");
 });
 
 test("chuva interna apresenta recomendação específica e vários fenômenos permanecem separados", () => {

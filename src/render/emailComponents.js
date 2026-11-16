@@ -106,6 +106,7 @@ function classificacaoMudanca(grauAnterior, grauAtual, motivo) {
   if (motivoNormalizado === "agravou") return "AGRAVAMENTO";
   if (motivoNormalizado === "reduziu") return "REDUÇÃO";
   if (motivoNormalizado === "novo") return "NOVO AVISO";
+  if (motivoNormalizado === "atualizou") return "ATUALIZAÇÃO";
   if (motivoNormalizado === "manteve" || motivoNormalizado === "manutenção") return "MANUTENÇÃO";
   if (!anterior) return "NOVO AVISO";
   if ((ORDEM_STATUS[atual] ?? 0) > (ORDEM_STATUS[anterior] ?? 0)) return "AGRAVAMENTO";
