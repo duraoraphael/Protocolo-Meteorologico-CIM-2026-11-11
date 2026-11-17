@@ -14,6 +14,7 @@ const {
   filtrarNovidades,
   marcarAlertasEnviados,
   detectarAlertasGraves,
+  picoUvPassou,
   ASSINATURA_MONITOR,
 } = require("../src/logic/alertWatcher");
 const fila = require("../src/logic/alertQueue");
@@ -236,6 +237,137 @@ test("cenário H: atualização material do mesmo aviso INMET gera nova versão"
     .find((alerta) => alerta.assinatura === "inmet:tempestade");
   const [mudanca] = filtrarNovidades("santos", [atual], estado);
   assert.equal(mudanca.motivo, "atualizou");
+});
+
+test("aviso INMET reemitido só com vigência, id e carimbo novos não gera atualização", () => {
+  const relatorio = (extra) => ({
+    ...reportComNivel("ATENÇÃO"),
+    severidade: { eventos: [] },
+    avisosInmet: [{
+      idAviso: "42", id: "urn:inmet:42.1", sequencia: 1,
+      descricao: "Tempestade", severidade: "Perigo", inicio: "21/10/2026 08:55",
+      fim: "21/10/2026 23:59", riscos: ["Ventos intensos."], instrucoes: ["Busque abrigo."],
+      atualizadoEm: "2026-10-21T11:00:00Z", ...extra,
+    }],
+  });
+  const achar = (r) => detectarAlertasGraves(r).find((a) => a.assinatura === "inmet:tempestade");
+  const estado = {};
+  const primeiro = filtrarNovidades("santos", [achar(relatorio({}))], estado);
+  marcarAlertasEnviados({ chave: "santos", alertas: primeiro }, { carregar: () => estado, salvar: () => {} });
+
+  const reemitido = achar(relatorio({
+    idAviso: "43", id: "urn:inmet:43.1", sequencia: 2,
+    inicio: "22/10/2026 00:00", fim: "22/10/2026 23:59", atualizadoEm: "2026-10-22T03:00:00Z",
+  }));
+  assert.deepEqual(filtrarNovidades("santos", [reemitido], estado), []);
+});
+
+test("estado gravado com fingerprint antigo é migrado em silêncio, sem e-mail", async () => {
+  const relatorio = {
+    ...reportComNivel("ATENÇÃO"),
+    severidade: { eventos: [] },
+    avisosInmet: [{
+      idAviso: "42", id: "urn:inmet:42.1", sequencia: 1,
+      descricao: "Tempestade", severidade: "Perigo", inicio: "21/10/2026 08:55",
+      fim: "21/10/2026 23:59", riscos: ["Ventos intensos."], instrucoes: ["Busque abrigo."],
+    }],
+  };
+  const atual = detectarAlertasGraves(relatorio).find((a) => a.assinatura === "inmet:tempestade");
+  const estado = {
+    [`santos|${ASSINATURA_MONITOR}`]: { inicializadoEm: "x", verificadoEm: "x" },
+    "santos|inmet:tempestade": {
+      gravidade: atual.gravidade, grau: atual.grau, tipo: atual.tipo, fonteDados: "INMET",
+      fingerprint: "fingerprint-da-formula-antiga", emISO: "2026-10-21T10:00:00.000Z",
+    },
+  };
+  const resultado = await verificarAlertas({
+    chaves: ["santos"], carregar: () => estado, salvar: () => {}, montar: async () => relatorio,
+  });
+  assert.equal(resultado.totalNovos, 0);
+  assert.equal(estado["santos|inmet:tempestade"].versaoFingerprint, 2, "estado migrado para a fórmula nova");
+  assert.notEqual(estado["santos|inmet:tempestade"].fingerprint, "fingerprint-da-formula-antiga");
+  const segundo = await verificarAlertas({
+    chaves: ["santos"], carregar: () => estado, salvar: () => {}, montar: async () => relatorio,
+  });
+  assert.equal(segundo.totalNovos, 0);
+});
+
+test("mudança real no texto do aviso INMET ainda gera atualização depois da migração", () => {
+  const relatorio = (risco) => ({
+    ...reportComNivel("ATENÇÃO"),
+    severidade: { eventos: [] },
+    avisosInmet: [{
+      idAviso: "42", id: "urn:inmet:42.1", sequencia: 1, descricao: "Tempestade", severidade: "Perigo",
+      inicio: "21/10/2026 08:55", fim: "21/10/2026 23:59", riscos: [risco], instrucoes: ["Busque abrigo."],
+    }],
+  });
+  const achar = (r) => detectarAlertasGraves(r).find((a) => a.assinatura === "inmet:tempestade");
+  const estado = {};
+  marcarAlertasEnviados({ chave: "santos", alertas: filtrarNovidades("santos", [achar(relatorio("Ventos."))], estado) },
+    { carregar: () => estado, salvar: () => {} });
+  const [mudanca] = filtrarNovidades("santos", [achar(relatorio("Ventos e granizo."))], estado);
+  assert.equal(mudanca.motivo, "atualizou");
+});
+
+test("UV: oscilar em torno do limiar não normaliza; só 2 leituras abaixo confirmam", () => {
+  const uvAtencao = { assinatura: "uv", tipo: "Índice UV", grau: "ATENÇÃO", gravidade: "atencao", fonteDados: "Open-Meteo" };
+  const estado = {
+    "macae|uv": { grau: "ATENÇÃO", gravidade: "atencao", tipo: "Índice UV", fonteDados: "Open-Meteo", emISO: "2026-11-16T12:00:00Z" },
+  };
+  const rodar = (achados, minutos) => {
+    const pendencias = {};
+    const novos = filtrarNovidades("macae", achados, estado, () => true, {
+      agora: new Date(Date.UTC(2026, 10, 16, 12, minutos)), pendencias,
+      confirmacao: { leituras: 3, minutos: 15 },
+    });
+    for (const [chave, p] of Object.entries(pendencias)) {
+      if (p) estado[chave].reducaoPendente = p; else delete estado[chave].reducaoPendente;
+    }
+    return novos;
+  };
+  // 7.9 (abaixo do limiar): ainda não normaliza.
+  assert.deepEqual(rodar([], 10), []);
+  // Volta a 8.0 antes da confirmação: a estabilização é descartada.
+  assert.deepEqual(rodar([uvAtencao], 20), []);
+  assert.equal(estado["macae|uv"].reducaoPendente, undefined);
+  // Duas leituras consecutivas abaixo, 10 min entre elas: confirma a normalização.
+  assert.deepEqual(rodar([], 30), []);
+  const [normalizacao] = rodar([], 40);
+  assert.equal(normalizacao.motivo, "normalizou");
+  assert.equal(normalizacao.assinatura, "uv");
+});
+
+test("UV: alerta de subida só sai antes do pico previsto", () => {
+  const uv = { assinatura: "uv", tipo: "Índice UV", grau: "ATENÇÃO", gravidade: "atencao", fonteDados: "Open-Meteo" };
+  const agora = new Date("2026-11-16T15:00:00-03:00");
+  assert.equal(picoUvPassou("2026-11-16T12:00", new Date("2026-11-16T12:30:00-03:00")), false);
+  assert.equal(picoUvPassou("2026-11-16T12:00", agora), true);
+  assert.equal(picoUvPassou(null, agora), false);
+  assert.equal(filtrarNovidades("macae", [uv], {}, () => true, { agora, uvPicoPassou: true }).length, 0);
+  assert.equal(filtrarNovidades("macae", [uv], {}, () => true, { agora, uvPicoPassou: false }).length, 1);
+  // Outros fenômenos não são afetados pelo pico do UV.
+  const vento = { assinatura: "vento", tipo: "Vento", grau: "ATENÇÃO", gravidade: "atencao" };
+  assert.equal(filtrarNovidades("macae", [vento], {}, () => true, { agora, uvPicoPassou: true }).length, 1);
+});
+
+test("UV: normalização só é enviada no mesmo dia do alerta; virada de dia é silenciosa", () => {
+  const entrada = (emISO) => ({
+    "macae|uv": { grau: "ATENÇÃO", gravidade: "atencao", tipo: "Índice UV", fonteDados: "Open-Meteo", emISO },
+  });
+  const confirmacao = { leituras: 1, minutos: 0 };
+  const agora = new Date("2026-11-17T08:00:00-03:00");
+
+  // Alerta enviado hoje às 05h: a normalização é comunicada.
+  const hoje = filtrarNovidades("macae", [], entrada("2026-11-17T08:00:00.000Z"), () => true, { agora, confirmacao });
+  assert.equal(hoje.length, 1);
+  assert.equal(hoje[0].motivo, "normalizou");
+
+  // Alerta de ontem: previsão nova substituiu a antiga; registra sem e-mail.
+  const silenciosos = {};
+  const ontem = filtrarNovidades("macae", [], entrada("2026-11-16T12:00:00.000Z"), () => true, { agora, confirmacao, silenciosos });
+  assert.equal(ontem.length, 0);
+  assert.equal(silenciosos["macae|uv"].grau, "NORMAL");
+  assert.equal(silenciosos["macae|uv"].silencioso, true);
 });
 
 test("primeiro ciclo registra linha de base sem disparo em massa", async () => {

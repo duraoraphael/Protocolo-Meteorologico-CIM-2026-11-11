@@ -70,7 +70,7 @@ test("aviso INMET mostra o conteúdo oficial no card e completo em Ver detalhes"
   assert.match(html, /Riscos descritos/);
   assert.match(html, /Orientações oficiais/);
   assert.match(html, /Evite usar aparelhos eletrônicos ligados à tomada\./);
-  assert.match(html, /01\/10\/2099 09:29 até 01\/10\/2099 23:59/);
+  assert.match(html, /01-10-2099 09:29 até 01-10-2099 23:59/);
   assert.match(html, /Rio de Janeiro, São Paulo · 2 municípios, incluindo Rio de Janeiro/);
   assert.match(html, /Aviso nº 28388/);
   assert.match(html, /href="https:\/\/previsao\.inmet\.gov\.br\/3304557"[^>]*>previsão oficial INMET/);

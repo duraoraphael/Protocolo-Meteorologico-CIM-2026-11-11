@@ -37,7 +37,8 @@ function blocoAlerta(a) {
     grau: a.grau,
     motivo: a.motivo,
     detalhe: a.detalhe,
-    janela: a.janela,
+    // Índice UV é previsão diária: sem janela. Vigência só para aviso oficial.
+    janela: a.assinatura === "uv" ? null : a.janela,
     fonteDados: a.fonteDados || a.origem,
     protocolo: a.protocolo,
     naturezaDado: a.naturezaDado,

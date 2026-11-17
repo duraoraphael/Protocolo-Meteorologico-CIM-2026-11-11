@@ -37,10 +37,15 @@ const {
   fenomenoAvisoInmet,
   grauAvisoInmet,
   buscarAvisosInmetParaBases,
+  formatarVigenciaInmet,
 } = require("../sources/inmet");
 
 const ARQUIVO_ESTADO = path.join(__dirname, "..", "..", "data", "alertas-notificados.json");
 const ASSINATURA_MONITOR = "__monitor_inicializado__";
+// Versão da fórmula do fingerprint de conteúdo. Estados gravados com outra
+// versão são migrados em silêncio, sem e-mail, para não gerar um lote único de
+// "atualizações" quando a fórmula muda.
+const VERSAO_FINGERPRINT = 2;
 
 // ---------------------------------------------------------------------------
 // Estado (o que já foi avisado)
@@ -72,14 +77,12 @@ function limparExpirados(estado) {
 function fingerprintAlerta(alerta) {
   const oficial = alerta?.naturezaDado === "Aviso oficial" || String(alerta?.assinatura || "").startsWith("inmet:");
   const material = oficial
+    // Só o conteúdo que o leitor percebe. Identificadores, sequência,
+    // carimbo de atualização e vigência mudam quando o INMET reemite o mesmo
+    // aviso e não justificam um novo e-mail ("atualização" sem mudança real).
     ? [
         alerta.assinatura,
-        alerta.idAviso,
-        alerta.codigoAviso,
-        alerta.sequenciaAviso,
         alerta.grau,
-        alerta.janela,
-        alerta.atualizadoEm,
         alerta.detalhe,
         ...(alerta.instrucoesOficiais || []),
       ]
@@ -134,6 +137,36 @@ function nomeGatilho(tipo) {
   return (ROTULOS_GATILHO[valor] || valor.replace(/([a-z\d])([A-Z])/g, "$1 $2"))
     .toLocaleLowerCase("pt-BR")
     .replace(/\buv\b/gi, "UV");
+}
+
+// ---------------------------------------------------------------------------
+// Regras próprias do UV: o índice é um máximo previsto para o dia.
+//  - alerta de subida/agravamento só antes do pico previsto (depois dele não
+//    há ação possível);
+//  - normalização só quando o alerta foi enviado no mesmo dia; a virada de dia
+//    (previsão nova substituindo a do dia anterior) é registrada em silêncio.
+// ---------------------------------------------------------------------------
+
+function partesLocais(data, fuso = "America/Sao_Paulo") {
+  const p = Object.fromEntries(new Intl.DateTimeFormat("en-CA", {
+    timeZone: fuso, year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+  }).formatToParts(data).map((x) => [x.type, x.value]));
+  return { dia: `${p.year}-${p.month}-${p.day}`, hora: `${p.hour}:${p.minute}` };
+}
+
+/**
+ * O pico (`horaPicoUv`, ex. "2026-11-16T13:00") está no horário local da base.
+ * Considera-o passado quando a hora cheia do pico já terminou.
+ * Sem horário de pico informado, não suprime nada.
+ */
+function picoUvPassou(horaPicoUv, agora = new Date(), fuso) {
+  const m = /^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})/.exec(String(horaPicoUv || ""));
+  if (!m) return false;
+  const local = partesLocais(agora, fuso);
+  const fimDoPico = `${m[1]}T${String(Number(m[2]) + 1).padStart(2, "0")}:${m[3]}`;
+  if (Number(m[2]) + 1 >= 24) return local.dia > m[1];
+  return `${local.dia}T${local.hora}` >= fimDoPico;
 }
 
 function consolidarPorFenomeno(achados) {
@@ -193,7 +226,7 @@ function detectarAlertasGraves(report) {
     const protocolos = [];
     if (fenomeno === "chuva" || (fenomeno === "tempestade" && /chuva|alagamento/.test(texto))) protocolos.push("chuva");
     if (fenomeno === "vento" || (fenomeno === "tempestade" && /vento|rajada/.test(texto))) protocolos.push("vento");
-    const janela = [aviso.inicio, aviso.fim].filter(Boolean).join(" até ");
+    const janela = formatarVigenciaInmet(aviso.inicio, aviso.fim);
     const previsao = contextoPrevisao(report, fenomeno);
 
     achados.push({
@@ -292,7 +325,18 @@ function detectarAlertasGraves(report) {
 
 // Fenômenos do motor de gatilhos cuja REDUÇÃO exige confirmação (histerese).
 // Elevações são sempre imediatas; avisos oficiais INMET seguem a vigência oficial.
-const GATILHOS_CONFIRMAVEIS = new Set(["chuva", "vento", "calor-ehf"]);
+const GATILHOS_CONFIRMAVEIS = new Set(["chuva", "vento", "calor-ehf", "uv"]);
+// O UV oscila em torno do limiar entre uma previsão e outra: confirma a
+// redução mais cedo que os demais (2 leituras / 10 min), nunca mais tarde que
+// a configuração global.
+const CONFIRMACAO_UV = Object.freeze({ leituras: 2, minutos: 10 });
+function confirmacaoDoGatilho(assinatura, confirmacao) {
+  if (assinatura !== "uv") return confirmacao;
+  return {
+    leituras: Math.min(confirmacao.leituras, CONFIRMACAO_UV.leituras),
+    minutos: Math.min(confirmacao.minutos, CONFIRMACAO_UV.minutos),
+  };
+}
 const GRAU_POR_GRAVIDADE = { atencao: "ATENÇÃO", alto: "ALERTA", severo: "EMERGÊNCIA" };
 
 /**
@@ -309,12 +353,15 @@ function filtrarNovidades(chaveBase, achados, estado, dadosDisponiveis = () => t
   const agoraData = opcoes.agora || new Date();
   const confirmacao = opcoes.confirmacao || configuracaoConfirmacao();
   const pendencias = opcoes.pendencias || {};
+  const migracoes = opcoes.migracoes || {};
+  const silenciosos = opcoes.silenciosos || {};
   const auditar = opcoes.historico || (() => {});
   const novos = [];
 
   // Aplica a histerese; devolve a decisão (confirmar, alvo, pendencia).
   const avaliarReducao = (chave, assinatura, anterior, leitura) => {
-    const decisao = decidirReducao(anterior, leitura, agoraData, confirmacao);
+    const config = confirmacaoDoGatilho(assinatura, confirmacao);
+    const decisao = decidirReducao(anterior, leitura, agoraData, config);
     const tinha = anterior.reducaoPendente || null;
     pendencias[chave] = decisao.pendencia;
     if (decisao.pendencia && (!tinha || tinha.leituras !== decisao.pendencia.leituras)) {
@@ -322,7 +369,7 @@ function filtrarNovidades(chaveBase, achados, estado, dadosDisponiveis = () => t
         evento: decisao.confirmar ? "reducao_confirmada" : "reducao_aguardando_confirmacao",
         chave, localidade: chaveBase, fenomeno: assinatura,
         grauVigente: anterior.grau, grauAlvo: decisao.pendencia.grauAlvo,
-        leituras: decisao.pendencia.leituras, exigidas: confirmacao.leituras,
+        leituras: decisao.pendencia.leituras, exigidas: config.leituras,
       });
     }
     return decisao;
@@ -382,7 +429,14 @@ function filtrarNovidades(chaveBase, achados, estado, dadosDisponiveis = () => t
         grauAnterior,
         transicao: tipoTransicao(grauAnterior, alerta.grau),
       });
+    } else if (alerta.assinatura.startsWith("inmet:") && anterior.versaoFingerprint !== VERSAO_FINGERPRINT && anterior.fingerprint === fingerprint) {
+      migracoes[chave] = { fingerprint, versaoFingerprint: VERSAO_FINGERPRINT };
     } else if (alerta.assinatura.startsWith("inmet:") && anterior.fingerprint && anterior.fingerprint !== fingerprint) {
+      if (anterior.versaoFingerprint !== VERSAO_FINGERPRINT) {
+        // Fingerprint gravado pela fórmula antiga: não é prova de mudança.
+        migracoes[chave] = { fingerprint, versaoFingerprint: VERSAO_FINGERPRINT };
+        continue;
+      }
       const motivo = "atualizou";
       novos.push({
         ...alerta,
@@ -448,7 +502,27 @@ function filtrarNovidades(chaveBase, achados, estado, dadosDisponiveis = () => t
       conteudoFingerprint: fingerprintAlerta(normalizacao),
     });
   }
-  return novos;
+
+  // Regras do UV (ver bloco acima).
+  const diaLocal = partesLocais(agoraData, opcoes.fuso).dia;
+  return novos.filter((alerta) => {
+    if (alerta.assinatura !== "uv") return true;
+    if (alerta.motivo === "normalizou") {
+      const anterior = estado[alerta.chaveEstado];
+      const diaDoAlerta = anterior?.emISO ? partesLocais(new Date(anterior.emISO), opcoes.fuso).dia : null;
+      if (diaDoAlerta === diaLocal) return true;
+      silenciosos[alerta.chaveEstado] = {
+        gravidade: "normal", grau: "NORMAL", tipo: anterior?.tipo, origem: anterior?.origem,
+        fonteDados: anterior?.fonteDados, naturezaDado: anterior?.naturezaDado, janela: null,
+        fingerprint: alerta.conteudoFingerprint, versaoFingerprint: VERSAO_FINGERPRINT,
+        emISO: agoraData.toISOString(), silencioso: true,
+      };
+      return false;
+    }
+    // Subida/agravamento/redução depois do pico: nada a fazer, nada é gravado
+    // (o estado só avança com e-mail enviado); o dia seguinte reavalia.
+    return !opcoes.uvPicoPassou;
+  });
 }
 
 function marcarAlertasEnviados(base, { carregar = carregarEstado, salvar = salvarEstado, auditar = carregar === carregarEstado } = {}) {
@@ -467,6 +541,7 @@ function marcarAlertasEnviados(base, { carregar = carregarEstado, salvar = salva
       // O estado compara o conteúdo meteorológico; a fila usa o fingerprint
       // da transição para deduplicar cada episódio separadamente.
       fingerprint: alerta.conteudoFingerprint || fingerprintAlerta(alerta),
+      versaoFingerprint: VERSAO_FINGERPRINT,
       eventoFingerprint: alerta.fingerprint || null,
       transicao: alerta.transicao || null,
       emISO,
@@ -510,6 +585,7 @@ function registrarLinhaBase(estado, chaveBase, alertas, emISO = new Date().toISO
       naturezaDado: alerta.naturezaDado,
       janela: alerta.janela,
       fingerprint: fingerprintAlerta(alerta),
+      versaoFingerprint: VERSAO_FINGERPRINT,
       emISO,
     };
   }
@@ -570,6 +646,8 @@ async function verificarAlertas({
   }
   // Estabilização de reduções ainda não confirmadas, persistida ao final.
   const pendencias = {};
+  const migracoes = {};
+  const silenciosos = {};
   const registrarEventoHistorico = ignorarHistorico || !auditar ? () => {} : (evento) => registrarHistorico(evento);
   const porBase = [];
   const falhas = [];
@@ -621,6 +699,10 @@ async function verificarAlertas({
       const novos = filtrarNovidades(chave, graves, estado, dadosDisponiveis, {
         agora: agoraVerificacao,
         pendencias,
+        migracoes,
+        silenciosos,
+        fuso: cidade.fusoHorario,
+        uvPicoPassou: picoUvPassou(report.qualidadeAr?.horaPicoUv, agoraVerificacao, cidade.fusoHorario),
         historico: registrarEventoHistorico,
       });
       if (!novos.length) {
@@ -637,7 +719,9 @@ async function verificarAlertas({
 
   await Promise.all(chaves.map(verificarBase));
   const chavesPendentes = Object.keys(pendencias);
-  if ((estadoAlterado || chavesPendentes.length) && !ignorarHistorico) {
+  const chavesMigradas = Object.keys(migracoes);
+  const chavesSilenciosas = Object.keys(silenciosos);
+  if ((estadoAlterado || chavesPendentes.length || chavesMigradas.length || chavesSilenciosas.length) && !ignorarHistorico) {
     // Recarrega: marcarAlertasEnviados pode ter gravado durante a verificação.
     const estadoAtual = carregar();
     let alterou = estadoAlterado;
@@ -660,6 +744,19 @@ async function verificarAlertas({
         delete entrada.reducaoPendente;
         alterou = true;
       }
+    }
+    for (const chaveEstado of chavesMigradas) {
+      const entrada = estadoAtual[chaveEstado];
+      // Se uma notificação substituiu o estado durante o ciclo, ele já é novo.
+      if (!entrada || entrada.emISO !== estado[chaveEstado]?.emISO) continue;
+      Object.assign(entrada, migracoes[chaveEstado]);
+      alterou = true;
+    }
+    for (const chaveEstado of chavesSilenciosas) {
+      const entrada = estadoAtual[chaveEstado];
+      if (!entrada || entrada.emISO !== estado[chaveEstado]?.emISO) continue;
+      estadoAtual[chaveEstado] = silenciosos[chaveEstado];
+      alterou = true;
     }
     if (alterou) salvar(estadoAtual);
   }
@@ -697,5 +794,6 @@ module.exports = {
   ARQUIVO_ESTADO,
   ASSINATURA_MONITOR,
   fingerprintAlerta,
+  picoUvPassou,
   enviarAlertaCalorDoRelatorio,
 };

@@ -13,7 +13,7 @@ const {
   recomendacoesPorNivel,
 } = require("./inmetAlertRules");
 const { formatarTitulo } = require("../../public/alert-title");
-const { grauAvisoInmet, fenomenoAvisoInmet, normalizarComparacao } = require("../sources/inmet");
+const { grauAvisoInmet, fenomenoAvisoInmet, normalizarComparacao, formatarVigenciaInmet } = require("../sources/inmet");
 const { recomendacoesFenomeno } = require("./phenomenonRecommendations");
 const { formatarRajadaPrevista } = require("../../public/weather-format");
 
@@ -134,7 +134,7 @@ function avaliarRiscos(consolidado) {
       tipo: "raios",
       grau,
       nivel: NIVEL_POR_GRAU[grau],
-      janela: `${avisoEletrico.inicio} até ${avisoEletrico.fim}`,
+      janela: formatarVigenciaInmet(avisoEletrico.inicio, avisoEletrico.fim),
       fonteDados: "INMET — aviso oficial",
       descricao: "Atividade elétrica indicada em aviso oficial do INMET; consulte o aviso completo abaixo.",
       avisoInmet: avisoEletrico,
@@ -156,7 +156,7 @@ function avaliarRiscos(consolidado) {
       tipo: grau === "ATENÇÃO" ? "chuvaModerada" : "chuvaIntensa",
       grau,
       nivel: NIVEL_POR_GRAU[grau],
-      janela: `${aviso.inicio} até ${aviso.fim}`,
+      janela: formatarVigenciaInmet(aviso.inicio, aviso.fim),
       descricao: aviso.riscos?.join(" ") || `${aviso.descricao} — ${aviso.severidade}.`,
       recomendacoes: recomendacoes("chuva", grau),
       recomendacoesPorNivel: recomendacoesPorNivel("chuva", grau),
@@ -169,7 +169,7 @@ function avaliarRiscos(consolidado) {
       tipo: grau === "ATENÇÃO" ? "ventoModerado" : "ventoForte",
       grau,
       nivel: NIVEL_POR_GRAU[grau],
-      janela: `${aviso.inicio} até ${aviso.fim}`,
+      janela: formatarVigenciaInmet(aviso.inicio, aviso.fim),
       descricao: aviso.riscos?.join(" ") || `${aviso.descricao} — ${aviso.severidade}.`,
       recomendacoes: recomendacoes("vento", grau),
       recomendacoesPorNivel: recomendacoesPorNivel("vento", grau),
@@ -320,7 +320,7 @@ function avaliarRiscos(consolidado) {
         // Severidade oficial → nível pelo mapeamento único do projeto
         // ("Perigo Potencial" é ATENÇÃO; antes /perigo/ o elevava a ALERTA).
         nivel: NIVEL_POR_GRAU[grauAvisoInmet(aviso.severidade)] || 2,
-        janela: `${aviso.inicio} até ${aviso.fim}`,
+        janela: formatarVigenciaInmet(aviso.inicio, aviso.fim),
         // Texto oficial do próprio aviso — nunca um encaminhamento genérico.
         descricao: aviso.riscos?.length
           ? `${aviso.descricao} — ${aviso.severidade}: ${aviso.riscos.join(" ")}`

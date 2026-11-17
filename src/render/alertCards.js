@@ -4,7 +4,7 @@
 // recomendações não divergem entre o corpo do e-mail e o PDF anexado.
 const AlertTitle = require("../../public/alert-title");
 const { ordenarEventosParaExibicao } = require("./eventOrdering");
-const { consolidarAvisosInmet, fenomenoAvisoInmet, grauAvisoInmet } = require("../sources/inmet");
+const { consolidarAvisosInmet, fenomenoAvisoInmet, grauAvisoInmet, formatarDataInmet } = require("../sources/inmet");
 const { recomendacoesPorProtocoloEmNiveis } = require("../logic/healthProtection");
 const { contextoPrevisao } = require("../logic/forecastAlertContext");
 const { FENOMENO_POR_TIPO } = require("../logic/ocorrenciasPainel");
@@ -107,7 +107,7 @@ function cardEvento(evento, r) {
     rotuloOrigem: evento.naturezaDado || "Classificação interna baseada na previsão",
     linhas: [
       linha(null, evento.descricao),
-      linha(observado ? "Janela observada" : "Janela prevista", evento.janela),
+      evento.tipo === "uvAlto" ? null : linha(observado ? "Janela observada" : "Janela prevista", evento.janela),
       linha("Fonte de dados", fonteEventoComPrioridade(evento)),
     ].filter(Boolean),
     recomendacoes: recomendacoesDoCard(nivel, () => resolverRecomendacoesAlerta({ evento, avisosInmet: r.avisosInmet }), evento.recomendacoesPorNivel),
@@ -180,7 +180,7 @@ function cardAvisoInmet(aviso, eventosLocais, r) {
     rotuloOrigem: "Aviso oficial INMET",
     linhas: [
       linha("Aviso", `${evento || "—"} — ${severidade || "—"}`),
-      presente(inicio) || presente(fim) ? linha("Vigência", `${inicio || "—"} até ${fim || "—"}`) : null,
+      presente(inicio) || presente(fim) ? linha("Vigência", `${inicio ? formatarDataInmet(inicio) : "—"} até ${fim ? formatarDataInmet(fim) : "—"}`) : null,
       linha("Motivo do aviso", listaOficial(aviso.description || aviso.riscos).join("\n") || null, { multilinha: true }),
       instrucoes.length ? linha("Instruções oficiais", instrucoes.join("\n"), { multilinha: true }) : null,
       linha("Fonte de dados", "INMET"),

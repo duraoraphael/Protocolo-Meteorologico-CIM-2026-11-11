@@ -337,6 +337,22 @@ function dataAvisoEmMs(valor) {
   return Number.isNaN(ms) ? null : ms;
 }
 
+// Vigência de aviso INMET no formato brasileiro DD-MM-AAAA HH:MM (Brasília).
+// Texto não reconhecido como data é devolvido como veio.
+function formatarDataInmet(valor) {
+  const ms = dataAvisoEmMs(valor);
+  if (ms === null) return valor ? String(valor) : "";
+  const p = Object.fromEntries(new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric",
+    hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+  }).formatToParts(new Date(ms)).map((x) => [x.type, x.value]));
+  return `${p.day}-${p.month}-${p.year} ${p.hour}:${p.minute}`;
+}
+
+function formatarVigenciaInmet(inicio, fim) {
+  return [inicio, fim].filter(Boolean).map(formatarDataInmet).join(" até ");
+}
+
 function avisoVigente(aviso, agoraMs) {
   const inicio = dataAvisoEmMs(aviso?.inicio ?? aviso?.onset);
   const fim = dataAvisoEmMs(aviso?.fim ?? aviso?.expires);
@@ -691,6 +707,8 @@ async function buscarAvisosInmet(codigoIbge, {
 }
 
 module.exports = {
+  formatarDataInmet,
+  formatarVigenciaInmet,
   buscarPrevisaoInmet,
   buscarAvisosInmet,
   buscarAvisosInmetParaBases,
