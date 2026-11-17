@@ -1,6 +1,7 @@
 const brand = require("./brand");
 const { cabecalhoPdfCss, cabecalhoPdfHtml } = require("./pdfTemplate");
 const { formatarRajadaPrevista } = require("../../public/weather-format");
+const { formatarUv } = require("../logic/uvClassification");
 const {
   svgTemperaturaEChuva,
   svgPanoramaSemana,
@@ -80,7 +81,7 @@ function tabelaDiasBase(base) {
           <td>${d.tempMin == null ? "—" : d.tempMin + "°"} / ${d.tempMax == null ? "—" : d.tempMax + "°"}</td>
           <td>${d.precipitacaoMm == null ? "—" : d.precipitacaoMm + " mm"}${d.probabilidadeChuva != null ? ` <span class="suave">(${d.probabilidadeChuva}%)</span>` : ""}</td>
           <td>${d.rajadaMaxKmh == null ? "—" : formatarRajadaPrevista(d.rajadaMaxKmh)}</td>
-          <td>${d.uvMax == null ? "—" : d.uvMax}</td>
+          <td>${formatarUv(d.uvMax, "—")}</td>
           ${temMar ? `<td>${d.mar?.alturaMaxM == null ? "—" : d.mar.alturaMaxM + " m"}</td>` : ""}
           <td><span class="pastilha" style="background:${d.severidade.cor};">${esc(d.severidade.rotulo)}</span></td>
         </tr>`
@@ -103,7 +104,7 @@ function secaoBase(base, indice) {
           ${valor(base.tempMinSemana, "°C")} a ${valor(base.tempMaxSemana, "°C")} &nbsp;·&nbsp;
           ${valor(base.chuvaTotalSemana, " mm")} na semana &nbsp;·&nbsp;
           rajada prevista ${formatarRajadaPrevista(base.rajadaMaxSemana, "—")} &nbsp;·&nbsp;
-          UV máx. ${valor(base.uvMaxSemana)}
+          UV máx. ${formatarUv(base.uvMaxSemana, "—")}
           ${Number.isFinite(base.ondaMaxSemana) ? ` &nbsp;·&nbsp; onda máx. ${base.ondaMaxSemana} m` : ""}
         </div>
       </div>

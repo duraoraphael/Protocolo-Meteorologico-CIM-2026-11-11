@@ -1,6 +1,8 @@
 // Fonte pública: Open-Meteo Forecast (https://open-meteo.com), com modelo
 // best_match e fallback de indicador para o modelo global GFS.
 
+const { classificarUv } = require("../logic/uvClassification");
+
 const WMO_DESCRICOES = {
   0: "Céu limpo",
   1: "Predomínio de sol, poucas nuvens",
@@ -79,14 +81,8 @@ function classificarIntensidadeVento(kmh) {
   return "Fraco";
 }
 
-function classificarIndiceUv(valor) {
-  if (!Number.isFinite(valor)) return null;
-  if (valor < 3) return { nivel: "Baixo", faixa: "0–2" };
-  if (valor < 6) return { nivel: "Moderado", faixa: "3–5" };
-  if (valor < 8) return { nivel: "Alto", faixa: "6–7" };
-  if (valor < 11) return { nivel: "Muito alto", faixa: "8–10" };
-  return { nivel: "Extremo", faixa: "11+" };
-}
+// Classificação operacional do UV centralizada em src/logic/uvClassification.js.
+const classificarIndiceUv = classificarUv;
 
 // Divide as horas de hoje em três períodos operacionais. São as mesmas
 // janelas no painel e nos PDFs das 05h e das 15h (hoje, das 05h até 00h).
@@ -927,9 +923,9 @@ function normalizarRespostaOpenMeteo(json, latitude, longitude, {
     rajadaRestantePeriodo: rajadaRestante?.janela || null,
     velocidadeMaxKmh,
     uvAtual: Number.isFinite(json.current?.uv_index) && json.current.uv_index >= 0 && json.current.uv_index <= 30
-      ? Math.round(json.current.uv_index * 10) / 10 : null,
+      ? json.current.uv_index : null,
     uvAtualReferenciaEm: horaAtualModeloIso || null,
-    uvMax: uvMax == null ? null : Math.round(uvMax * 10) / 10,
+    uvMax: uvMax == null ? null : uvMax,
     uvClassificacao: classificarIndiceUv(uvMax),
     horaPicoUv: indiceUvPico >= 0 ? horas.time[indiceUvPico] : null,
     temTempestadeHoje,
@@ -952,7 +948,7 @@ function normalizarRespostaOpenMeteo(json, latitude, longitude, {
       janela: "00h–24h",
       chuvaMm: Number.isFinite(dia.precipitation_sum?.[i]) ? Math.round(dia.precipitation_sum[i] * 10) / 10 : null,
       probabilidadeChuvaPct: Number.isFinite(dia.precipitation_probability_max?.[i]) ? Math.round(dia.precipitation_probability_max[i]) : null,
-      uvMax: Number.isFinite(dia.uv_index_max?.[i]) ? Math.round(dia.uv_index_max[i] * 10) / 10 : null,
+      uvMax: Number.isFinite(dia.uv_index_max?.[i]) ? dia.uv_index_max[i] : null,
       rajadaKmh: Number.isFinite(dia.wind_gusts_10m_max?.[i]) ? Math.round(dia.wind_gusts_10m_max[i] * 10) / 10 : null,
     }); }),
   };

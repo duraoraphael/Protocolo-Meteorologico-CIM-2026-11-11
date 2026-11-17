@@ -7,7 +7,7 @@ const {
   classificarRajada,
   recomendacoes,
 } = require("../src/logic/inmetAlertRules");
-const { avaliarRiscos, grauUvConfigurado } = require("../src/logic/riskEngine");
+const { avaliarRiscos } = require("../src/logic/riskEngine");
 const { recomendacoesProtecao } = require("../src/logic/healthProtection");
 const { recomendacoesFenomeno } = require("../src/logic/phenomenonRecommendations");
 
@@ -125,22 +125,17 @@ test("UV usa recomendações solares próprias sem alterar seus limites técnico
   assert.equal(recomendacoesProtecao("ATENÇÃO").length, 3);
   assert.equal(recomendacoesProtecao("ALERTA").length, 10);
   assert.equal(recomendacoesProtecao("EMERGÊNCIA").length, 13);
-  const uv = avaliarRiscos(entrada({ qualidadeAr: { uvMax: 8, uvClassificacao: { nivel: "Muito alto" } } })).severidade.eventos.find((e) => e.tipo === "uvAlto");
-  assert.equal(uv.grau, "ATENÇÃO");
-  assert.deepEqual(uv.recomendacoes, recomendacoesFenomeno("uv", "ATENÇÃO"));
 });
 
-test("mapeamento operacional de UV é parametrizável", { concurrency: false }, () => {
-  const anterior = process.env.UV_GRAU_EXTREMO;
-  try {
-    process.env.UV_GRAU_EXTREMO = "EMERGENCIA";
-    assert.equal(grauUvConfigurado("extremo"), "EMERGÊNCIA");
-    const uv = avaliarRiscos(entrada({ qualidadeAr: { uvMax: 11, uvClassificacao: { nivel: "Extremo" } } })).severidade.eventos.find((e) => e.tipo === "uvAlto");
-    assert.equal(uv.grau, "EMERGÊNCIA");
-    assert.deepEqual(uv.recomendacoes, recomendacoesFenomeno("uv", "EMERGÊNCIA"));
-  } finally {
-    if (anterior === undefined) delete process.env.UV_GRAU_EXTREMO;
-    else process.env.UV_GRAU_EXTREMO = anterior;
+test("UV: severidade e recomendações do motor seguem a classificação central", () => {
+  const evento = (uvMax) => avaliarRiscos(entrada({ qualidadeAr: { uvMax } })).severidade.eventos.find((e) => e.tipo === "uvAlto");
+  assert.equal(evento(4), undefined);
+  assert.equal(evento(4.4), undefined);
+  assert.equal(evento(null), undefined, "dado indisponível não gera alerta nem vira NORMAL");
+  for (const [uv, grau] of [[5, "ATENÇÃO"], [6, "ATENÇÃO"], [7, "ALERTA"], [10, "ALERTA"], [11, "EMERGÊNCIA"], [15, "EMERGÊNCIA"]]) {
+    const e = evento(uv);
+    assert.equal(e.grau, grau, `UV ${uv}`);
+    assert.deepEqual(e.recomendacoes, recomendacoesFenomeno("uv", grau));
   }
 });
 

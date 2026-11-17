@@ -70,7 +70,7 @@ function converterDias(d) {
     probabilidadeChuva: arred(d.precipitation_probability_max?.[i]),
     ventoMaxKmh: arred(d.wind_speed_10m_max?.[i]),
     rajadaMaxKmh: arred(d.wind_gusts_10m_max?.[i], 1),
-    uvMax: arred(d.uv_index_max?.[i], 1),
+    uvMax: Number.isFinite(d.uv_index_max?.[i]) ? d.uv_index_max[i] : null,
   }));
 }
 

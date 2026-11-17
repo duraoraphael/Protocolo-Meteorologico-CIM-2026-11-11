@@ -244,7 +244,7 @@ ao título oficial, como transformar `Tempestade` em `Tempestade com raios`.
 | Tempestade | severidade do aviso oficial vigente; sem aviso, não é inferida a partir de chuva/vento de outro provedor | INMET |
 | Calor / risco à saúde | EHF Baixo / Severo / Extremo | Clima e Saúde — Ministério da Saúde; temperatura alta isolada não altera o EHF |
 | Baixa umidade | ≤ 20% | calibração operacional |
-| Índice UV alto | Atenção ≥ 8; Alerta ≥ 11 por padrão, com nível configurável | faixas da OMS |
+| Índice UV | Normal 0–4; Atenção 5–6; Alerta 7–10; Emergência ≥ 11 (valor arredondado para inteiro, `Math.round`); dado indisponível não é Normal | classificação central em `src/logic/uvClassification.js` |
 | Condição do mar | Atenção ≥ 1,5 m; Alerta ≥ 2,5 m | referência operacional marítima |
 | Qualidade do ar | Atenção > 60; Alerta > 80; Emergência > 100 no European AQI de PM2,5 | somente quando uma fonte autorizada fornecer o indicador; atualmente indisponível |
 

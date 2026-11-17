@@ -31,8 +31,8 @@ test("classifica as três faixas US AQI simplificadas e rejeita índice inválid
   assert.equal(classificarUsAqi(-1), null);
   assert.equal(classificarUsAqi(501), null);
   assert.equal(classificarUsAqi(null), null);
-  assert.deepEqual([0, 2.9, 3, 5.9, 6, 7.9, 8, 10.9, 11].map(v => classificarIndiceUv(v).nivel),
-    ["BAIXO", "BAIXO", "MODERADO", "MODERADO", "ALTO", "ALTO", "MUITO ALTO", "MUITO ALTO", "EXTREMO"]);
+  assert.deepEqual([0, 4, 4.4, 4.5, 6, 6.5, 7, 10, 10.5, 10.9, 11].map(v => classificarIndiceUv(v).nivel),
+    ["NORMAL", "NORMAL", "NORMAL", "ATENÇÃO", "ATENÇÃO", "ALERTA", "ALERTA", "ALERTA", "EMERGÊNCIA", "EMERGÊNCIA", "EMERGÊNCIA"]);
   assert.equal(classificarIndiceUv(null), null);
 });
 
@@ -41,7 +41,7 @@ test("valida AQI atual, horário local com UTC offset, coordenadas e partículas
   assert.equal(dados.usAqi, 50);
   assert.equal(dados.classificacao.nivel, "NORMAL");
   assert.equal(dados.uvAtual, 7.2);
-  assert.equal(dados.uvClassificacao.nivel, "ALTO");
+  assert.equal(dados.uvClassificacao.nivel, "ALERTA");
   assert.equal(dados.referenciaEm, "2026-10-25T13:00:00.000Z");
   assert.equal(dados.pm25Medio, 8.2);
   assert.equal(dados.pm10Medio, 14.5);

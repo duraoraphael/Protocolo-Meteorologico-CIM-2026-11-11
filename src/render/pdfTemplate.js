@@ -9,6 +9,7 @@ const { informativoProgramado, tipoDocumentoDoRelatorio } = require("../logic/al
 const { referenciaEdicaoVisual } = require("../logic/informativoValidity");
 const { calorPorData, dataLocal, fonteCalor, DESCRICAO_CALOR } = require("../logic/calorPorData");
 const { formatarRajadaNumero, formatarRajadaPrevista } = require("../../public/weather-format");
+const { classificarUv, formatarUv } = require("../logic/uvClassification");
 
 function esc(valor) {
   if (valor === null || valor === undefined) return "—";
@@ -453,7 +454,7 @@ function tabelaQualidadeAr(qa, indiceUv, fontesPorCampo = {}) {
     : Number.isFinite(qa.usAqi) ? (qa.fonte || "Open-Meteo — estimativa modelada") : "Informação indisponível";
   const classificacaoAr = Number.isFinite(qa.usAqi) ? qa.classificacao : null;
   const uvDisponivel = Number.isFinite(indiceUv?.valorAtual) && Boolean(indiceUv?.classificacao);
-  const uvValor = uvDisponivel ? indiceUv.valorAtual : "Índice UV indisponível";
+  const uvValor = uvDisponivel ? formatarUv(indiceUv.valorAtual) : "Índice UV indisponível";
   const uvClassificacao = uvDisponivel ? indiceUv.classificacao : "Não disponível";
   const uvReferencia = uvDisponivel
     ? `Valor atual modelado em ${indiceUv.referenciaEm || "horário não informado"}; classificação interna.`
@@ -751,6 +752,13 @@ function numeroBr(valor, casas) {
   return valor.toLocaleString("pt-BR", { minimumFractionDigits: casas, maximumFractionDigits: casas });
 }
 
+// UV: inteiro (mesma regra da classificação) com a cor do nível operacional.
+function celulaUv(valor) {
+  const uv = classificarUv(valor);
+  if (!uv) return NAO_DISPONIVEL;
+  return `<strong style="color:${esc(uv.cor)}">${uv.valorInteiro}</strong> <span class="p3d-nd">${esc(uv.nivel)}</span>`;
+}
+
 function celulaNumero(valor, casas = 0) {
   return valor == null ? NAO_DISPONIVEL : numeroBr(valor, casas);
 }
@@ -789,7 +797,7 @@ function blocoPrevisaoProximosDias(r, numeroSecao) {
       <td class="p3d-num">${formatarRajadaNumero(d.rajadaMaxKmh, NAO_DISPONIVEL)}</td>
       <td class="p3d-num">${celulaNumero(d.chuvaMm, 1)}</td>
       <td class="p3d-num">${Number.isFinite(d.probabilidadeChuvaPct) ? `${numeroBr(d.probabilidadeChuvaPct, 0)}%` : `<span class="p3d-nd">—</span>`}</td>
-      <td class="p3d-num">${celulaNumero(d.uvMax, 1)}</td>
+      <td class="p3d-num">${celulaUv(d.uvMax)}</td>
       <td class="p3d-num">${celulaCalor(r.climaSaude, d.data)}</td>
       <td>${d.condicao ? esc(d.condicao) : NAO_DISPONIVEL}</td>
     </tr>`;

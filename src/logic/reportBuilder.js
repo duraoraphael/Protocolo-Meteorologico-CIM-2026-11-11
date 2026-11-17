@@ -13,6 +13,7 @@ const {
 } = require("../sources/inmet");
 const { buscarObservacaoInmet } = require("../sources/inmetObservations");
 const { buscarOpenMeteo, classificarIndiceUv } = require("../sources/openMeteo");
+const { arredondarUv } = require("./uvClassification");
 const { buscarQualidadeAr } = require("../sources/airQuality");
 const { buscarMarComFallback } = require("../sources/marine");
 const { montarOcorrencias } = require("./ocorrenciasPainel");
@@ -714,8 +715,11 @@ async function montarRelatorio(cidade, { horarioAgendado = null, atualizarClimaS
     indiceUv: Number.isFinite(qualidadeAr?.uvAtual) ? {
       status: "operacional",
       valorAtual: qualidadeAr.uvAtual,
+      valorInteiro: arredondarUv(qualidadeAr.uvAtual),
       maximoPrevisto: qualidadeAr.uvMax,
+      maximoPrevistoInteiro: arredondarUv(qualidadeAr.uvMax),
       classificacao: qualidadeAr.uvClassificacao?.nivel || null,
+      cor: qualidadeAr.uvClassificacao?.cor || null,
       fonte: qualidadeAr.fonteUv || qualidadeAr.fonte,
       municipio: cidade.nome,
       uf: cidade.uf,

@@ -1,4 +1,5 @@
 const { acumularRecomendacoes } = require("./recomendacoesCumulativas");
+const { RECOMENDACOES_UV } = require("./uvClassification");
 
 const RECOMENDACOES = Object.freeze({
   tempestade: Object.freeze({
@@ -15,19 +16,8 @@ const RECOMENDACOES = Object.freeze({
       "Acionar a resposta de emergência local diante de descargas, danos ou pessoas atingidas.",
     ]),
   }),
-  uv: Object.freeze({
-    "ATENÇÃO": Object.freeze([
-      "Utilizar protetor solar, vestimenta de manga longa, óculos com proteção UV e cobertura para a cabeça.",
-      "Priorizar sombra e reforçar a proteção das equipes em atividade externa.",
-    ]),
-    ALERTA: Object.freeze([
-      "Reprogramar, quando possível, atividades externas para fora do período de pico do índice UV.",
-      "Ampliar pausas em área coberta e reduzir o tempo contínuo de exposição solar.",
-    ]),
-    "EMERGÊNCIA": Object.freeze([
-      "Suspender atividades externas não essenciais durante o pico de radiação ultravioleta.",
-    ]),
-  }),
+  // Textos do UV definidos em uvClassification.js (fonte única).
+  uv: RECOMENDACOES_UV.uv,
   ar: Object.freeze({
     "ATENÇÃO": Object.freeze([
       "Monitorar sintomas respiratórios e reduzir esforço prolongado ao ar livre para pessoas sensíveis.",

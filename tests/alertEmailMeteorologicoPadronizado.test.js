@@ -194,14 +194,14 @@ test("UV e qualidade do ar usam títulos humanos sem metadados técnicos", () =>
     qualidadeAr: {
       uvMax: 11,
       horaPicoUv: "11:00",
-      uvClassificacao: { nivel: "Extremo" },
+      uvClassificacao: { nivel: "EMERGÊNCIA" },
       usAqi: 150,
       pm25Medio: 29,
       classificacao: { nivel: "Muito Ruim", exibicao: "Muito Ruim" },
     },
   });
   const html = renderAlertEmailHtml(base(detectarAlertasGraves(report), report));
-  assert.match(html, /ÍNDICE UV — ALERTA/);
+  assert.match(html, /ÍNDICE UV — EMERGÊNCIA/);
   assert.match(html, /QUALIDADE DO AR — ATENÇÃO/);
   assert.doesNotMatch(html, /Fonte de dados:|Origem da classificação|Significado do nível CIM|Instalações/);
   assert.doesNotMatch(html, /UVALTO|QUALIDADEARRUIM/);

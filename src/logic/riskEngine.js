@@ -15,6 +15,7 @@ const {
 const { formatarTitulo } = require("../../public/alert-title");
 const { grauAvisoInmet, fenomenoAvisoInmet, normalizarComparacao, formatarVigenciaInmet } = require("../sources/inmet");
 const { recomendacoesFenomeno } = require("./phenomenonRecommendations");
+const { classificarUv } = require("./uvClassification");
 const { formatarRajadaPrevista } = require("../../public/weather-format");
 
 const LIMIARES = {
@@ -27,9 +28,7 @@ const LIMIARES = {
   ventoForteKmh: 60,
   ventoModeradoKmh: 40,
   baixaUmidadePct: 20,
-  // Índice UV — faixas da OMS: 8+ é "muito alto", 11+ é "extremo".
-  uvMuitoAlto: 8,
-  uvExtremo: 11,
+  // Índice UV: faixas em uvClassification.js (única fonte; sem limiar aqui).
   // Altura significativa de onda (m) — referência para operação portuária,
   // transferência de pessoal e uso de heliponto em instalações costeiras.
   marGrossoM: 2.5,
@@ -69,14 +68,6 @@ function grauPorNivel(nivel) {
   if (nivel >= 5) return "EMERGÊNCIA";
   if (nivel >= 3) return "ALERTA";
   return nivel >= 1 ? "ATENÇÃO" : "NORMAL";
-}
-
-function grauUvConfigurado(categoria) {
-  const padrao = categoria === "extremo" ? "ALERTA" : "ATENÇÃO";
-  const chave = categoria === "extremo" ? "UV_GRAU_EXTREMO" : "UV_GRAU_MUITO_ALTO";
-  const valor = String(process.env[chave] || padrao)
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
-  return ({ ATENCAO: "ATENÇÃO", ALERTA: "ALERTA", EMERGENCIA: "EMERGÊNCIA" })[valor] || padrao;
 }
 
 function rotuloFenomeno(tipo) {
@@ -278,15 +269,17 @@ function avaliarRiscos(consolidado) {
   }
 
   // Índice UV — risco de queimadura solar para equipes em trabalho externo.
-  if (Number.isFinite(qualidadeAr?.uvMax) && qualidadeAr.uvMax >= LIMIARES.uvMuitoAlto) {
-    const extremo = qualidadeAr.uvMax >= LIMIARES.uvExtremo;
-    const grauUv = grauUvConfigurado(extremo ? "extremo" : "muito_alto");
+  // Classificação central (arredondamento inteiro); NORMAL ou dado indisponível
+  // não geram alerta de UV.
+  const uvClasse = classificarUv(qualidadeAr?.uvMax);
+  if (uvClasse && uvClasse.nivel !== "NORMAL") {
+    const grauUv = uvClasse.nivel;
     candidatos.push({
       tipo: "uvAlto",
       grau: grauUv,
       nivel: NIVEL_POR_GRAU[grauUv],
       janela: qualidadeAr.horaPicoUv ? `pico por volta das ${qualidadeAr.horaPicoUv}` : "meio do dia",
-      descricao: `Índice UV ${qualidadeAr.uvMaxClassificacao?.nivel?.toLowerCase() || (extremo ? "extremo" : "muito alto")} previsto (máx. ${qualidadeAr.uvMax}), com risco de queimadura solar em exposição curta sem proteção.`,
+      descricao: `Índice UV ${uvClasse.valorInteiro} (${uvClasse.nivel}) previsto para o dia, com risco de queimadura solar em exposição sem proteção.`,
       naturezaDado: "Classificação interna baseada na previsão",
       recomendacoes: recomendacoesFenomeno("uv", grauUv),
     });
@@ -547,4 +540,4 @@ function recomendacoesEdificacao(categorias) {
   return secoes;
 }
 
-module.exports = { avaliarRiscos, recomendacoesDeslocamento, recomendacoesEdificacao, LIMIARES, grauUvConfigurado };
+module.exports = { avaliarRiscos, recomendacoesDeslocamento, recomendacoesEdificacao, LIMIARES };

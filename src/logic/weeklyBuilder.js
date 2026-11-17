@@ -16,6 +16,7 @@ const { buscarSemanaEmLote, buscarSemanaMarEmLote } = require("../sources/openMe
 const { LIMIARES } = require("./riskEngine");
 const { registrarDocumentoOperacional } = require("./documentProvenance");
 const { formatarRajadaPrevista } = require("../../public/weather-format");
+const { classificarUv } = require("./uvClassification");
 
 // Níveis de severidade usados no relatório semanal. O número permite ordenar
 // e escolher a cor; o rótulo aparece no documento.
@@ -95,17 +96,14 @@ function avaliarDia(dia, mar) {
     });
   }
 
-  if (dia.uvMax != null && dia.uvMax >= LIMIARES.uvExtremo) {
+  // Classificação central do UV; o semanal tem só dois níveis de severidade:
+  // EMERGÊNCIA => Crítico; ATENÇÃO/ALERTA => Atenção; NORMAL não gera risco.
+  const uv = classificarUv(dia.uvMax);
+  if (uv && uv.nivel !== "NORMAL") {
     riscos.push({
-      tipo: "UV extremo",
-      severidade: SEVERIDADE.CRITICO,
-      detalhe: `Índice UV ${dia.uvMax}`,
-    });
-  } else if (dia.uvMax != null && dia.uvMax >= LIMIARES.uvMuitoAlto) {
-    riscos.push({
-      tipo: "UV muito alto",
-      severidade: SEVERIDADE.ATENCAO,
-      detalhe: `Índice UV ${dia.uvMax}`,
+      tipo: `UV ${uv.nivel}`,
+      severidade: uv.nivel === "EMERGÊNCIA" ? SEVERIDADE.CRITICO : SEVERIDADE.ATENCAO,
+      detalhe: `Índice UV ${uv.valorInteiro}`,
     });
   }
 

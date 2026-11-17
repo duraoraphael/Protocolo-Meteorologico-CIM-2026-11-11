@@ -40,11 +40,13 @@ test("Open-Meteo entrega UV, chuva, vento médio e série de rajada separada", a
   assert.match(urlConsultada.searchParams.get("hourly"), /uv_index/);
   assert.match(urlConsultada.searchParams.get("hourly"), /wind_gusts_10m/);
   assert.equal(dados.uvMax, 8.4);
-  assert.equal(dados.uvClassificacao.nivel, "Muito alto");
+  assert.equal(dados.uvClassificacao.nivel, "ALERTA");
   assert.equal(dados.probabilidadeChuvaMax, null, "horas faltantes não permitem máximo da janela operacional");
   assert.equal(dados.rajadaMaxKmh, null);
   assert.equal(dados.periodos.tarde.rajadaMaxKmh, null);
-  assert.deepEqual(classificarIndiceUv(11), { nivel: "Extremo", faixa: "11+" });
+  assert.deepEqual(
+    (({ nivel, faixa }) => ({ nivel, faixa }))(classificarIndiceUv(11)),
+    { nivel: "EMERGÊNCIA", faixa: "11+" });
 });
 
 test("Open-Meteo busca no GFS uma série diária ausente e preserva o dado preenchido", async () => {

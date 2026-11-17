@@ -132,9 +132,12 @@ const Dashboard = (() => {
       const source = sources(...keys);
       return source && source !== 'Indisponível' ? source : fallback;
     };
-    const uv = Number.isFinite(r.indiceUv?.valorAtual)
+    // UV exibido como inteiro (mesma regra de arredondamento da classificação).
+    const uvBruto = Number.isFinite(r.indiceUv?.valorAtual)
       ? r.indiceUv.valorAtual
       : Number.isFinite(aq?.uvAtual) ? aq.uvAtual : null;
+    const uv = Number.isFinite(r.indiceUv?.valorInteiro) ? r.indiceUv.valorInteiro
+      : uvBruto == null ? null : Math.round(uvBruto);
     const uvClassificacao = r.indiceUv?.classificacao || aq?.uvClassificacao?.nivel;
     const uvDetail = uv == null ? 'Dado indisponível' : uvClassificacao || '';
     const uvReportedSource = r.indiceUv?.fonte;

@@ -184,7 +184,7 @@ test("sem Air Quality o UV atual vem da previsão Open-Meteo, identificado como 
   } });
   assert.equal(relatorio.indiceUv.status, "operacional");
   assert.equal(relatorio.indiceUv.valorAtual, 4.3);
-  assert.equal(relatorio.indiceUv.classificacao, "Moderado");
+  assert.equal(relatorio.indiceUv.classificacao, "NORMAL");
   assert.match(relatorio.indiceUv.fonte, /Open-Meteo.*modelado/);
   assert.equal(relatorio.indiceUv.maximoPrevisto, 10.2);
 });

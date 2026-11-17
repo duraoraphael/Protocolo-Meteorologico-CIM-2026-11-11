@@ -1,7 +1,9 @@
 const { buscarJsonComRetentativa } = require("./httpJsonClient");
 const { aplicarConfiguracaoOpenMeteo, removerCredenciaisOpenMeteo, apiPublicaPermitida } = require("./openMeteoConfig");
 
-const SOURCE = "Open-Meteo Air Quality / CAMS";
+const { classificarUv } = require("../logic/uvClassification");
+
+const SOURCE ="Open-Meteo Air Quality / CAMS";
 const CURRENT_VARIABLES = Object.freeze(["uv_index", "us_aqi", "pm2_5", "pm10"]);
 const AQI_MAX_AGE_MS = 4 * 60 * 60 * 1000;
 const AQI_GRID_MAX_DISTANCE_KM = 100;
@@ -22,14 +24,8 @@ function classificarUsAqi(valor) {
   return { nivel: "RUIM", exibicao: "RUIM", cor: "#D92828" };
 }
 
-function classificarIndiceUv(valor) {
-  if (!Number.isFinite(valor) || valor < 0 || valor > 30) return null;
-  if (valor < 3) return { nivel: "BAIXO" };
-  if (valor < 6) return { nivel: "MODERADO" };
-  if (valor < 8) return { nivel: "ALTO" };
-  if (valor < 11) return { nivel: "MUITO ALTO" };
-  return { nivel: "EXTREMO" };
-}
+// Classificação operacional do UV centralizada em src/logic/uvClassification.js.
+const classificarIndiceUv = classificarUv;
 
 function instanteEmUtc(time, offsetSegundos = 0) {
   if (typeof time !== "string" || !time.trim()) return null;
