@@ -40,8 +40,8 @@ class ErroPipelineRelatorio extends Error {
   }
 }
 
-function erroDaEtapa(etapa, codigoLog, funcao, erroOriginal) {
-  console.error(`[RELATORIO][ERRO][${codigoLog}]`, {
+function erroDaEtapa(etapa, codigoLog, funcao, erroOriginal, logDetalhado = true) {
+  if (logDetalhado) console.error(`[RELATORIO][ERRO][${codigoLog}]`, {
     mensagem: erroOriginal?.message || String(erroOriginal),
     stack: erroOriginal?.stack,
     funcao,
@@ -131,7 +131,7 @@ async function executarPipelineCorRio({ enviarEmail = true, horarioAgendado = nu
   const cidade = getCidade("rio_de_janeiro");
   const report = relatorioBaseCorRio(cidade, horarioAgendado);
   if (teste) report.envioTeste = true;
-  await anexarCorRioAoRelatorio(report, cidade);
+  await anexarCorRioAoRelatorio(report, cidade, { forcarAtualizacao: true });
   registrarDocumentoOperacional(report, {
     tipo: TIPOS_DOCUMENTO.AVISO_COR_RIO,
     fontes: ["COR-Rio — Centro de Operações e Resiliência"],
@@ -155,7 +155,11 @@ async function executarPipelineCorRio({ enviarEmail = true, horarioAgendado = nu
   return { report, arquivoPdf: null, caminhoArquivo: null, envio, ged: null };
 }
 
-async function executarPipeline({ cidadeChave, enviarEmail = true, horarioAgendado = null, teste = false, tipoEnvio = "informativo", permitirSemDestinatarios = false, destinatariosTeste = null, destinatariosAvulsos = null } = {}) {
+async function executarPipeline({
+  cidadeChave, enviarEmail = true, horarioAgendado = null, teste = false, tipoEnvio = "informativo",
+  permitirSemDestinatarios = false, destinatariosTeste = null, destinatariosAvulsos = null,
+  somenteDestinatariosCadastrados = false, aoMudarEtapa,
+} = {}) {
   if (tipoEnvio === "cor_rio") {
     return executarPipelineCorRio({ enviarEmail, horarioAgendado, teste, permitirSemDestinatarios });
   }
@@ -165,7 +169,7 @@ async function executarPipeline({ cidadeChave, enviarEmail = true, horarioAgenda
   try {
     report = await montarRelatorio(cidade, { horarioAgendado, atualizarClimaSaude: true });
   } catch (erro) {
-    throw erroDaEtapa("weather", "COLETA_DADOS", "montarRelatorio", erro);
+    throw erroDaEtapa("weather", "COLETA_DADOS", "montarRelatorio", erro, !aoMudarEtapa);
   }
   console.log("[RELATORIO] Dados obtidos");
   if (horarioAgendado) {
@@ -205,12 +209,13 @@ async function executarPipeline({ cidadeChave, enviarEmail = true, horarioAgenda
   validarDocumentoOperacional(report, "geração do documento operacional", { exigirCamposCriticos: true });
 
   let pdfBuffer;
+  aoMudarEtapa?.("gerando_pdf");
   console.log("[RELATORIO] Gerando HTML");
   console.log("[RELATORIO] Gerando PDF");
   try {
     pdfBuffer = await gerarPdfBuffer(report);
   } catch (erro) {
-    throw erroDaEtapa("pdf", "GERACAO_PDF", "gerarPdfBuffer", erro);
+    throw erroDaEtapa("pdf", "GERACAO_PDF", "gerarPdfBuffer", erro, !aoMudarEtapa);
   }
   console.log("[RELATORIO] PDF gerado");
 
@@ -219,7 +224,7 @@ async function executarPipeline({ cidadeChave, enviarEmail = true, horarioAgenda
     validarDocumentoOperacional(report, "gravação do PDF operacional", { exigirCamposCriticos: true });
     copiaLocal = await salvarCopiaLocal(pdfBuffer, report.nomeArquivoBase);
   } catch (erro) {
-    throw erroDaEtapa("pdf", "GRAVACAO_PDF", "salvarCopiaLocal", erro);
+    throw erroDaEtapa("pdf", "GRAVACAO_PDF", "salvarCopiaLocal", erro, !aoMudarEtapa);
   }
   const { caminhoArquivo, aviso } = copiaLocal;
   if (aviso) report.avisosColeta.push(aviso);
@@ -232,7 +237,7 @@ async function executarPipeline({ cidadeChave, enviarEmail = true, horarioAgenda
     try {
       pdfAnexoEmail = await gerarPdfBuffer(report, { incluirCorRio: false });
     } catch (erro) {
-      throw erroDaEtapa("pdf", "GERACAO_PDF_EMAIL", "gerarPdfBuffer", erro);
+      throw erroDaEtapa("pdf", "GERACAO_PDF_EMAIL", "gerarPdfBuffer", erro, !aoMudarEtapa);
     }
   }
 
@@ -244,11 +249,13 @@ async function executarPipeline({ cidadeChave, enviarEmail = true, horarioAgenda
       envio = await enviarRelatorioPorEmail(report, pdfAnexoEmail, {
         destinatariosOverride: destinatariosTeste ?? destinatariosAvulsos,
         permitirOverrideDestinatarios: destinatariosAvulsos !== null,
+        permitirFallback: !somenteDestinatariosCadastrados,
+        antesDeEnviar: aoMudarEtapa && (() => aoMudarEtapa("enviando_email")),
       });
     } catch (erro) {
-      throw erroDaEtapa("email", "SMTP", "enviarRelatorioPorEmail", erro);
+      throw erroDaEtapa("email", "SMTP", "enviarRelatorioPorEmail", erro, !aoMudarEtapa);
     }
-    console.log("[RELATORIO] E-mail enviado", {
+    if (!aoMudarEtapa) console.log("[RELATORIO] E-mail enviado", {
       messageId: envio.messageId,
       respostaSmtp: envio.respostaSmtp,
       aceitos: envio.aceitos,

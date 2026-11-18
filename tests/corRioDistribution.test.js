@@ -77,12 +77,12 @@ test("envios geral e COR-RIO usam listas isoladas e sem duplicação", { concurr
   await enviarAvisoCorRioPorEmail(report);
 
   assert.deepEqual(mensagens[0].to.split(", "), ["rio@exemplo.com", "ambos@exemplo.com"]);
-  assert.doesNotMatch(mensagens[0].html, /Comunicado oficial COR-Rio/);
+  assert.doesNotMatch(mensagens[0].html, /Comunicado oficial COR-Rio/i);
   assert.equal(mensagens[0].attachments.filter((item) => item.contentType === "application/pdf").length, 1);
 
   assert.deepEqual(mensagens[1].to.split(", "), ["cor@exemplo.com", "ambos@exemplo.com"]);
   assert.match(mensagens[1].html, /AVISO COR-RIO/);
-  assert.match(mensagens[1].html, /Comunicado oficial COR-Rio/);
+  assert.match(mensagens[1].html, /COMUNICADO OFICIAL COR-RIO/);
   assert.equal(mensagens[1].attachments.filter((item) => item.contentType === "application/pdf").length, 0);
   assert.deepEqual(listaDestinatarios("macae"), ["fallback@exemplo.com"]);
 });

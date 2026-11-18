@@ -35,6 +35,8 @@ const { criarLinksRelatorio, senhaDoBasicAuth } = require("./src/security/linksR
 const { criarControleTentativas, valorTrustProxy } = require("./src/security/tentativas");
 const { opcoesDeRede, carregarPfx, redirecionarParaHttps } = require("./src/security/https");
 const { validarDocumentoOperacional } = require("./src/logic/documentProvenance");
+const { criarLotesRelatorio } = require("./src/logic/lotesRelatorio");
+const { listaDestinatarios } = require("./src/email/sendReport");
 
 // Hospedagens em nuvem (Render, Railway, etc.) definem PORT automaticamente —
 // PORTA continua valendo para rodar local/Windows sem mexer no .env.
@@ -51,6 +53,8 @@ function criarApp({
   trustProxy = process.env.TRUST_PROXY,
   opcoesTentativas = {},
   executarPipelineRelatorio = executarPipeline,
+  pastaLotes = path.join(__dirname, "data", "lotes-relatorios"),
+  listarDestinatariosLote = (chave) => listaDestinatarios(chave, { permitirFallback: false }),
   atualizadorDados = criarAtualizadorDados(),
   servicoCorRio = servicoCorRioPadrao(),
 } = {}) {
@@ -222,6 +226,38 @@ function criarApp({
   });
 
   let geracaoEmAndamento = false;
+  const lotes = criarLotesRelatorio({
+    pasta: pastaLotes,
+    cidades: CIDADES,
+    executar: executarPipelineRelatorio,
+    listarDestinatarios: listarDestinatariosLote,
+    geracaoIndividualAtiva: () => geracaoEmAndamento,
+    publicar(resultado) {
+      validarDocumentoOperacional(resultado.report, "publicação pelo servidor", { exigirCamposCriticos: true });
+      atualizadorDados.registrar(resultado.report);
+      if (resultado.arquivoPdf) arquivosOperacionais.add(resultado.arquivoPdf);
+    },
+  });
+
+  const rotaLote = (acao, status = 200) => async (req, res) => {
+    res.set("Cache-Control", "no-store");
+    const checagem = await verificarSenha(req);
+    if (!checagem.ok) {
+      return res.status(checagem.status).json({ ok: false, erro: checagem.erro });
+    }
+    try {
+      return res.status(status).json({ ok: true, lote: acao(req) });
+    } catch (erro) {
+      if (!erro?.publico) console.error("[LOTE] Falha ao acessar o registro de processamento.");
+      return res.status(erro?.publico ? erro.status : 500).json({
+        ok: false, erro: erro?.publico ? erro.message : "Não foi possível acessar o registro do lote.",
+      });
+    }
+  };
+  app.locals.restaurarLotesAgendados = lotes.restaurarAgendamentos;
+  app.post("/api/relatorios/lotes", rotaLote((req) => lotes.criar(req.body?.id, req.body?.cidades, req.body?.horario), 202));
+  app.post("/api/relatorios/lotes/:id/status", rotaLote((req) => lotes.obter(req.params.id)));
+  app.post("/api/relatorios/lotes/:id/repetir", rotaLote((req) => lotes.repetir(req.params.id, req.body?.tentativaId), 202));
 
   app.post("/api/gerar-relatorio", async (req, res) => {
     console.log("[RELATORIO] Iniciando geração");
@@ -238,7 +274,7 @@ function criarApp({
     }
     console.log("[RELATORIO] Autorização validada");
 
-    if (geracaoEmAndamento) {
+    if (geracaoEmAndamento || lotes.emAndamento()) {
       const mensagem = "Já existe uma geração de relatório em andamento. Aguarde a conclusão.";
       return res.status(409).json({
         ok: false,
@@ -248,6 +284,9 @@ function criarApp({
       });
     }
 
+    if (req.body?.tipoEnvio === "lote") {
+      return res.status(400).json({ ok: false, erro: "Use a rota de envio em lote para informar as instalações." });
+    }
     const tipoEnvio = req.body?.tipoEnvio === "cor_rio" ? "cor_rio" : "informativo";
     let cidadeChave;
     try {
@@ -446,6 +485,7 @@ function iniciarServidor() {
   const iniciarAgendamentos = () => {
     if (agendamentosIniciados) return;
     agendamentosIniciados = true;
+    app.locals.restaurarLotesAgendados();
     iniciarAgendamentoDiario(publicarSnapshotInformativo);
     agendarEnvioUnicoHoje(publicarSnapshotInformativo);
     iniciarMonitorColetaAvisosInmet();

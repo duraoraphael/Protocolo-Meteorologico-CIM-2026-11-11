@@ -204,6 +204,21 @@ h1 em { color:var(--yellow-petro); font-style:normal; }
 }
 .modal-campo { display:grid; gap:6px; margin:12px 0; color:var(--texto); font-size:13px; font-weight:650; }
 .modal-campo select { margin:0; font-weight:400; }
+.modal.modal-lote { width:min(700px, 94vw); padding:clamp(14px, 4vw, 28px); }
+.lote-secao { min-width:0; margin:0 0 12px; padding:10px; border:1px solid var(--borda); border-radius:8px; }
+.lote-secao legend, .lote-secao h3 { color:var(--amarelo); font-size:15px; font-weight:650; }
+.lote-secao h3 { margin:0 0 8px; }
+.lote-grade { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:6px; max-height:min(32dvh, 250px); overflow:auto; }
+.lote-opcao { display:flex; align-items:center; gap:8px; min-width:0; padding:6px; font-size:13px; overflow-wrap:anywhere; }
+.lote-opcao input[type="checkbox"] { width:auto; margin:0; flex:none; accent-color:var(--amarelo); }
+.lote-todas { font-weight:650; margin-bottom:4px; }
+.lote-secao p { margin:6px 0 0; }
+.lote-secao ul { margin:8px 0 0; padding:0; list-style:none; max-height:min(36dvh, 300px); overflow:auto; }
+.lote-secao li { padding:6px; border-bottom:1px solid var(--borda); font-size:13px; }
+.lote-secao li small { display:block; margin-top:3px; color:var(--texto-suave); }
+.modal p.lote-confirmacao { color:var(--amarelo); margin:8px 0; font-weight:650; }
+.modal-lote .modal-botoes { position:sticky; bottom:0; background:var(--fundo-card); flex-wrap:wrap; }
+@media (max-width:580px) { .lote-grade { grid-template-columns:repeat(2, minmax(0, 1fr)); } }
 .modal-mensagem { min-height: 20px; font-size: 12.5px; color: var(--vermelho); margin-bottom: 6px; }
 .modal-botoes { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
 

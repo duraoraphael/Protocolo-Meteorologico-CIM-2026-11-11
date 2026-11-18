@@ -42,6 +42,8 @@ function listaDestinatarios(cidadeChave, { permitirFallback = true } = {}) {
 async function enviarRelatorioPorEmail(report, pdfBuffer, {
   destinatariosOverride = null,
   permitirOverrideDestinatarios = false,
+  permitirFallback = true,
+  antesDeEnviar,
 } = {}) {
   validarDocumentoOperacional(report, "envio de e-mail", { exigirCamposCriticos: true });
   let destinatarios;
@@ -54,7 +56,7 @@ async function enviarRelatorioPorEmail(report, pdfBuffer, {
     }
     destinatarios = semDuplicacoes(destinatariosOverride.map(validarEmail));
   } else {
-    destinatarios = listaDestinatarios(report.cidade?.chave);
+    destinatarios = listaDestinatarios(report.cidade?.chave, { permitirFallback });
   }
   if (destinatarios.length === 0) {
     throw new Error(
@@ -69,7 +71,7 @@ async function enviarRelatorioPorEmail(report, pdfBuffer, {
   // meteorológica Rio de Janeiro recebem somente o informativo geral.
   const html = renderEmailHtml(report, { incluirCorRio: false });
 
-  const info = await transportador.sendMail({
+  const mensagem = {
     from: enderecoRemetente().formatado,
     to: destinatarios.join(", "),
     subject: assunto,
@@ -82,7 +84,9 @@ async function enviarRelatorioPorEmail(report, pdfBuffer, {
         contentType: "application/pdf",
       },
     ],
-  });
+  };
+  antesDeEnviar?.();
+  const info = await transportador.sendMail(mensagem);
 
   return {
     messageId: info.messageId,

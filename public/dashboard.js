@@ -103,6 +103,7 @@ async function popularSeletorBase() {
   const inicial = escolhidaNaUrl || dados.ativa;
 
   basesComCorRio = new Set(dados.disponiveis.filter((c) => c.corRio).map((c) => c.chave));
+  envioLote?.popular(dados.disponiveis);
   seletorBaseEl.innerHTML = dados.disponiveis
     .map((c) => `<option value="${esc(c.chave)}">${esc(c.nome)} — ${esc(c.uf)}</option>`)
     .join("");
@@ -162,11 +163,11 @@ async function carregarCorRio() {
     const { ok, aplicavel, ...resposta } = dados;
     // estágio, textos e cores mudam juntos, num único render
     estadoCorRio = { chave, carregando: false, falhaServidor: false, resposta };
-    proximaConsultaCorRio = Date.now() + intervaloAtualizacaoMs;
+    proximaConsultaCorRio = Date.now() + 60_000;
   } catch (erro) {
     if (request !== corRioRequest) return;
     estadoCorRio = { ...estadoCorRio, carregando: false, falhaServidor: true };
-    proximaConsultaCorRio = Date.now() + Math.min(NOVA_TENTATIVA_MS, intervaloAtualizacaoMs);
+    proximaConsultaCorRio = Date.now() + Math.min(NOVA_TENTATIVA_MS, 60_000);
   }
   renderCorRio();
 }
@@ -256,6 +257,11 @@ async function iniciar() {
     conteudo.innerHTML = `<div class="erro" role="alert">Não foi possível carregar as bases. <button id="tentar-novamente">Tentar novamente</button></div>`;
   }
 }
+const envioLote = window.EnvioLote?.criar({
+  overlay: overlaySenha, tipo: tipoEnvioEl, senha: inputSenha, confirmar: botaoConfirmar,
+  cancelar: botaoCancelar, mensagem: modalMensagem, escape: esc,
+  aoConcluir: carregarPreview,
+});
 iniciar();
 
 // ---------------------------------------------------------------------
@@ -265,9 +271,11 @@ function abrirModal() {
   overlaySenha.classList.remove("oculto");
   modalMensagem.textContent = "";
   inputSenha.value = "";
+  envioLote?.atualizar();
   inputSenha.focus();
 }
 function fecharModal() {
+  if (envioLote?.cancelarFechamento()) return;
   overlaySenha.classList.add("oculto");
 }
 
@@ -277,7 +285,7 @@ overlaySenha.addEventListener("click", (e) => {
   if (e.target === overlaySenha) fecharModal();
 });
 inputSenha.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") botaoConfirmar.click();
+  if (e.key === "Enter" && !e.repeat) botaoConfirmar.click();
 });
 
 function mostrarToast(mensagem, tipo = "sucesso") {
@@ -286,7 +294,13 @@ function mostrarToast(mensagem, tipo = "sucesso") {
   setTimeout(() => toastEl.classList.add("oculto"), 8000);
 }
 
-botaoConfirmar.addEventListener("click", async () => {
+botaoConfirmar.addEventListener("click", async (evento) => {
+  if (botaoConfirmar.disabled) return;
+  if (tipoEnvioEl.value === "lote" && envioLote) {
+    if (evento.detail > 1) return;
+    await envioLote.acionar();
+    return;
+  }
   const senha = inputSenha.value;
   const tipoEnvio = tipoEnvioEl.value;
   const avisoCorRio = tipoEnvio === "cor_rio";
@@ -295,6 +309,7 @@ botaoConfirmar.addEventListener("click", async () => {
     return;
   }
   botaoConfirmar.disabled = true;
+  tipoEnvioEl.disabled = true;
   botaoConfirmar.textContent = avisoCorRio ? "Preparando aviso…" : "Gerando relatório…";
   modalMensagem.textContent = avisoCorRio ? "Consultando o conteúdo oficial do COR-Rio…" : "Atualizando os dados meteorológicos…";
   const avisoPdf = setTimeout(() => {
@@ -328,6 +343,7 @@ botaoConfirmar.addEventListener("click", async () => {
     clearTimeout(avisoPdf);
     clearTimeout(avisoEnvio);
     botaoConfirmar.disabled = false;
+    tipoEnvioEl.disabled = false;
     botaoConfirmar.textContent = "Gerar e Enviar";
   }
 });

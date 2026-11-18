@@ -81,8 +81,8 @@ function linhaLocal({ cidade, uf, data, contexto }) {
   return partes.length ? partes.map(esc).join(" — ") : "—";
 }
 
-function renderEmailHeader({ titulo, cidade, uf, data, contexto }) {
-  return `<tr data-email-header="true"><td bgcolor="${EMAIL_HEADER_VERDE}" style="background:${EMAIL_HEADER_VERDE};padding:16px 22px;">
+function renderEmailHeader({ titulo, cidade, uf, data, contexto, cor = EMAIL_HEADER_VERDE }) {
+  return `<tr data-email-header="true"><td bgcolor="${cor}" style="background:${cor};padding:16px 22px;">
     <table class="cim-header-layout" role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;"><tr>
       <td data-email-header-cim="true" class="cim-header-cell cim-header-cim" width="36%" valign="middle" align="left" style="width:36%;color:#ffffff;">${identidadeCimHtml()}</td>
       <td data-email-header-title="true" class="cim-header-cell cim-header-title" width="64%" valign="middle" align="center" style="width:64%;color:#ffffff;padding:0 18px 0 10px;text-align:center;">

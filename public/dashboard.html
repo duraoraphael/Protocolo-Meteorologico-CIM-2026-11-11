@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Protocolo Meteorológico CIM</title>
 <link rel="icon" href="/logo/CIM.png" type="image/png" />
-<link rel="stylesheet" href="dashboard.css?v=ops-11" />
+<link rel="stylesheet" href="dashboard.css?v=lotes-1" />
 </head>
 <body>
 
@@ -57,11 +57,37 @@
         <select id="tipo-envio">
           <option value="informativo">Informativo meteorológico da base selecionada</option>
           <option value="cor_rio">Aviso exclusivo COR-RIO — RJ</option>
+          <option value="lote">Envio em lote de informativos</option>
         </select>
       </label>
+      <fieldset id="lote-selecao" class="lote-secao oculto">
+        <legend>Selecionar instalações</legend>
+        <label class="modal-campo lote-horario">
+          <span>Horário de envio (Brasília)</span>
+          <select id="lote-horario">
+            <option value="">Esporádico — enviar agora</option>
+            <option value="08:00">08h — próxima ocorrência</option>
+            <option value="15:00">15h — próxima ocorrência</option>
+          </select>
+        </label>
+        <label class="lote-opcao lote-todas"><input id="lote-todas" type="checkbox"> Selecionar todas</label>
+        <div id="lote-bases" class="lote-grade"></div>
+        <p id="lote-contador" aria-live="polite"></p>
+        <label id="lote-historico" class="modal-campo oculto">
+          <span>Agendamentos desta sessão</span>
+          <select id="lote-agendamentos"></select>
+        </label>
+      </fieldset>
       <input id="input-senha" aria-label="Senha operacional" type="password" placeholder="Senha" autocomplete="off" />
+      <section id="lote-progresso" class="lote-secao oculto" aria-labelledby="lote-titulo">
+        <h3 id="lote-titulo">Envio em lote de informativos meteorológicos</h3>
+        <p id="lote-resumo" role="status"></p>
+        <ul id="lote-resultados"></ul>
+      </section>
+      <p id="lote-confirmacao" class="lote-confirmacao oculto" role="status"></p>
       <div id="modal-mensagem" class="modal-mensagem" role="status" aria-live="polite"></div>
       <div class="modal-botoes">
+        <button id="lote-novo" class="botao-secundario oculto" type="button">Novo lote</button>
         <button id="botao-cancelar" class="botao-secundario">Cancelar</button>
         <button id="botao-confirmar" class="botao-primario">Gerar e Enviar</button>
       </div>
@@ -113,7 +139,8 @@
   <script src="weather-format.js?v=1"></script>
   <script src="cor-rio-compartilhado.js?v=ops-2"></script>
   <script src="dashboard-components.js?v=ops-8"></script>
-  <script src="dashboard.js?v=ops-6"></script>
+  <script src="envio-lote.js?v=2"></script>
+  <script src="dashboard.js?v=lotes-2"></script>
 </body>
 </html>
 

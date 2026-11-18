@@ -42,7 +42,7 @@ const URL_COMUNICADOS =
 // nesta janela.
 const JANELA_VIGENCIA_HORAS = 24;
 // Vários painéis abertos não multiplicam as consultas à fonte.
-const TTL_PADRAO_MS = 5 * 60 * 1000;
+const TTL_PADRAO_MS = 60 * 1000;
 const HEADERS = { "User-Agent": "Protocolo-Meteorologico-CIM/1.0 (consulta publica institucional)", Accept: "application/json" };
 const LIMITE_PARAGRAFOS = 400;
 const LIMITE_CARACTERES = 60000;
@@ -131,6 +131,20 @@ function normalizarTitulo(titulo) {
   return titulo.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/gi, " ").trim().toLowerCase();
 }
 
+// Texto integral para o aviso exclusivo. Os outros canais continuam usando
+// os campos limitados (titulo, resumo e paragrafos).
+function descricaoIntegral(html) {
+  const $ = cheerio.load(html || "");
+  $("script, style, iframe, noscript, svg, form, template").remove();
+  const quebra = "\u2029";
+  $("br").replaceWith(quebra);
+  $("article, section, div, p, h1, h2, h3, h4, h5, h6, li, dt, dd, blockquote, pre, tr, figcaption").each((_, el) => {
+    $(el).before(quebra).after(quebra);
+  });
+  $("td, th").after(" ");
+  return $("body").text().split(quebra).map((bloco) => bloco.replace(/\s+/g, " ").trim()).filter(Boolean);
+}
+
 /**
  * Interpreta a lista de posts do WordPress. Descarta itens sem id, título,
  * data ou link do próprio cor.rio; remove duplicados (mesmo id ou mesmo
@@ -141,7 +155,8 @@ function interpretarComunicados(json) {
   const porChave = new Map();
   for (const post of json) {
     const id = Number(post?.id);
-    const titulo = textoHtml(post?.title?.rendered).slice(0, 300);
+    const tituloIntegral = textoHtml(post?.title?.rendered);
+    const titulo = tituloIntegral.slice(0, 300);
     const publicadoEm = isoGmt(post?.date_gmt);
     const link = linkCorRio(post?.link);
     if (!Number.isInteger(id) || id <= 0 || !titulo || !publicadoEm || !link) continue;
@@ -149,6 +164,8 @@ function interpretarComunicados(json) {
     const item = {
       id: String(id),
       titulo,
+      tituloIntegral,
+      descricaoIntegral: descricaoIntegral(post?.content?.rendered),
       resumo: textoHtml(post?.excerpt?.rendered).replace(/\s*\[(?:…|&hellip;|\.\.\.)\]\s*$/, "…").slice(0, 600),
       paragrafos: paragrafosConteudo(post?.content?.rendered),
       publicadoEm,
@@ -242,7 +259,7 @@ function criarServicoCorRio({
       const json = await buscarJsonComRetentativa(url, {
         nomeFonte, fetchImpl, timeoutMs, tentativas, atrasoBaseMs: 1000,
         ...(esperarFn ? { esperarFn } : {}),
-        requestInit: { headers: HEADERS, redirect: "error" },
+        requestInit: { headers: HEADERS, redirect: "error", cache: "no-store" },
       });
       parte.dados = interpretar(json);
       parte.consultadoEm = new Date(agora()).toISOString();
@@ -314,13 +331,13 @@ function criarServicoCorRio({
   }
 
   /** Devolve o estado, consultando a fonte se a última tentativa passou do TTL. */
-  async function obter() {
+  async function obter({ forcar = false } = {}) {
     const ultima = Math.max(
       Date.parse(partes.estagio.ultimaTentativaEm || "") || 0,
       Date.parse(partes.calor.ultimaTentativaEm || "") || 0,
       Date.parse(partes.comunicados.ultimaTentativaEm || "") || 0
     );
-    if (agora() - ultima >= ttlMs) await atualizar();
+    if (forcar || agora() - ultima >= ttlMs) await atualizar();
     return estado();
   }
 
@@ -369,11 +386,13 @@ function fontesCorRio(estado) {
  * atualiza as fontes. Só para bases com integracaoCorRio. Nunca lança: uma
  * falha vira estado "indisponível" e o restante do PDF segue normalmente.
  */
-async function anexarCorRioAoRelatorio(report, cidade, { servico = servicoCorRioPadrao(), logger = console } = {}) {
+async function anexarCorRioAoRelatorio(report, cidade, {
+  servico = servicoCorRioPadrao(), logger = console, forcarAtualizacao = false,
+} = {}) {
   if (!cidade?.integracaoCorRio) return null;
   let estado;
   try {
-    estado = await servico.obter();
+    estado = await servico.obter({ forcar: forcarAtualizacao });
   } catch (erro) {
     logger.error?.(`[COR-RIO] Falha inesperada ao preparar o relatório: ${erro.message}`);
     estado = {

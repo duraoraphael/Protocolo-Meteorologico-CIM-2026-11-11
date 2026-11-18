@@ -96,8 +96,9 @@ function conteudoDoDia(paragrafos, ref) {
 }
 
 /** Comunicado meteorológico do dia do informativo, ou null. */
-function comunicadoDoDia(itens, { geradoEm = Date.now() } = {}) {
+function comunicadoDoDia(itens, { geradoEm = Date.now(), integral = false } = {}) {
   const limite = typeof geradoEm === "number" ? geradoEm : Date.parse(geradoEm);
+  if (!Number.isFinite(limite)) return null;
   const ref = diaBrasilia(limite);
   const candidatos = (itens || []).filter((c) => {
     const publicado = Date.parse(c.publicadoEm);
@@ -108,6 +109,7 @@ function comunicadoDoDia(itens, { geradoEm = Date.now() } = {}) {
     return !diasTitulo.length || diasTitulo.includes(0);
   }).sort((a, b) => Date.parse(b.publicadoEm) - Date.parse(a.publicadoEm));
   for (const c of candidatos) {
+    if (integral) return c;
     const paragrafos = conteudoDoDia(c.paragrafos, ref);
     if (paragrafos.length) return { ...c, paragrafos };
   }
@@ -124,14 +126,15 @@ const link = (url, rotulo) => (/^https:\/\/cor\.rio\//.test(url || "") ? `<a hre
 const linha = (rotulo, valor) => `<div style="margin-top:3px;"><strong>${rotulo}:</strong> ${valor}</div>`;
 const aviso = (t) => `<div style="margin-top:8px;padding:6px 10px;border:1px dashed #B7791F;background:#FFF8E6;font:13px/1.45 Arial,sans-serif;">${t}</div>`;
 
-function paragrafosHtml(paragrafos) {
+function paragrafosHtml(paragrafos, tituloEmNegrito) {
   let html = "";
   let lista = [];
   const fechar = () => { if (lista.length) html += `<ul style="margin:4px 0 0;padding-left:20px;">${lista.join("")}</ul>`; lista = []; };
   for (const p of paragrafos) {
     if (p.item) { lista.push(`<li style="margin-bottom:3px;">${textoOficial(p.texto)}</li>`); continue; }
     fechar();
-    html += `<div style="margin-top:${p.destaque ? 10 : 6}px;${p.destaque ? "font-weight:bold;" : ""}">${textoOficial(p.texto)}</div>`;
+    const texto = textoOficial(p.texto);
+    html += `<div style="margin-top:${p.destaque ? 10 : 6}px;${p.destaque ? "font-weight:bold;" : ""}">${tituloEmNegrito ? texto.replace(tituloEmNegrito, "<strong>$&</strong>") : texto}</div>`;
   }
   fechar();
   return html;
@@ -203,4 +206,4 @@ function cartaoCorRioEmail(r) {
   </table>`;
 }
 
-module.exports = { cartaoCorRioEmail, comunicadoDoDia, conteudoDoDia, diasCitados, diaBrasilia };
+module.exports = { cartaoCorRioEmail, comunicadoDoDia, conteudoDoDia, diasCitados, diaBrasilia, paragrafosHtml };

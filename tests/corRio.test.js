@@ -32,11 +32,11 @@ function respostaJson(json, status = 200) {
 }
 function fetchFalso(rotas) {
   const chamadas = [];
-  const fn = async (url) => {
+  const fn = async (url, opcoes) => {
     chamadas.push(url);
     const r = rotas[url];
     if (r instanceof Error) throw r;
-    if (typeof r === "function") return r();
+    if (typeof r === "function") return r(opcoes);
     return r;
   };
   fn.chamadas = chamadas;
@@ -132,11 +132,13 @@ test("serviço: estágio operacional, calor e comunicados têm horários própri
   await s.obter();
   assert.equal(fetchImpl.chamadas.length, 3);
 
-  // mudança de estágio chega na próxima consulta
+  // mudanças nos dois protocolos chegam na próxima consulta
   avancar(60_000);
   estagio = estagioBruto("Estágio 4");
+  rotas[URL_CALOR] = ({ cache }) => respostaJson(cache === "no-store" ? "calor 2" : "calor 1");
   e = await s.obter();
   assert.equal(e.estagio.dados.nivel, 4);
+  assert.equal(e.calor.dados.nivel, 2);
 
   // estágio falha, comunicados seguem: cada parte com seu status
   avancar(60_000);
@@ -153,7 +155,7 @@ test("serviço: estágio operacional, calor e comunicados têm horários própri
   rotas[URL_CALOR] = () => respostaJson({}, 503);
   e = await s.obter();
   assert.equal(e.calor.status, "desatualizado");
-  assert.equal(e.calor.dados.nivel, 1, "mantém o último estágio de calor válido");
+  assert.equal(e.calor.dados.nivel, 2, "mantém o último estágio de calor válido");
   assert.equal(e.estagio.status, "desatualizado", "estado operacional permanece independente");
 });
 
@@ -170,6 +172,23 @@ test("serviço: sem dado válido fica indisponível — nunca assume o estágio 
   assert.deepEqual(e.comunicados.itens, []);
   assert.equal(e.comunicados.consultadoEm, null);
   assert.equal(e.calor.status, "operacional");
+});
+
+test("coleta forçada atualiza o calor mesmo dentro do TTL e ignora o cache HTTP", async () => {
+  let calor = "calor 1";
+  const { s, fetchImpl } = servico({
+    [URL_ESTAGIO]: () => respostaJson(estagioBruto()),
+    [URL_CALOR]: ({ cache }) => {
+      assert.equal(cache, "no-store");
+      return respostaJson(calor);
+    },
+    [URL_COMUNICADOS]: () => respostaJson([]),
+  });
+  assert.equal((await s.obter()).calor.dados.nivel, 1);
+  calor = "calor 2";
+  assert.equal((await s.obter()).calor.dados.nivel, 1);
+  assert.equal((await s.obter({ forcar: true })).calor.dados.nivel, 2);
+  assert.equal(fetchImpl.chamadas.length, 6);
 });
 
 test("serviço: lista vazia da fonte é 'nenhum comunicado', não falha", async () => {
