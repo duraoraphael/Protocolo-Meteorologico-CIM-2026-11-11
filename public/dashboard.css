@@ -267,7 +267,7 @@ h1 em { color:var(--yellow-petro); font-style:normal; }
 }
 
 /* Modal de gerenciamento de responsáveis */
-.modal-responsaveis { width: min(760px, 94vw); }
+.modal-responsaveis { width: min(1180px, 96vw); }
 .modal-responsaveis h2 span { color: var(--texto); }
 
 .resp-lista {

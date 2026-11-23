@@ -1,5 +1,5 @@
 const { criarTransportador, enderecoRemetente } = require("./transport");
-const { listarTodos } = require("../config/recipients");
+const { listarTodos, filtrarEmailsAtivos } = require("../config/recipients");
 const { anexosLogosEmail } = require("../config/headerAssets");
 const { validarDocumentoOperacional } = require("../logic/documentProvenance");
 
@@ -38,7 +38,7 @@ function listaDestinatariosSemanal() {
       .forEach((e) => vistos.add(e));
   }
 
-  return [...vistos];
+  return filtrarEmailsAtivos([...vistos]);
 }
 
 async function enviarRelatorioSemanalPorEmail(relatorio, pdfBuffer, emailHtml) {

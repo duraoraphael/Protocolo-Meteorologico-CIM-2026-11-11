@@ -61,7 +61,7 @@ function renderListaDestinatariosPainel(responsaveis) {
   const alvo = document.getElementById("lista-destinatarios-painel");
   if (!alvo) return;
   if (!responsaveis || responsaveis.length === 0) {
-    alvo.innerHTML = `<span class="texto-aviso">Nenhum responsável cadastrado para esta base — o botão 👥 permite cadastrar.</span>`;
+    alvo.innerHTML = `<span class="texto-aviso">Nenhum responsável cadastrado para esta instalação — o botão 👥 permite cadastrar.</span>`;
     return;
   }
   alvo.innerHTML = `<div class="chips-destinatarios">${responsaveis
@@ -348,211 +348,10 @@ botaoConfirmar.addEventListener("click", async (evento) => {
   }
 });
 
-// ---------------------------------------------------------------------
-// Modal de gerenciamento de responsáveis. A pessoa existe uma única vez e
-// pode receber os informativos de uma ou várias bases.
-// ---------------------------------------------------------------------
-const overlayResponsaveis = document.getElementById("overlay-responsaveis");
-const botaoResponsaveis = document.getElementById("botao-responsaveis");
-const respBlocoSenha = document.getElementById("resp-bloco-senha");
-const respBlocoGestao = document.getElementById("resp-bloco-gestao");
-const respInputSenha = document.getElementById("resp-input-senha");
-const respSenhaMensagem = document.getElementById("resp-senha-mensagem");
-const respBotaoDesbloquear = document.getElementById("resp-botao-desbloquear");
-const respBotaoCancelar = document.getElementById("resp-botao-cancelar");
-const respBotaoFechar = document.getElementById("resp-botao-fechar");
-const respLista = document.getElementById("resp-lista");
-const respForm = document.getElementById("resp-form");
-const respInputNome = document.getElementById("resp-input-nome");
-const respInputEmail = document.getElementById("resp-input-email");
-const respBotaoCadastrar = document.getElementById("resp-botao-cadastrar");
-const respFormMensagem = document.getElementById("resp-form-mensagem");
-
-let senhaDesbloqueada = null; // guardada em memória só durante a sessão do modal aberto
-let basesDisponiveis = [];
-let responsaveisCadastrados = [];
-
-function abrirModalResponsaveis() {
-  if (!cidadeAtivaChave) return;
-  overlayResponsaveis.classList.remove("oculto");
-  respBlocoSenha.classList.remove("oculto");
-  respBlocoGestao.classList.add("oculto");
-  respInputSenha.value = "";
-  respSenhaMensagem.textContent = "";
-  senhaDesbloqueada = null;
-  respInputSenha.focus();
-}
-function fecharModalResponsaveis() {
-  overlayResponsaveis.classList.add("oculto");
-  senhaDesbloqueada = null;
-}
-
-botaoResponsaveis.addEventListener("click", abrirModalResponsaveis);
-respBotaoCancelar.addEventListener("click", fecharModalResponsaveis);
-respBotaoFechar.addEventListener("click", fecharModalResponsaveis);
-overlayResponsaveis.addEventListener("click", (e) => {
-  if (e.target === overlayResponsaveis) fecharModalResponsaveis();
-});
-respInputSenha.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") respBotaoDesbloquear.click();
-});
-
-async function renderListaModal() {
-  respLista.innerHTML = `<li class="resp-vazio">Carregando…</li>`;
-  // E-mails só vêm com a senha (V-06): a leitura pública devolve só nomes.
-  const resp = await fetch("/api/responsaveis/consultar", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ senha: senhaDesbloqueada }),
-  });
-  const dados = await resp.json();
-  if (!dados.ok) throw new Error(dados.erro || "Falha ao carregar responsáveis.");
-  responsaveisCadastrados = dados.responsaveis || [];
-  basesDisponiveis = dados.basesDisponiveis || [];
-
-  respLista.innerHTML =
-    responsaveisCadastrados.length === 0
-      ? `<li class="resp-vazio">Nenhuma pessoa cadastrada ainda.</li>`
-      : responsaveisCadastrados
-          .map(
-            (r) => `<li class="resp-pessoa" data-email="${esc(r.email)}">
-              <div class="resp-cabecalho">
-                <span><strong>${esc(r.nome)}</strong> <span class="resp-email">${esc(r.email)}</span></span>
-                <button type="button" class="resp-remover" title="Excluir responsável">Excluir</button>
-              </div>
-              <fieldset class="resp-bases">
-                <legend>Bases vinculadas</legend>
-                ${basesDisponiveis.map((base) => `<label><input type="checkbox" class="resp-base" value="${esc(base.chave)}"${r.bases?.includes(base.chave) ? " checked" : ""}> ${esc(base.nome)} — ${esc(base.uf)}</label>`).join("")}
-              </fieldset>
-              <button type="button" class="botao-primario resp-salvar">Salvar bases</button>
-            </li>`
-          )
-          .join("");
-
-  // mantém o painel principal sincronizado, sem deixar e-mails à mostra na TV
-  renderListaDestinatariosPainel(
-    responsaveisCadastrados.filter((r) => r.bases?.includes(cidadeAtivaChave)).map(({ nome }) => ({ nome }))
-  );
-}
-
-respBotaoDesbloquear.addEventListener("click", async () => {
-  const senha = respInputSenha.value;
-  if (!senha) {
-    respSenhaMensagem.textContent = "Digite a senha.";
-    return;
-  }
-  respBotaoDesbloquear.disabled = true;
-  respBotaoDesbloquear.textContent = "Verificando…";
-  try {
-    const resp = await fetch("/api/verificar-senha", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ senha }),
-    });
-    const dados = await resp.json();
-    if (!dados.ok) throw new Error(dados.erro || "Senha incorreta.");
-
-    senhaDesbloqueada = senha;
-    respBlocoSenha.classList.add("oculto");
-    respBlocoGestao.classList.remove("oculto");
-    respFormMensagem.classList.remove("sucesso");
-    respFormMensagem.textContent = "";
-    await renderListaModal();
-  } catch (erro) {
-    respSenhaMensagem.textContent = erro.message;
-  } finally {
-    respBotaoDesbloquear.disabled = false;
-    respBotaoDesbloquear.textContent = "Desbloquear";
-  }
-});
-
-respForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const nome = respInputNome.value.trim();
-  const email = respInputEmail.value.trim();
-  if (!nome || !email) {
-    respFormMensagem.classList.remove("sucesso");
-    respFormMensagem.textContent = "Preencha nome e e-mail.";
-    return;
-  }
-  respFormMensagem.classList.remove("sucesso");
-  respFormMensagem.textContent = "";
-  respBotaoCadastrar.disabled = true;
-  respBotaoCadastrar.textContent = "Cadastrando…";
-  try {
-    const resp = await fetch("/api/responsaveis", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ senha: senhaDesbloqueada, nome, email }),
-    });
-    const dados = await resp.json();
-    if (!dados.ok) throw new Error(dados.erro || "Falha ao cadastrar responsável.");
-    respInputNome.value = "";
-    respInputEmail.value = "";
-    await renderListaModal();
-    respFormMensagem.classList.add("sucesso");
-    respFormMensagem.textContent = `${nome} foi cadastrado(a). Agora marque e salve as bases dessa pessoa.`;
-    mostrarToast(`${nome} cadastrado(a). Agora selecione e salve as bases.`, "sucesso");
-  } catch (erro) {
-    respFormMensagem.classList.remove("sucesso");
-    respFormMensagem.textContent = erro.message;
-    if (/senha/i.test(erro.message)) {
-      // senha incorreta ou expirada: força novo desbloqueio
-      respBlocoGestao.classList.add("oculto");
-      respBlocoSenha.classList.remove("oculto");
-      senhaDesbloqueada = null;
-    }
-  } finally {
-    respBotaoCadastrar.disabled = false;
-    respBotaoCadastrar.textContent = "Cadastrar responsável";
-  }
-});
-
-async function salvarBasesResponsavel(item) {
-  const email = item.dataset.email;
-  const bases = [...item.querySelectorAll(".resp-base:checked")].map((campo) => campo.value);
-  respFormMensagem.classList.remove("sucesso");
-  respFormMensagem.textContent = "";
-  try {
-    const resp = await fetch("/api/responsaveis", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ senha: senhaDesbloqueada, email, bases }),
-    });
-    const dados = await resp.json();
-    if (!dados.ok) throw new Error(dados.erro || "Falha ao salvar as bases.");
-    await renderListaModal();
-    mostrarToast(`Bases de ${email} atualizadas.`, "sucesso");
-  } catch (erro) {
-    respFormMensagem.classList.remove("sucesso");
-    respFormMensagem.textContent = erro.message;
-  }
-}
-
-async function removerResponsavel(email) {
-  if (!window.confirm("Excluir este responsável de todas as bases?")) return;
-  respFormMensagem.textContent = "";
-  try {
-    const resp = await fetch("/api/responsaveis", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ senha: senhaDesbloqueada, email }),
-    });
-    const dados = await resp.json();
-    if (!dados.ok) throw new Error(dados.erro || "Falha ao excluir responsável.");
-    await renderListaModal();
-    mostrarToast(`${email} excluído(a).`, "sucesso");
-  } catch (erro) {
-    respFormMensagem.textContent = erro.message;
-  }
-}
-
-respLista.addEventListener("click", (e) => {
-  const item = e.target.closest(".resp-pessoa");
-  if (!item) return;
-  if (e.target.closest(".resp-salvar")) salvarBasesResponsavel(item);
-  if (e.target.closest(".resp-remover")) removerResponsavel(item.dataset.email);
-});
+const overlayResponsaveis = document.getElementById('overlay-responsaveis');
+const botaoResponsaveis = document.getElementById('botao-responsaveis');
+window.CentralDestinatarios.iniciar({ onChange: carregarDestinatariosPainel });
+function fecharModalResponsaveis() { window.CentralDestinatarios.fechar(); }
 
 // Navigation and detail views keep operational features outside the compact home.
 let detalheAtivo = 'monitoramento';
@@ -602,11 +401,12 @@ const modalObserver = new MutationObserver(records => {
 });
 [overlaySenha, overlayResponsaveis].forEach(el => modalObserver.observe(el, {attributes:true, attributeFilter:['class']}));
 document.addEventListener('keydown', e => {
+  if (window.CentralDestinatarios.dialogAberto()) return;
   const overlay = [overlaySenha, overlayResponsaveis].find(el => !el.classList.contains('oculto'));
   if (!overlay) return;
   if (e.key === 'Escape') overlay === overlaySenha ? fecharModal() : fecharModalResponsaveis();
   if (e.key === 'Tab') {
-    const focusable = [...overlay.querySelectorAll('button,input')].filter(el => !el.disabled && el.getClientRects().length);
+    const focusable = [...overlay.querySelectorAll('button,input,select,textarea,a[href],[tabindex="0"]')].filter(el => !el.disabled && el.getClientRects().length);
     const first = focusable[0], last = focusable.at(-1);
     if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
     else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }

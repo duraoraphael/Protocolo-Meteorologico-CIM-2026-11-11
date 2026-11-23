@@ -5,6 +5,18 @@ const Dashboard = (() => {
     || (valor => Number.isFinite(Number(valor)) && Number(valor) >= 0 ? `${Math.round(Number(valor))} km/h` : 'Indisponível');
   const escape = (value) => String(value ?? '—').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const paths = {
+    users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m20 0v-2a4 4 0 0 0-3-3.87M15 3.13a4 4 0 0 1 0 7.75"/><circle cx="9" cy="7" r="4"/>',
+    usercheck: '<circle cx="8" cy="7" r="4"/><path d="M2 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2m2-11 2 2 4-5"/>',
+    unlink: '<path d="m9 15 6-6M8 3 6 1M3 8 1 6m15 15 2 2m3-7 2 2M9 5l1-1a5 5 0 0 1 7 7l-1 1M8 12l-1 1a5 5 0 0 0 7 7l1-1"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    download: '<path d="M12 3v12m-5-5 5 5 5-5M4 16v4h16v-4"/>',
+    file: '<path d="M14 2H5v20h14V7Zm0 0v6h5M8 13h8m-8 4h6"/>',
+    chevron: '<path d="m6 9 6 6 6-6"/>',
+    search: '<circle cx="10.5" cy="10.5" r="7.5"/><path d="m16 16 5 5"/>',
+    edit: '<path d="m16 3 5 5-12 12-6 1 1-6ZM13 6l5 5"/>',
+    power: '<path d="M12 2v10M6 5a9 9 0 1 0 12 0"/>',
+    trash: '<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/>',
+    close: '<path d="m6 6 12 12M6 18 18 6"/>',
     cloud: '<path d="M6 18a5 5 0 1 1 1-10 6 6 0 0 1 11 2 4 4 0 0 1 0 8Z"/>',
     sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l2 2m10 10 2 2M5 19l2-2M17 7l2-2"/>',
     moon: '<path d="M20 15A9 9 0 0 1 9 4a9 9 0 1 0 11 11Z"/>',
@@ -190,7 +202,7 @@ const Dashboard = (() => {
   }
 
   function table(title, name, headers, rows, detail, fonte = '') {
-    return `<section class="secao-periodos"><div class="section-heading"><div class="section-titulo"><h2>${icon(name)}${title}</h2><p class="tabela-fonte">${textoFonte(fonte)}</p></div><button class="text-link" data-detail="${detail}">Ver mais <span aria-hidden="true">→</span></button></div><div class="table-scroll" tabindex="0" role="region" aria-label="${title}"><table class="tabela-periodos${headers.length <= 4 ? ' tabela-compacta' : ''}"><caption class="sr-only">${title}</caption><thead><tr>${headers.map(h => `<th scope="col">${h}</th>`).join('')}</tr></thead><tbody>${rows.length ? rows.map(row => `<tr>${row.map((v, i) => i === 0 ? `<th scope="row">${v}</th>` : `<td>${v}</td>`).join('')}</tr>`).join('') : `<tr><td colspan="${headers.length}" class="empty-table">Dados indisponíveis para esta base.</td></tr>`}</tbody></table></div></section>`;
+    return `<section class="secao-periodos"><div class="section-heading"><div class="section-titulo"><h2>${icon(name)}${title}</h2><p class="tabela-fonte">${textoFonte(fonte)}</p></div><button class="text-link" data-detail="${detail}">Ver mais <span aria-hidden="true">→</span></button></div><div class="table-scroll" tabindex="0" role="region" aria-label="${title}"><table class="tabela-periodos${headers.length <= 4 ? ' tabela-compacta' : ''}"><caption class="sr-only">${title}</caption><thead><tr>${headers.map(h => `<th scope="col">${h}</th>`).join('')}</tr></thead><tbody>${rows.length ? rows.map(row => `<tr>${row.map((v, i) => i === 0 ? `<th scope="row">${v}</th>` : `<td>${v}</td>`).join('')}</tr>`).join('') : `<tr><td colspan="${headers.length}" class="empty-table">Dados indisponíveis para esta instalação.</td></tr>`}</tbody></table></div></section>`;
   }
   function marine(r) {
     const altura = p => p.alturaOndaM != null && p.alturaMaxM != null ? `${unit(p.alturaOndaM,' m')} (máx. ${unit(p.alturaMaxM,' m')})` : unit(p.alturaMaxM ?? p.alturaOndaM,' m');
@@ -364,8 +376,8 @@ const Dashboard = (() => {
     return {monitoramento:'Monitoramento e fontes', mar:'Condições marítimas', vento:'Vento e chuva', sobre:'Sobre o CIM'}[type] || 'Detalhes';
   }
   function details(r, type) {
-    if (type === 'sobre') return '<p>O painel CIM integra informações meteorológicas para apoiar a tomada de decisão operacional.</p><p>Fontes: INMET para observações, previsão oficial e avisos; Open-Meteo para rajada prevista, precipitação prevista e probabilidade de chuva; Clima e Saúde para EHF e risco térmico. Campos sem valor numérico válido são identificados como indisponíveis.</p><p>Na base Rio de Janeiro, o painel “Comunicados COR-Rio” mostra o estágio operacional e os comunicados publicados pelo Centro de Operações e Resiliência da Prefeitura do Rio, que valem apenas para o município do Rio de Janeiro.</p><p>Atualização automática conforme a configuração do servidor. Dados de referência: consulte também a Defesa Civil local para confirmação operacional.</p>';
-    if (!r) return '<p>Os dados desta base ainda não estão disponíveis.</p>';
+    if (type === 'sobre') return '<p>O painel CIM integra informações meteorológicas para apoiar a tomada de decisão operacional.</p><p>Fontes: INMET para observações, previsão oficial e avisos; Open-Meteo para rajada prevista, precipitação prevista e probabilidade de chuva; Clima e Saúde para EHF e risco térmico. Campos sem valor numérico válido são identificados como indisponíveis.</p><p>Na instalação Rio de Janeiro, o painel “Comunicados COR-Rio” mostra o estágio operacional e os comunicados publicados pelo Centro de Operações e Resiliência da Prefeitura do Rio, que valem apenas para o município do Rio de Janeiro.</p><p>Atualização automática conforme a configuração do servidor. Dados de referência: consulte também a Defesa Civil local para confirmação operacional.</p>';
+    if (!r) return '<p>Os dados desta instalação ainda não estão disponíveis.</p>';
     if (String(type).startsWith('ocorrencia:')) return occurrenceDetails(r, type.slice(11));
     if (type === 'mar') return `${marine(r)}<p>Ponto de referência: ${escape(r.mar?.referenciaPonto)}</p><p>Temperatura da água: ${unit(r.mar?.temperaturaMarC, '°C')}</p>`;
     if (type === 'vento') return windRain(r);
@@ -384,8 +396,8 @@ const Dashboard = (() => {
       ? '<p class="det-indisponivel">A coleta de avisos oficiais do INMET falhou nesta atualização; os avisos vigentes não puderam ser confirmados.</p>'
       : r.avisosInmet?.length
         ? r.avisosInmet.map(a => `<article class="aviso-item"><strong>Aviso oficial INMET: ${escape(a.descricao)} — ${escape(a.severidade)}</strong><p>Vigência: ${escape(a.inicio)} até ${escape(a.fim)}</p><p>Fonte de dados: INMET</p>${a.riscos?.length ? `<p><strong>Motivo do aviso:</strong> ${escape(a.riscos.filter(Boolean).join(' '))}</p>` : '<p>Riscos não informados pela fonte nesta coleta.</p>'}${a.instrucoes?.length ? `<p><strong>Orientações oficiais:</strong></p>${list(a.instrucoes)}` : ''}</article>`).join('')
-        : '<p>Nenhum aviso vigente do INMET para esta base.</p>';
-    return `<h3>Status de todas as APIs</h3><p class="api-status-note">Última coleta desta base: ${escape(r.horaConsulta)} (Brasília).</p><div class="api-monitor-grid">${apiCards || '<p>Status das APIs indisponível nesta versão do relatório.</p>'}</div><h3>Ocorrências ativas</h3>${resumoEventos}<h3>Avisos oficiais INMET</h3>${avisos}${r.avisosColeta?.length ? `<h3>Falhas e avisos da coleta</h3>${list(r.avisosColeta)}` : ''}${r.divergencias?.length ? `<h3>Divergências entre fontes</h3>${list(r.divergencias)}` : ''}<h3>Destinatários desta base</h3><div id="lista-destinatarios-painel">Carregando…</div><h3>Fonte por campo</h3>${list(Object.entries(r.fontesPorCampo || {}).filter(([campo]) => fieldLabel(campo)).map(([campo,fonte]) => `${fieldLabel(campo)}: ${fonte}`))}<h3>Fontes automatizadas que responderam</h3>${list((r.fontesAutomatizadas || []).map(f => `${f.nome}: ${f.uso}`))}`;
+        : '<p>Nenhum aviso vigente do INMET para esta instalação.</p>';
+    return `<h3>Status de todas as APIs</h3><p class="api-status-note">Última coleta desta instalação: ${escape(r.horaConsulta)} (Brasília).</p><div class="api-monitor-grid">${apiCards || '<p>Status das APIs indisponível nesta versão do relatório.</p>'}</div><h3>Ocorrências ativas</h3>${resumoEventos}<h3>Avisos oficiais INMET</h3>${avisos}${r.avisosColeta?.length ? `<h3>Falhas e avisos da coleta</h3>${list(r.avisosColeta)}` : ''}${r.divergencias?.length ? `<h3>Divergências entre fontes</h3>${list(r.divergencias)}` : ''}<h3>Destinatários desta instalação</h3><div id="lista-destinatarios-painel">Carregando…</div><h3>Fonte por campo</h3>${list(Object.entries(r.fontesPorCampo || {}).filter(([campo]) => fieldLabel(campo)).map(([campo,fonte]) => `${fieldLabel(campo)}: ${fonte}`))}<h3>Fontes automatizadas que responderam</h3>${list((r.fontesAutomatizadas || []).map(f => `${f.nome}: ${f.uso}`))}`;
   }
   // ---------------------------------------------------------------------
   // Comunicados e estágio operacional do COR-Rio (só bases do município do

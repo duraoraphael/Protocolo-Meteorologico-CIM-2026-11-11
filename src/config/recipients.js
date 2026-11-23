@@ -3,6 +3,7 @@
 // sobreviver a reinícios do servidor, sem depender de banco de dados.
 const fs = require("fs");
 const path = require("path");
+const { randomUUID } = require("node:crypto");
 const {
   BASES_DISTRIBUICAO,
   baseDistribuicaoExiste,
@@ -67,11 +68,14 @@ function carregarTodos() {
     if (dados?.versao === 2 && Array.isArray(dados.responsaveis)) {
       return {
         versao: 2,
+        historico: Array.isArray(dados.historico) ? dados.historico : [],
+        operacoes: Array.isArray(dados.operacoes) ? dados.operacoes : [],
         responsaveis: dados.responsaveis
           .filter((r) => r && typeof r === "object")
           .map((r) => ({
             nome: r.nome,
             email: r.email,
+            ativo: r.ativo !== false,
             bases: Array.isArray(r.bases) ? [...new Set(r.bases.filter(basePreservavel))] : [],
           })),
       };
@@ -86,7 +90,7 @@ function carregarTodos() {
         for (const pessoa of Array.isArray(dados[chave]) ? dados[chave] : []) {
           const email = String(pessoa?.email || "").trim().toLowerCase();
           if (!email) continue;
-          const atual = porEmail.get(email) || { nome: pessoa?.nome, email, bases: [] };
+          const atual = porEmail.get(email) || { nome: pessoa?.nome, email, bases: [], ativo: true };
           if (!atual.bases.includes(chave)) atual.bases.push(chave);
           porEmail.set(email, atual);
         }
@@ -99,9 +103,36 @@ function carregarTodos() {
   }
 }
 
-function salvarTodos(dados) {
+function salvarTodos(dados, contexto = {}) {
+  const anteriores = carregarTodos();
+  const historico = [...(anteriores.historico || [])];
+  const antes = new Map(anteriores.responsaveis.map(p => [p.email, p]));
+  const depois = new Map(dados.responsaveis.map(p => [p.email, p]));
+  if (contexto.emailAnterior && contexto.emailNovo && contexto.emailAnterior !== contexto.emailNovo && antes.has(contexto.emailAnterior)) {
+    antes.set(contexto.emailNovo, antes.get(contexto.emailAnterior));
+    antes.delete(contexto.emailAnterior);
+  }
+  const momento = new Date().toISOString();
+  for (const email of new Set([...antes.keys(), ...depois.keys()])) {
+    const a = antes.get(email) || null;
+    const d = depois.get(email) || null;
+    if (JSON.stringify(a) === JSON.stringify(d)) continue;
+    historico.push({ id: randomUUID(), data: momento,
+      operador: contexto.operador || 'Acesso operacional compartilhado',
+      identificacao: contexto.operador ? 'declarada' : 'compartilhada',
+      acao: contexto.acao || (!a ? 'cadastrar' : !d ? 'excluir' : 'alterar'),
+      email, antes: a, depois: d,
+    });
+  }
+  dados.historico = historico;
   fs.mkdirSync(path.dirname(ARQUIVO), { recursive: true });
-  fs.writeFileSync(ARQUIVO, JSON.stringify(dados, null, 2), "utf-8");
+  const temporario = `${ARQUIVO}.${randomUUID()}.tmp`;
+  try {
+    fs.writeFileSync(temporario, JSON.stringify(dados, null, 2), { encoding: 'utf8', mode: 0o600, flag: 'wx' });
+    fs.renameSync(temporario, ARQUIVO);
+  } finally {
+    if (fs.existsSync(temporario)) fs.unlinkSync(temporario);
+  }
 }
 
 // V-10: só string ^[a-z_]{2,40}$ que seja chave própria de CIDADES.
@@ -113,7 +144,7 @@ function listarPorCidade(chave) {
   validarCidade(chave);
   const dados = carregarTodos();
   return dados.responsaveis
-    .filter((r) => basesAtivas(r.bases).includes(chave))
+    .filter((r) => r.ativo !== false && basesAtivas(r.bases).includes(chave))
     .map(({ nome, email }) => ({ nome, email }));
 }
 
@@ -124,13 +155,18 @@ function listarTodos() {
     nome: BASES_DISTRIBUICAO[chave].nome,
     uf: BASES_DISTRIBUICAO[chave].uf,
     responsaveis: dados.responsaveis
-      .filter((r) => r.bases.includes(chave))
+      .filter((r) => r.ativo !== false && r.bases.includes(chave))
       .map(({ nome, email }) => ({ nome, email })),
   }));
 }
 
 function listarResponsaveis() {
   return carregarTodos().responsaveis.map((r) => ({ ...r, bases: basesAtivas(r.bases) }));
+}
+
+function filtrarEmailsAtivos(emails) {
+  const inativos = new Set(carregarTodos().responsaveis.filter(p => p.ativo === false).map(p => String(p.email).trim().toLowerCase()));
+  return emails.filter(email => !inativos.has(String(email).trim().toLowerCase()));
 }
 
 function validarBases(bases) {
@@ -147,7 +183,7 @@ function cadastrarResponsavel(nome, email) {
   if (dados.responsaveis.some((r) => String(r.email).toLowerCase() === emailLimpo)) {
     throw erroEntrada("Este e-mail já está cadastrado.");
   }
-  const pessoa = { nome: nomeLimpo, email: emailLimpo, bases: [] };
+  const pessoa = { nome: nomeLimpo, email: emailLimpo, bases: [], ativo: true };
   dados.responsaveis.push(pessoa);
   salvarTodos(dados);
   return { ...pessoa, bases: [] };
@@ -186,7 +222,7 @@ function adicionar(chave, nome, email) {
     throw erroEntrada("Este e-mail já está cadastrado para esta base.");
   }
   if (!pessoa) {
-    pessoa = { nome: nomeLimpo, email: emailLimpo, bases: [] };
+    pessoa = { nome: nomeLimpo, email: emailLimpo, bases: [], ativo: true };
     dados.responsaveis.push(pessoa);
   }
   pessoa.bases.push(chave);
@@ -216,6 +252,7 @@ module.exports = {
   listarPorCidade,
   listarTodos,
   listarResponsaveis,
+  filtrarEmailsAtivos,
   cadastrarResponsavel,
   atualizarBases,
   removerResponsavel,
@@ -224,4 +261,8 @@ module.exports = {
   validarNome,
   validarEmail,
   validarCidade,
+  validarBases,
+  carregarTodos,
+  salvarTodos,
+  erroEntrada,
 };

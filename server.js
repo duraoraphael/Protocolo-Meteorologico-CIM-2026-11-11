@@ -72,6 +72,8 @@ function criarApp({
   const confiancaProxy = valorTrustProxy(trustProxy);
   if (confiancaProxy !== false) app.set("trust proxy", confiancaProxy);
   app.use(cabecalhosSeguranca());
+  app.use('/api/destinatarios/importar', express.json({ limit: '1500kb' }));
+  app.use('/api/destinatarios', express.json({ limit: '1mb' }));
   app.use(express.json({ limit: "100kb" }));
   app.use(express.static(path.join(__dirname, "public"), { index: "dashboard.html" }));
   // Ativos visuais do CIM ficam em Logo/, na raiz do projeto.
@@ -358,7 +360,9 @@ function criarApp({
   // E-mails (dado pessoal, V-06) só com a senha operacional, via
   // POST /api/responsaveis/consultar; cadastrar/remover também exige senha.
   // -----------------------------------------------------------------------
-  const somenteNomes = (lista) => lista.map((r) => ({ nome: r?.nome }));
+  const somenteNomes = (lista) => lista.map((r) => ({ nome: typeof r?.nome === 'string' && !r.nome.includes('@') ? r.nome : 'Nome pendente' }));
+
+  require('./src/recipients/routes').registrarRotasDestinatarios(app, { verificarSenha, responderErro });
 
   function basesResponsaveis(cidadeChave, { comEmail }) {
     const formatar = comEmail ? (l) => l : somenteNomes;

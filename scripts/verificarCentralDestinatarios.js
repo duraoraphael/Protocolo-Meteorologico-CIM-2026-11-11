@@ -1,0 +1,207 @@
+// Verificação real de navegador com cadastro temporário; não envia e-mails.
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const pasta = fs.mkdtempSync(path.join(os.tmpdir(), 'cim-central-browser-'));
+process.env.RESPONSAVEIS_ARQUIVO = path.join(pasta, 'pessoas.json');
+const { subirApp, SENHA_TESTE } = require('../tests/helpers/servidor');
+const puppeteer = require('puppeteer');
+(async () => {
+  let srv, browser;
+  try {
+    const configuradas = Object.keys(require('../src/config/distributionBases').BASES_DISTRIBUICAO);
+    fs.writeFileSync(process.env.RESPONSAVEIS_ARQUIVO, JSON.stringify({ versao: 2, responsaveis: [
+      ...Array.from({ length: 32 }, (_, i) => ({ nome: `Pessoa ${String(i + 1).padStart(2, '0')}`, email: `pessoa${i + 1}@exemplo.com`, bases: i % 3 ? [configuradas[i % 4]] : [] })),
+      { nome: 'Ana dos vínculos', email: 'ana.vinculos@exemplo.com', bases: configuradas.slice(0, 7) },
+      { nome: 'legado@exemplo.com', email: 'legado@exemplo.com', bases: [] },
+      { nome: '', email: `contato.${'a'.repeat(50)}@${'b'.repeat(60)}.${'c'.repeat(60)}.exemplo.com`, bases: [] },
+    ] }));
+    srv = await subirApp();
+    console.log('Servidor de teste pronto; iniciando navegador.');
+    const candidatos = [process.env.PUPPETEER_EXECUTABLE_PATH, 'C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'].filter(Boolean);
+    const executablePath = candidatos.find(p => fs.existsSync(p));
+    browser = await puppeteer.launch({ headless: true, ...(executablePath ? { executablePath } : {}), args: ['--disable-gpu', '--disable-dev-shm-usage'], timeout: 30000 });
+    console.log('Navegador pronto.');
+    const page = await browser.newPage();
+    await (await page.createCDPSession()).send('Browser.setDownloadBehavior', { behavior: 'deny' });
+    await page.setViewport({ width: 1440, height: 1000 });
+    const errors = [];
+    page.on('pageerror', e => errors.push(e.message));
+    await page.setRequestInterception(true);
+    page.on('request', req => {
+      if (req.url().includes('/api/preview') || req.url().includes('/api/cor-rio') || req.url().includes('/api/monitoramento')) req.respond({ status: 503, contentType: 'application/json', body: '{"ok":false,"erro":"Dados meteorológicos isolados no teste"}' });
+      else if (!req.url().startsWith(srv.base)) req.abort();
+      else req.continue();
+    });
+    await page.goto(srv.base, { waitUntil: 'networkidle0' });
+    await page.click('#botao-responsaveis');
+    await page.type('#central-operador', 'Operadora teste');
+    await page.type('#resp-input-senha', SENHA_TESTE);
+    await page.click('#resp-botao-desbloquear');
+    await page.waitForSelector('#central-adicionar', { visible: true });
+    assert.equal(await page.$eval('#central-acao', el => el.disabled), true);
+    await page.waitForSelector('#central-linhas .central-mais-vinculos');
+    await page.click('#central-linhas .central-mais-vinculos summary');
+    assert.equal(await page.$eval('#central-linhas .central-mais-vinculos', el => el.open), true);
+    await page.click('#central-linhas .central-mais-vinculos summary');
+    await page.click('#central-proxima');
+    await page.waitForFunction(() => document.getElementById('central-pagina').textContent.includes('Página 2'));
+    await page.click('#central-anterior');
+    await page.waitForFunction(() => document.getElementById('central-pagina').textContent.includes('Página 1'));
+    await page.focus('#central-adicionar');
+    await page.keyboard.press('ArrowDown');
+    assert.equal(await page.evaluate(() => document.activeElement.dataset.cadastro), 'individual');
+    await page.keyboard.press('Escape');
+    assert.equal(await page.$eval('#central-adicionar', el => el.getAttribute('aria-expanded')), 'false');
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('Enter');
+    await page.type('#resp-input-nome', 'Maria Teste');
+    await page.type('#resp-input-email', 'maria@exemplo.com');
+    await page.click('#central-cadastro-bases input[value="santos"]');
+    await page.click('#resp-botao-cadastrar');
+    await page.waitForSelector('#central-previa:not([hidden])');
+    await page.click('#central-confirmar-cadastro');
+    await page.waitForFunction(() => document.getElementById('central-relatorio').textContent.includes('1 sucesso'));
+    await page.click('#central-cadastro [data-fechar-dialog]');
+    await page.waitForFunction(() => document.activeElement.id === 'central-adicionar');
+    // Importação real dos dois formatos passa pela prévia e pela mesma escrita.
+    for (const formato of ['csv', 'xlsx']) {
+      const planilhas = require('../src/recipients/spreadsheets');
+      const arquivo = path.join(pasta, `importacao.${formato}`);
+      fs.writeFileSync(arquivo, await planilhas.exportar([{ nome: `Importado ${formato}`, email: `${formato}@exemplo.com`, bases: ['macae'] }], formato));
+      await page.click('#central-adicionar');
+      await page.click('[data-cadastro="arquivo"]');
+      await (await page.$('#central-input-arquivo')).uploadFile(arquivo);
+      await page.click('#resp-botao-cadastrar');
+      await page.waitForFunction(() => !document.getElementById('central-previa').hidden);
+      await page.click('#central-confirmar-cadastro');
+      await page.waitForFunction(() => document.getElementById('central-relatorio').textContent.includes('1 sucesso'));
+      await page.click('#central-cadastro [data-fechar-dialog]');
+    }
+    await page.waitForFunction(() => document.getElementById('central-linhas').textContent.includes('Maria Teste'));
+    await page.click('#central-adicionar');
+    await page.click('[data-cadastro="lote"]');
+    await page.type('#central-texto-lote', 'lote@exemplo.com; errado; LOTE@exemplo.com\nmaria@exemplo.com');
+    await page.click('#resp-botao-cadastrar');
+    await page.waitForFunction(() => document.getElementById('central-previa-contagens').textContent.includes('1 inválido(s)'));
+    assert.match(await page.$eval('#central-previa-contagens', e => e.textContent), /1 repetido\(s\).*1 já cadastrado/);
+    await page.type('[data-previa-nome="0"]', 'João Lote');
+    await page.click('#central-confirmar-cadastro');
+    await page.waitForFunction(() => document.getElementById('central-relatorio').textContent.includes('1 ignorado'));
+    await page.click('#central-cadastro [data-fechar-dialog]');
+    await page.type('#central-busca', 'inexistente');
+    await page.waitForFunction(() => document.getElementById('central-linhas').textContent.includes('Nenhum resultado'));
+    await page.click('#central-limpar');
+    await page.waitForSelector('#central-linhas [data-editar]');
+    await page.type('#central-busca', 'maria@exemplo.com');
+    await page.waitForFunction(() => document.querySelectorAll('#central-linhas [data-editar]').length === 1);
+    await page.evaluate(() => {
+      const criar = URL.createObjectURL;
+      URL.createObjectURL = function(blob) { window.arquivoExportadoTeste = blob.text(); return criar.call(this, blob); };
+    });
+    const download = page.waitForResponse(r => r.url().endsWith('/api/destinatarios/exportar'));
+    await page.click('#central-exportar');
+    const respostaExportacao = await download;
+    assert.equal(respostaExportacao.status(), 200);
+    await page.waitForFunction(() => !document.getElementById('central-exportar').disabled);
+    await page.waitForFunction(() => !!window.arquivoExportadoTeste);
+    const exportado = await page.evaluate(() => window.arquivoExportadoTeste);
+    assert.ok(exportado.includes('maria@exemplo.com'), `Exportação ${respostaExportacao.headers()['content-type']}: ${exportado.slice(0, 250)}`);
+    assert.equal(await page.$eval('#central-exportar', el => el.querySelectorAll('svg').length), 1);
+    await page.click('#central-limpar');
+    await page.waitForFunction(() => document.querySelectorAll('#central-linhas [data-editar]').length > 1);
+    await page.select('#central-ordem', 'email'); await page.select('#central-direcao', 'desc');
+    await page.waitForFunction(() => document.querySelector('#central-linhas [data-editar]')?.dataset.editar === 'xlsx@exemplo.com');
+    await page.select('#central-direcao', 'asc'); await page.select('#central-ordem', 'nome');
+    await page.waitForSelector('[data-selecionar="maria@exemplo.com"]');
+    await page.click('[data-selecionar="maria@exemplo.com"]');
+    await page.click('#central-linhas [data-editar="maria@exemplo.com"]');
+    await page.click('#central-edicao-bases input[value="cor_rio"]');
+    await page.click('#central-editar-email');
+    await page.keyboard.down('Control'); await page.keyboard.press('KeyA'); await page.keyboard.up('Control');
+    await page.type('#central-editar-email', 'maria.editada@exemplo.com');
+    await page.click('#central-form-edicao button[type="submit"]');
+    await page.waitForFunction(() => !document.getElementById('central-edicao').open);
+    assert.equal(await page.$eval('[data-selecionar="maria.editada@exemplo.com"]', el => el.checked), true);
+    await page.click('#central-linhas [data-status="maria.editada@exemplo.com"]');
+    await page.click('#central-confirmar-acao');
+    await page.waitForFunction(() => !document.getElementById('central-confirmacao').open && document.querySelector('[data-status="maria.editada@exemplo.com"]').closest('tr').textContent.includes('Inativo'));
+    await page.select('#central-filtro-status', 'inativos');
+    await page.waitForFunction(() => document.querySelectorAll('#central-linhas [data-editar]').length === 1);
+    await page.select('#central-filtro-status', 'todos');
+    await page.waitForFunction(() => document.querySelectorAll('#central-linhas [data-editar]').length > 1);
+    await page.click('#central-tab-instalacoes');
+    assert.equal(await page.$$eval('[data-instalar]', els => els.length), Object.keys(require('../src/config/distributionBases').BASES_DISTRIBUICAO).length);
+    await page.click('[data-inst-filtro="sem"]');
+    assert.ok(await page.$$eval('.central-instalacao', els => els.every(el => el.textContent.includes('0 destinatários'))));
+    await page.click('[data-inst-filtro="com"]');
+    assert.ok(await page.$$eval('.central-instalacao', els => els.every(el => !el.textContent.includes('0 destinatários'))));
+    await page.click('[data-inst-filtro="todas"]');
+    await page.type('#central-inst-busca', 'Macae');
+    assert.equal(await page.$$eval('[data-instalar]', els => els.length), 1);
+    await page.click('#central-inst-limpar');
+    await page.click('[data-adicionar-instalacao="santos"]');
+    await page.waitForSelector('[data-selecionar="lote@exemplo.com"]');
+    await page.click('[data-selecionar="lote@exemplo.com"]');
+    await page.click('#central-aplicar');
+    assert.equal(await page.$eval('#central-confirmacao-bases input[value="santos"]', el => el.checked), true);
+    await page.click('#central-confirmar-acao');
+    await page.waitForFunction(() => !document.getElementById('central-confirmacao').open);
+    await page.click('#central-tab-instalacoes');
+    await page.click('[data-instalar="santos"]');
+    await page.waitForSelector('#central-linhas [data-editar]');
+    await page.screenshot({ path: path.join(__dirname, '../output/central-desktop.png'), fullPage: false });
+    await page.click('#central-tab-historico');
+    await page.waitForSelector('#central-hist-lista [data-hist-acao="desativar"]');
+    assert.ok((await page.$eval('#central-hist-lista', e => e.textContent)).includes('Operadora teste'));
+    await page.type('#central-hist-operador', 'inexistente');
+    await page.waitForFunction(() => document.getElementById('central-hist-lista').textContent.includes('Nenhum evento'));
+    await page.$eval('#central-hist-operador', el => { el.value = ''; el.dispatchEvent(new Event('input', { bubbles: true })); });
+    await page.waitForSelector('[data-hist-acao]');
+    await page.setViewport({ width: 390, height: 844 });
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
+    await page.screenshot({ path: path.join(__dirname, '../output/central-celular.png'), fullPage: false });
+    for (const [width, height] of [[1920, 1080], [1366, 768], [1280, 720], [768, 1024], [390, 844]]) {
+      await page.setViewport({ width, height });
+      await page.click('#central-tab-pessoas');
+      await page.evaluate(() => { document.querySelector('.central-conteudo').scrollTop = 0; });
+      assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `viewport ${width}`);
+      assert.ok(await page.$eval('.central-conteudo', el => el.scrollWidth <= el.clientWidth + 1), `conteúdo ${width}`);
+      assert.ok(await page.$eval('#central-pessoas .central-tabela', el => el.scrollWidth <= el.clientWidth + 1), `tabela ${width}`);
+      assert.ok(await page.$eval('#central-fechar-topo', el => { const r = el.getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight; }), `fechar ${width}`);
+      if (width === 390) {
+        await page.click('#central-selecionar-pagina');
+        assert.ok(await page.$$eval('#central-linhas [data-selecionar]', els => els.every(el => el.checked)));
+        await page.click('#central-selecionar-pagina');
+        assert.ok(await page.$$eval('#central-linhas [data-selecionar]', els => els.every(el => !el.checked)));
+        await page.screenshot({ path: path.join(__dirname, '../output/central-pessoas-celular-detalhe.png') });
+        await page.evaluate(() => { document.querySelector('.central-conteudo').scrollTop = 0; });
+      }
+      await page.screenshot({ path: path.join(__dirname, `../output/central-pessoas-${width}.png`) });
+      await page.click('#central-tab-instalacoes');
+      await page.evaluate(() => { document.querySelector('.central-conteudo').scrollTop = 0; });
+      const colunas = await page.$eval('#central-grade-instalacoes', el => getComputedStyle(el).gridTemplateColumns.split(' ').length);
+      assert.equal(colunas, width > 1100 ? 4 : width > 480 ? 2 : 1, `grid ${width}`);
+      assert.ok(await page.$eval('.central-conteudo', el => el.scrollWidth <= el.clientWidth + 1), `instalações ${width}`);
+      await page.screenshot({ path: path.join(__dirname, `../output/central-instalacoes-${width}.png`) });
+    }
+    await page.setViewport({ width: 1366, height: 768 });
+    await page.click('#central-tab-pessoas');
+    await page.select('#central-filtro-instalacao', '');
+    await page.type('#central-busca', 'csv@exemplo.com');
+    await page.waitForFunction(() => document.querySelectorAll('#central-linhas [data-editar]').length === 1);
+    await page.click('[data-excluir="csv@exemplo.com"]');
+    await page.click('#central-confirmacao [data-fechar-dialog]');
+    assert.ok(await page.$('[data-editar="csv@exemplo.com"]'));
+    await page.click('[data-excluir="csv@exemplo.com"]');
+    await page.click('#central-confirmar-acao');
+    await page.waitForFunction(() => document.getElementById('central-linhas').textContent.includes('Nenhum resultado'));
+    await page.click('#resp-botao-fechar');
+    assert.equal(await page.$eval('#central-hist-lista', e => e.textContent), '');
+    assert.deepEqual(errors, []);
+    console.log('PASS: cadastro → prévia → importação CSV/XLSX → lote válido/inválido/repetido/existente → vínculos → busca → edição → desativação → instalações → auditoria → celular → limpeza de sessão.');
+  } finally {
+    await browser?.close(); await srv?.fechar(); fs.rmSync(pasta, { recursive: true, force: true });
+  }
+})().catch(e => { console.error(e); process.exitCode = 1; });

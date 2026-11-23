@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8" />
@@ -6,6 +6,7 @@
 <title>Protocolo Meteorológico CIM</title>
 <link rel="icon" href="/logo/CIM.png" type="image/png" />
 <link rel="stylesheet" href="dashboard.css?v=lotes-1" />
+<link rel="stylesheet" href="destinatarios.css?v=2" />
 </head>
 <body>
 
@@ -31,7 +32,7 @@
         <h1>PROTOCOLO<br>METEOROLÓGICO</h1>
         <p class="hero-description">Monitoramento em tempo real para apoiar<br>a tomada de decisão operacional.</p>
         <div class="hero-controls">
-          <label class="location-control"><span data-icon="pin"></span><span class="sr-only">Selecionar base</span><select id="seletor-base" aria-label="Selecionar base"><option value="">Carregando bases…</option></select></label>
+          <label class="location-control"><span data-icon="pin"></span><span class="sr-only">Selecionar instalação</span><select id="seletor-base" aria-label="Selecionar instalação"><option value="">Carregando instalações…</option></select></label>
           <div class="current-date"><span data-icon="calendar"></span><time id="data-atual"></time></div>
         </div>
         <p class="hero-note">Informações meteorológicas integradas para operações mais seguras e eficientes.</p>
@@ -55,7 +56,7 @@
       <label class="modal-campo" for="tipo-envio">
         <span>Tipo de envio</span>
         <select id="tipo-envio">
-          <option value="informativo">Informativo meteorológico da base selecionada</option>
+          <option value="informativo">Informativo meteorológico da instalação selecionada</option>
           <option value="cor_rio">Aviso exclusivo COR-RIO — RJ</option>
           <option value="lote">Envio em lote de informativos</option>
         </select>
@@ -95,11 +96,13 @@
   </div>
 
   <div id="overlay-responsaveis" class="overlay oculto">
-    <div class="modal modal-responsaveis" role="dialog" aria-modal="true" aria-label="Gerenciar responsáveis">
-      <h2>Responsáveis e bases</h2>
-      <p>Cadastre primeiro a pessoa e depois marque as bases cujos informativos ela deve receber.</p>
+    <div class="modal modal-responsaveis" role="dialog" aria-modal="true" aria-labelledby="central-titulo">
+      <header class="central-cabecalho"><div><span class="central-selo"><span class="central-marca">CIM</span> PROTOCOLO METEOROLÓGICO</span><h2 id="central-titulo">Central de Gerenciamento de Destinatários</h2><p>Pessoas, instalações e histórico de alterações em um só lugar.</p></div><button id="central-fechar-topo" type="button" class="central-fechar" aria-label="Fechar central"><span data-central-icon="close"></span></button></header>
+      <div id="central-conteudo" class="central-conteudo">
 
       <div id="resp-bloco-senha">
+        <label class="resp-campo" for="central-operador">Nome do operador <input id="central-operador" autocomplete="name" maxlength="100" placeholder="Informe seu nome para o histórico" required></label>
+        <p class="central-nota">Acesso por senha operacional. O nome do operador será registrado como identificação declarada.</p>
         <input id="resp-input-senha" aria-label="Senha operacional" type="password" placeholder="Senha" autocomplete="off" />
         <div id="resp-senha-mensagem" class="modal-mensagem"></div>
         <div class="modal-botoes">
@@ -109,27 +112,25 @@
       </div>
 
       <div id="resp-bloco-gestao" class="oculto">
-        <h3>Pessoas cadastradas</h3>
-        <ul id="resp-lista" class="resp-lista"></ul>
-
-        <form id="resp-form" class="resp-form">
-          <h3>Cadastrar novo responsável</h3>
-          <label class="resp-campo" for="resp-input-nome">
-            <span>Nome da pessoa</span>
-            <input id="resp-input-nome" type="text" placeholder="Ex.: Maria da Silva" autocomplete="name" maxlength="100" required />
-          </label>
-          <label class="resp-campo" for="resp-input-email">
-            <span>E-mail</span>
-            <input id="resp-input-email" type="email" placeholder="Ex.: nome@empresa.com.br" autocomplete="email" maxlength="254" required />
-          </label>
-          <button id="resp-botao-cadastrar" type="submit" class="botao-primario">Cadastrar responsável</button>
-        </form>
-        <div id="resp-form-mensagem" class="modal-mensagem" role="status" aria-live="polite"></div>
-
-        <div class="modal-botoes">
-          <button id="resp-botao-fechar" class="botao-secundario">Fechar</button>
-        </div>
+        <div id="central-indicadores" class="central-indicadores" aria-label="Resumo de destinatários"></div>
+        <div class="central-topo-fixo"><div class="central-toolbar central-principais"><div class="central-adicionar-grupo"><button id="central-adicionar" type="button" class="botao-primario" aria-expanded="false" aria-controls="central-menu-cadastro"><span data-central-icon="plus"></span>Adicionar destinatários<span data-central-icon="chevron"></span></button><div id="central-menu-cadastro" class="central-menu-cadastro" role="group" aria-label="Formas de cadastro" hidden><button type="button" data-cadastro="individual"><span data-central-icon="usercheck"></span><span>Cadastro individual<small>Adicionar uma pessoa</small></span></button><button type="button" data-cadastro="lote"><span data-central-icon="users"></span><span>Cadastro em lote<small>Vários e-mails de uma vez</small></span></button><button type="button" data-cadastro="arquivo"><span data-central-icon="file"></span><span>Importar planilha<small>Arquivo CSV ou XLSX</small></span></button></div></div><button id="central-exportar" type="button" class="botao-secundario"><span data-central-icon="download"></span>Exportar lista filtrada</button><button id="central-modelo" type="button" class="botao-secundario"><span data-central-icon="file"></span>Baixar modelo</button><label class="central-formato">Formato<select id="central-formato"><option value="csv">CSV</option><option value="xlsx">XLSX</option></select></label></div>
+        <div class="central-abas" role="tablist" aria-label="Gerenciamento de destinatários"><button role="tab" id="central-tab-pessoas" aria-selected="true" aria-controls="central-pessoas" tabindex="0" data-aba="pessoas"><span data-central-icon="users"></span>Pessoas</button><button role="tab" id="central-tab-instalacoes" aria-selected="false" aria-controls="central-instalacoes" tabindex="-1" data-aba="instalacoes"><span data-central-icon="pin"></span>Instalações</button><button role="tab" id="central-tab-historico" aria-selected="false" aria-controls="central-historico" tabindex="-1" data-aba="historico"><span data-central-icon="clock"></span>Histórico</button></div></div>
+        <div id="central-mensagem" class="modal-mensagem" role="status" aria-live="polite"></div>
+        <section id="central-pessoas" role="tabpanel" aria-labelledby="central-tab-pessoas" tabindex="0">
+          <div class="central-painel-filtros"><div class="central-filtros"><label class="central-pesquisa-label">Pesquisar destinatários<span class="central-busca"><span data-central-icon="search"></span><input id="central-busca" type="search" placeholder="Nome, e-mail ou instalação" maxlength="200"><button id="central-limpar" type="button" aria-label="Limpar pesquisa"><span data-central-icon="close"></span></button></span></label><label>Instalação<select id="central-filtro-instalacao"><option value="">Todas as instalações</option></select></label><label>Status<select id="central-filtro-status"><option value="todos">Todos</option><option value="ativos">Ativos</option><option value="inativos">Inativos</option></select></label><label>Vínculos<select id="central-filtro-vinculos"><option value="todos">Todos</option><option value="com">Com vínculo</option><option value="sem">Sem vínculo</option></select></label></div>
+          <div class="central-ordenacao"><label>Ordenar por<select id="central-ordem"><option value="nome">Nome</option><option value="email">E-mail</option><option value="instalacoes">Instalações</option><option value="status">Status</option></select></label><label>Direção<select id="central-direcao"><option value="asc">Crescente</option><option value="desc">Decrescente</option></select></label><label>Por página<select id="central-tamanho"><option>25</option><option>50</option><option>100</option></select></label><span id="central-resultados" role="status"></span></div></div>
+          <div class="central-selecao"><div class="central-selecao-resumo"><span data-central-icon="users"></span><strong id="central-selecionados">0 pessoas selecionadas</strong><button id="central-desmarcar" class="central-botao-texto" disabled>Limpar seleção</button></div><label class="sr-only" for="central-acao">Ação para selecionados</label><select id="central-acao" disabled><option value="vincular">Vincular instalações</option><option value="desvincular">Remover vínculos</option><option value="ativar">Ativar</option><option value="desativar">Desativar</option><option value="excluir">Excluir</option><option value="exportar">Exportar selecionados</option></select><button id="central-aplicar" class="botao-primario" disabled>Aplicar aos selecionados</button></div>
+          <div class="central-tabela-wrap"><table class="central-tabela"><caption class="sr-only">Destinatários cadastrados</caption><thead><tr><th><label class="central-selecao-pagina"><input id="central-selecionar-pagina" type="checkbox" aria-label="Selecionar destinatários desta página"><span class="sr-only central-selecao-pagina-texto">Selecionar página</span></label></th><th scope="col">Pessoa / e-mail</th><th scope="col">Instalações</th><th scope="col">Status</th><th scope="col">Ações</th></tr></thead><tbody id="central-linhas"></tbody></table></div>
+          <div class="central-paginacao"><button id="central-anterior" class="botao-secundario">Anterior</button><span id="central-pagina"></span><button id="central-proxima" class="botao-secundario">Próxima</button></div>
+        </section>
+        <section id="central-instalacoes" role="tabpanel" aria-labelledby="central-tab-instalacoes" tabindex="0" hidden><div class="central-instalacoes-filtros"><label class="central-pesquisa-label">Pesquisar instalações<span class="central-busca"><span data-central-icon="search"></span><input id="central-inst-busca" type="search" placeholder="Nome da instalação ou UF" maxlength="200"><button id="central-inst-limpar" type="button" aria-label="Limpar pesquisa de instalações"><span data-central-icon="close"></span></button></span></label><div class="central-filtros-presenca" role="group" aria-label="Filtrar instalações por destinatários"><button type="button" data-inst-filtro="todas" aria-pressed="true">Todas <span data-inst-contagem="todas">0</span></button><button type="button" data-inst-filtro="com" aria-pressed="false">Com destinatários <span data-inst-contagem="com">0</span></button><button type="button" data-inst-filtro="sem" aria-pressed="false">Sem destinatários <span data-inst-contagem="sem">0</span></button></div></div><div class="central-secao-legenda"><p>Selecione uma instalação para consultar e gerenciar seus destinatários.</p><span id="central-inst-resultados" role="status"></span></div><div id="central-grade-instalacoes" class="central-grade-instalacoes"></div></section>
+        <section id="central-historico" role="tabpanel" aria-labelledby="central-tab-historico" tabindex="0" hidden><div class="central-painel-filtros central-historico-filtros"><div class="central-filtros"><label>Pesquisar histórico<input id="central-hist-busca" type="search" maxlength="200" placeholder="Destinatário ou alteração"></label><label>Usuário responsável<input id="central-hist-operador" type="search" maxlength="100" placeholder="Nome do operador"></label><label>Tipo de alteração<select id="central-hist-acao"><option value="">Todas</option><option value="cadastrar">Cadastro</option><option value="editar">Edição</option><option value="alterar">Alteração legada</option><option value="vincular">Vinculação</option><option value="desvincular">Desvinculação</option><option value="ativar">Ativação</option><option value="desativar">Desativação</option><option value="excluir">Exclusão</option></select></label><label>Desde<input id="central-hist-desde" type="date"></label><label>Até<input id="central-hist-ate" type="date"></label></div></div><p class="central-nota">Datas e horários de Brasília. A identificação declarada é informada pelo operador.</p><div id="central-hist-lista"></div><div class="central-paginacao"><button id="central-hist-anterior" class="botao-secundario">Anterior</button><span id="central-hist-pagina" role="status"></span><button id="central-hist-proxima" class="botao-secundario">Próxima</button></div></section>
+        <div class="modal-botoes"><button id="resp-botao-fechar" class="botao-secundario">Fechar central</button></div>
       </div>
+      </div>
+      <dialog id="central-cadastro" class="central-dialog" aria-labelledby="central-cadastro-titulo"><div class="central-dialog-topo"><h2 id="central-cadastro-titulo">Adicionar destinatários</h2><button type="button" data-fechar-dialog aria-label="Fechar cadastro">×</button></div><form id="resp-form"><label class="resp-campo">Modo de cadastro<select id="central-modo"><option value="individual">Individual</option><option value="lote">Em lote</option><option value="arquivo">Importar CSV / XLSX</option></select></label><div id="central-individual" class="central-form-grade"><label class="resp-campo" for="resp-input-nome"><span>Nome da pessoa</span><input id="resp-input-nome" type="text" autocomplete="name" maxlength="100" required></label><label class="resp-campo" for="resp-input-email"><span>E-mail</span><input id="resp-input-email" type="email" autocomplete="email" maxlength="254" required></label></div><div id="central-lote" hidden><label class="resp-campo">E-mails separados por ponto e vírgula ou quebra de linha<textarea id="central-texto-lote" rows="5" maxlength="100000" placeholder="maria@empresa.com.br; joao@empresa.com.br"></textarea></label></div><div id="central-arquivo" hidden><label class="resp-campo">Arquivo CSV UTF-8 ou XLSX (até 1 MB, 500 destinatários)<input id="central-input-arquivo" type="file" accept=".csv,.xlsx"></label><p>Colunas: nome (opcional), email (obrigatória), instalacoes (opcional). Separe instalações por | e use as chaves abaixo. A primeira aba do XLSX será utilizada. Fórmulas não são aceitas.</p></div><fieldset><legend>Associar às instalações</legend><div class="central-toolbar"><button type="button" data-marcar="cadastro">Selecionar todas</button><button type="button" data-desmarcar="cadastro">Desmarcar todas</button></div><div id="central-cadastro-bases" class="central-bases"></div></fieldset><label class="resp-campo">E-mails já cadastrados<select id="central-existentes"><option value="ignorar">Ignorar</option><option value="vincular">Adicionar vínculos sem sobrescrever os existentes</option></select></label><div class="central-toolbar"><button id="resp-botao-cadastrar" type="submit" class="botao-primario">Cadastrar responsável</button></div></form><div id="central-previa" hidden><h3>Prévia da operação</h3><p id="central-previa-contagens" role="status"></p><p>Selecione as linhas a processar. Informe nomes quando disponíveis; campos vazios ficam com nome pendente.</p><div class="central-tabela-wrap central-previa-wrap"><table class="central-tabela"><thead><tr><th>Selecionar</th><th>E-mail / resultado</th><th>Nome</th></tr></thead><tbody id="central-previa-linhas"></tbody></table></div><button id="central-confirmar-cadastro" type="button" class="botao-primario">Confirmar cadastro selecionado</button></div><div id="resp-form-mensagem" class="modal-mensagem" role="status" aria-live="polite"></div><div id="central-relatorio"></div></dialog>
+      <dialog id="central-edicao" class="central-dialog" aria-labelledby="central-edicao-titulo"><div class="central-dialog-topo"><h2 id="central-edicao-titulo">Editar destinatário</h2><button type="button" data-fechar-dialog aria-label="Fechar edição">×</button></div><form id="central-form-edicao"><label class="resp-campo">Nome da pessoa<input id="central-editar-nome" maxlength="100" autocomplete="name"></label><label class="resp-campo">E-mail<input id="central-editar-email" type="email" maxlength="254" autocomplete="email" required></label><fieldset><legend>Instalações vinculadas</legend><div class="central-toolbar"><button type="button" data-marcar="edicao">Selecionar todas</button><button type="button" data-desmarcar="edicao">Desmarcar todas</button></div><div id="central-edicao-bases" class="central-bases"></div></fieldset><button class="botao-primario" type="submit">Salvar alterações</button></form><div id="central-edicao-mensagem" role="status" aria-live="polite"></div></dialog>
+      <dialog id="central-confirmacao" class="central-dialog" aria-labelledby="central-confirmacao-titulo"><div class="central-dialog-topo"><h2 id="central-confirmacao-titulo">Confirmar alteração</h2><button type="button" data-fechar-dialog aria-label="Cancelar alteração">×</button></div><p id="central-confirmacao-texto"></p><fieldset id="central-confirmacao-bases-grupo"><legend>Instalações da operação</legend><div class="central-toolbar"><button type="button" data-marcar="confirmacao">Selecionar todas</button><button type="button" data-desmarcar="confirmacao">Desmarcar todas</button></div><div id="central-confirmacao-bases" class="central-bases"></div></fieldset><div class="modal-botoes"><button type="button" data-fechar-dialog class="botao-secundario">Cancelar</button><button id="central-confirmar-acao" class="botao-primario">Confirmar operação</button></div><div id="central-confirmacao-mensagem" role="status" aria-live="polite"></div></dialog>
     </div>
   </div>
 
@@ -138,9 +139,11 @@
   <script src="alert-title.js?v=1"></script>
   <script src="weather-format.js?v=1"></script>
   <script src="cor-rio-compartilhado.js?v=ops-2"></script>
-  <script src="dashboard-components.js?v=ops-8"></script>
+  <script src="dashboard-components.js?v=ops-9"></script>
   <script src="envio-lote.js?v=2"></script>
-  <script src="dashboard.js?v=lotes-2"></script>
+  <script src="destinatarios-ui.js?v=1"></script>
+  <script src="destinatarios.js?v=2"></script>
+  <script src="dashboard.js?v=central-1"></script>
 </body>
 </html>
 

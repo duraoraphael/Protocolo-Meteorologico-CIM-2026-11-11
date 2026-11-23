@@ -1,6 +1,6 @@
 const { renderEmailHtml } = require("../render/emailTemplate");
 const { renderCorRioStandaloneEmail } = require("../render/corRioStandaloneEmail");
-const { listarPorCidade, validarEmail } = require("../config/recipients");
+const { listarPorCidade, validarEmail, filtrarEmailsAtivos } = require("../config/recipients");
 const { BASE_COR_RIO } = require("../config/distributionBases");
 const { criarTransportador, enderecoRemetente } = require("./transport");
 const { anexosLogosEmail } = require("../config/headerAssets");
@@ -33,10 +33,10 @@ function listaDestinatarios(cidadeChave, { permitirFallback = true } = {}) {
     process.env.EMAIL_REMETENTE ||
     process.env.GMAIL_USER ||
     "";
-  return semDuplicacoes(raw
+  return filtrarEmailsAtivos(semDuplicacoes(raw
     .split(",")
     .map((e) => e.trim())
-    .filter(Boolean));
+    .filter(Boolean)));
 }
 
 async function enviarRelatorioPorEmail(report, pdfBuffer, {
