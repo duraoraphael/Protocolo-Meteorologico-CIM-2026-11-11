@@ -2,12 +2,12 @@ const cron = require("node-cron");
 const { executarPipeline } = require("./pipeline");
 const { CIDADES } = require("./config/cities");
 const { dataBrasilia, lerEstado, gravarEstado, registroHistorico, adquirirExecucao } = require("./logic/scheduledReport");
-const { BASE_COR_RIO } = require("./config/distributionBases");
 const { HORARIOS_INFORMATIVO, horariosConfigurados } = require("./logic/informativoValidity");
 const { buscarAvisosInmetParaBases } = require("./sources/inmet");
 const { createInmetAlertMonitor } = require("./logic/inmetAlertMonitor");
 
-const HORARIOS_COR_RIO_PADRAO = Object.freeze(["08:00", "15:00"]);
+const { criarMonitorCorRio } = require("./logic/corRioAlertMonitor");
+const monitorCorRio = criarMonitorCorRio();
 const {
   relatorioDiarioAtivo,
   envioUnicoAgendadoAtivo,
@@ -56,7 +56,6 @@ async function executarHorarioAgendado(horario, {
   carregar = lerEstado,
   salvar = gravarEstado,
   data = dataBrasilia(),
-  incluirCorRio = true,
   adquirir = null,
 } = {}) {
   if (processamentoAgendado) {
@@ -109,39 +108,6 @@ async function executarHorarioAgendado(horario, {
         onResultado?.(erro, null);
       }
     }
-    if (incluirCorRio) {
-      const chaveCorRio = `${data}|${BASE_COR_RIO}|${horario}`;
-      if (!estado[chaveCorRio]) {
-        const travaCorRio = adquirirTrava(chaveCorRio);
-        if (!travaCorRio.adquirida) {
-          console.warn(`[AGENDADOR] execução duplicada bloqueada horario=${horario} localidade="COR-RIO" chave="${chaveCorRio}".`);
-          return;
-        }
-        try {
-          const resultado = await executar({
-            cidadeChave: "rio_de_janeiro",
-            enviarEmail: true,
-            horarioAgendado: horario,
-            tipoEnvio: "cor_rio",
-            permitirSemDestinatarios: true,
-          });
-          if (resultado.envio) {
-            estado[chaveCorRio] = registroHistorico(resultado.report);
-            salvar(estado);
-            travaCorRio.concluir("enviado", { messageId: resultado.envio?.messageId || null });
-            console.log(`[AGENDADOR] executionId=${travaCorRio.executionId} horarioProgramado=${horario} horarioEfetivo=${new Date().toISOString()} localidade="COR-RIO" status=enviado.`);
-            onResultado?.(null, resultado);
-          } else {
-            travaCorRio.liberar();
-            console.log(`[AGENDADOR] COR-RIO: nenhum destinatário vinculado; envio ignorado (${horario}).`);
-          }
-        } catch (erro) {
-          travaCorRio.liberar();
-          console.error(`[AGENDADOR] COR-RIO: falha às ${horario}: ${erro.message}`);
-          onResultado?.(erro, null);
-        }
-      }
-    }
   } catch (erro) {
     console.error(`[AGENDADOR] ${horario}: não foi possível ler o estado dos envios: ${erro.message}`);
     onResultado?.(erro, null);
@@ -164,7 +130,7 @@ function lerHorarios(variavel, padrao) {
  * Agenda as edições diárias do informativo para todas as bases, no horário
  * de Brasília. Únicos horários regulares: 08:00 e 15:00.
  *   HORARIOS_INFORMATIVO=08:00,15:00
- *   HORARIOS_COR_RIO=08:00,15:00
+ * O COR-Rio é enviado pelo monitor somente quando há mudança de estágio.
  */
 function iniciarAgendamentoDiario(onResultado, agendar = cron.schedule) {
   if (!relatorioDiarioAtivo()) {
@@ -177,14 +143,12 @@ function iniciarAgendamentoDiario(onResultado, agendar = cron.schedule) {
   }
 
   const horarios = lerHorarios("HORARIOS_INFORMATIVO", HORARIOS_INFORMATIVO);
-  const horariosCorRio = lerHorarios("HORARIOS_COR_RIO", HORARIOS_COR_RIO_PADRAO);
   const tarefas = Object.fromEntries(horarios.map((horario) => {
     const [hora, minuto] = horario.split(":").map(Number);
-    const incluirCorRio = horariosCorRio.includes(horario);
-    const tarefa = agendar(`${minuto} ${hora} * * *`, () => executarHorarioAgendado(horario, { onResultado, incluirCorRio }), { timezone: "America/Sao_Paulo" });
+    const tarefa = agendar(`${minuto} ${hora} * * *`, () => executarHorarioAgendado(horario, { onResultado }), { timezone: "America/Sao_Paulo" });
     return [horario, tarefa];
   }));
-  console.log(`[AGENDADOR] ${horarios.join(", ")} (America/Sao_Paulo), ${Object.keys(CIDADES).length} bases meteorológicas; aviso COR-RIO em ${horariosCorRio.filter((h) => horarios.includes(h)).join(", ") || "nenhum horário"}.`);
+  console.log(`[AGENDADOR] ${horarios.join(", ")} (America/Sao_Paulo), ${Object.keys(CIDADES).length} bases meteorológicas; COR-RIO somente por mudança de estágio.`);
   return tarefas;
 }
 
@@ -325,7 +289,10 @@ async function verificarAlertasEEnviarPorBase({ onResultado, verificar } = {}) {
   });
 }
 
-function iniciarMonitorAlertas(onResultado, agendar = cron.schedule) {
+function iniciarMonitorAlertas(onResultado, agendar = cron.schedule, {
+  verificarCorRio = monitorCorRio,
+  verificarBases = verificarAlertasEEnviarPorBase,
+} = {}) {
   if (monitorAlertasTarefa) return monitorAlertasTarefa;
   if (!alertasAutomaticosAtivos()) {
     console.log("[CIM] Monitor de alertas desativado em src/config/email.js.");
@@ -359,7 +326,18 @@ function iniciarMonitorAlertas(onResultado, agendar = cron.schedule) {
       }
 
       try {
-        const resultado = await verificarAlertasEEnviarPorBase({ onResultado });
+        const resultadoCorRio = await verificarCorRio();
+        if (resultadoCorRio.envio) {
+          console.log(`[COR-RIO] Mudança de estágio notificada: ${JSON.stringify(resultadoCorRio.mudancas)}.`);
+          onResultado?.(null, resultadoCorRio);
+        }
+      } catch (erro) {
+        console.error(`[COR-RIO] Falha no monitor: ${erro.message}`);
+        onResultado?.(erro, null);
+      }
+
+      try {
+        const resultado = await verificarBases({ onResultado });
         for (const falha of resultado.falhas) {
           console.error(`[AGENDADOR] Alerta — ${falha.nome}: falha na coleta: ${falha.erro}`);
         }

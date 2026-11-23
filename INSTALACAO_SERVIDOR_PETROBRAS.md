@@ -94,8 +94,11 @@ comitados no repositório**):
 | `DASHBOARD_PASSWORD` | **defina uma senha nova** — não reaproveite valor de teste |
 | `ENVIO_AUTOMATICO_DIARIO` | `true` |
 | `HORARIOS_INFORMATIVO` | `08:00,15:00` |
-| `HORARIOS_COR_RIO` | `08:00,15:00` |
 | `MONITOR_ALERTAS` | `true` |
+
+O COR-RIO é enviado pelo monitor somente quando muda o estágio operacional ou
+de calor. Não há envio fixo às 08h e 15h; `HORARIOS_COR_RIO` não é mais usado.
+A primeira consulta válida registra a referência sem disparar aviso.
 
 Demais variáveis (bases monitoradas e integrações opcionais) já vêm com
 valores padrão razoáveis — ver comentários no próprio `.env.example`.

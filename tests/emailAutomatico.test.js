@@ -85,7 +85,7 @@ test("cron agenda exclusivamente 08h e 15h no horário de Brasília", () => {
   }
 });
 
-test("edições das 08h e 15h são autônomas e COR-Rio segue os mesmos horários", async () => {
+test("edições das 08h e 15h são autônomas e não disparam COR-Rio", async () => {
   const estado = {};
   const chamadas = [];
   const executar = async (opcoes) => {
@@ -108,7 +108,7 @@ test("edições das 08h e 15h são autônomas e COR-Rio segue os mesmos horário
   assert.equal(chamada.teste, undefined);
   assert.equal(chamada.destinatariosTeste, undefined);
   assert.ok(estado["2026-09-28|rio_de_janeiro|15:00"]);
-  assert.deepEqual(chamadas.filter((c) => c.tipoEnvio === "cor_rio").map((c) => c.horarioAgendado), ["08:00", "15:00"]);
+  assert.deepEqual(chamadas.filter((c) => c.tipoEnvio === "cor_rio"), []);
 });
 
 test("duas rodadas percorrem bases, isolam falha e não repetem envio confirmado", async () => {
@@ -140,7 +140,7 @@ test("duas rodadas percorrem bases, isolam falha e não repetem envio confirmado
   assert.equal(envioDas15.teste, undefined);
   assert.equal(envioDas15.destinatariosTeste, undefined);
   assert.ok(estado["2026-09-28|rio_de_janeiro|15:00"]);
-  assert.ok(estado["2026-09-28|cor_rio|08:00"]);
-  assert.ok(estado["2026-09-28|cor_rio|15:00"]);
-  assert.equal(chamadas.filter((c) => c.tipoEnvio === "cor_rio").length, 2);
+  assert.equal(estado["2026-09-28|cor_rio|08:00"], undefined);
+  assert.equal(estado["2026-09-28|cor_rio|15:00"], undefined);
+  assert.equal(chamadas.filter((c) => c.tipoEnvio === "cor_rio").length, 0);
 });

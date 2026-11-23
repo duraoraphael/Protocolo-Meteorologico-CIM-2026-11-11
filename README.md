@@ -77,7 +77,6 @@ node -e "console.log(require('crypto').randomBytes(18).toString('base64url'))"
 CIDADE=rio_de_janeiro
 ENVIO_AUTOMATICO_DIARIO=true
 HORARIOS_INFORMATIVO=08:00,15:00
-HORARIOS_COR_RIO=08:00,15:00
 ```
 
 Os únicos horários automáticos regulares são 08:00 e 15:00, no fuso
@@ -87,6 +86,15 @@ A previsão operacional da edição das 08h cobre 08h–15h; a edição das 15h
 cobre 15h–00h.
 Valores diferentes em `HORARIOS_INFORMATIVO` são rejeitados e o agendador
 retorna ao padrão seguro 08:00/15:00.
+
+O aviso COR-RIO é enviado somente quando o monitor detecta mudança no estágio
+operacional ou de calor, inclusive redução. A primeira consulta válida de cada
+fonte estabelece a referência sem enviar e-mail. O estado é persistido em
+`data/cor-rio-notificado.json`; consultas com erro/cache não mudam a referência,
+e falhas de envio são retentadas no próximo ciclo. A verificação segue
+`MONITOR_ALERTAS`, `INTERVALO_MONITOR_MIN` (padrão: 5 minutos) e `JANELA_MONITOR`.
+`HORARIOS_COR_RIO` não é mais utilizado. Os destinatários continuam sendo os
+vinculados à opção COR-RIO no painel.
 
 O cadastro central de bases é estático em `src/config/cities.js`; não há
 cadastro/edição de instalações pela interface. Relatórios e monitores percorrem

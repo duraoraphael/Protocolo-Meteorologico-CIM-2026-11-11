@@ -43,8 +43,6 @@ services:
         value: "true"
       - key: HORARIOS_INFORMATIVO
         value: "08:00,15:00"
-      - key: HORARIOS_COR_RIO
-        value: "08:00,15:00"
       - key: MONITOR_ALERTAS
         value: "true"
       - key: INTERVALO_MONITOR_MIN
