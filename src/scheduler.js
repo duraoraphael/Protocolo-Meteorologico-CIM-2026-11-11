@@ -6,8 +6,6 @@ const { HORARIOS_INFORMATIVO, horariosConfigurados } = require("./logic/informat
 const { buscarAvisosInmetParaBases } = require("./sources/inmet");
 const { createInmetAlertMonitor } = require("./logic/inmetAlertMonitor");
 
-const { criarMonitorCorRio } = require("./logic/corRioAlertMonitor");
-const monitorCorRio = criarMonitorCorRio();
 const {
   relatorioDiarioAtivo,
   envioUnicoAgendadoAtivo,
@@ -130,7 +128,7 @@ function lerHorarios(variavel, padrao) {
  * Agenda as edições diárias do informativo para todas as bases, no horário
  * de Brasília. Únicos horários regulares: 08:00 e 15:00.
  *   HORARIOS_INFORMATIVO=08:00,15:00
- * O COR-Rio é enviado pelo monitor somente quando há mudança de estágio.
+ * O COR-Rio possui monitor exclusivo de publicações e estágios.
  */
 function iniciarAgendamentoDiario(onResultado, agendar = cron.schedule) {
   if (!relatorioDiarioAtivo()) {
@@ -148,7 +146,7 @@ function iniciarAgendamentoDiario(onResultado, agendar = cron.schedule) {
     const tarefa = agendar(`${minuto} ${hora} * * *`, () => executarHorarioAgendado(horario, { onResultado }), { timezone: "America/Sao_Paulo" });
     return [horario, tarefa];
   }));
-  console.log(`[AGENDADOR] ${horarios.join(", ")} (America/Sao_Paulo), ${Object.keys(CIDADES).length} bases meteorológicas; COR-RIO somente por mudança de estágio.`);
+  console.log(`[AGENDADOR] ${horarios.join(", ")} (America/Sao_Paulo), ${Object.keys(CIDADES).length} bases meteorológicas; COR-RIO em monitor exclusivo.`);
   return tarefas;
 }
 
@@ -290,7 +288,6 @@ async function verificarAlertasEEnviarPorBase({ onResultado, verificar } = {}) {
 }
 
 function iniciarMonitorAlertas(onResultado, agendar = cron.schedule, {
-  verificarCorRio = monitorCorRio,
   verificarBases = verificarAlertasEEnviarPorBase,
 } = {}) {
   if (monitorAlertasTarefa) return monitorAlertasTarefa;
@@ -323,17 +320,6 @@ function iniciarMonitorAlertas(onResultado, agendar = cron.schedule, {
       const h = agora.getHours();
       if (!Number.isNaN(horaIni) && !Number.isNaN(horaFim) && (h < horaIni || h >= horaFim)) {
         return; // fora da janela de vigilância
-      }
-
-      try {
-        const resultadoCorRio = await verificarCorRio();
-        if (resultadoCorRio.envio) {
-          console.log(`[COR-RIO] Mudança de estágio notificada: ${JSON.stringify(resultadoCorRio.mudancas)}.`);
-          onResultado?.(null, resultadoCorRio);
-        }
-      } catch (erro) {
-        console.error(`[COR-RIO] Falha no monitor: ${erro.message}`);
-        onResultado?.(erro, null);
       }
 
       try {

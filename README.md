@@ -87,14 +87,24 @@ cobre 15h–00h.
 Valores diferentes em `HORARIOS_INFORMATIVO` são rejeitados e o agendador
 retorna ao padrão seguro 08:00/15:00.
 
-O aviso COR-RIO é enviado somente quando o monitor detecta mudança no estágio
-operacional ou de calor, inclusive redução. A primeira consulta válida de cada
-fonte estabelece a referência sem enviar e-mail. O estado é persistido em
-`data/cor-rio-notificado.json`; consultas com erro/cache não mudam a referência,
-e falhas de envio são retentadas no próximo ciclo. A verificação segue
-`MONITOR_ALERTAS`, `INTERVALO_MONITOR_MIN` (padrão: 5 minutos) e `JANELA_MONITOR`.
-`HORARIOS_COR_RIO` não é mais utilizado. Os destinatários continuam sendo os
-vinculados à opção COR-RIO no painel.
+O COR-RIO tem monitor exclusivo 24h, com `MONITOR_COR_RIO=true` e
+`INTERVALO_COR_RIO_SEGUNDOS=15` (valores aceitos: 5 a 300 segundos; inválidos
+usam 15). Detecta publicações novas e editadas de **todas as categorias**, incluindo
+trânsito e notícias, e mudanças de estágio operacional ou de calor, inclusive
+redução. O e-mail inclui as publicações detectadas com conteúdo e links oficiais.
+A primeira consulta válida estabelece a referência sem distribuir histórico.
+O estado é persistido em `data/cor-rio-notificado.json`; falhas de coleta não
+mudam a referência e falhas de envio são retentadas. Durante falhas, a espera
+aumenta progressivamente até 5 minutos. O ciclo não sobrepõe consultas; aguarda
+15 segundos após terminar a consulta anterior. O tempo de resposta do site,
+seu cache e a entrega SMTP impedem garantir envio instantâneo.
+
+O monitor respeita `MONITOR_ALERTAS` e o interruptor de alertas automáticos em
+`src/config/email.js`, mas independe de `INTERVALO_MONITOR_MIN` e `JANELA_MONITOR`,
+que continuam valendo para os demais alertas. `HORARIOS_COR_RIO` não é utilizado.
+Os destinatários continuam sendo exclusivamente os vinculados à opção COR-RIO
+no painel; o aviso não tem PDF. O painel e os relatórios meteorológicos gerais
+mantêm sua seleção de comunicados meteorológicos.
 
 O cadastro central de bases é estático em `src/config/cities.js`; não há
 cadastro/edição de instalações pela interface. Relatórios e monitores percorrem
@@ -154,8 +164,8 @@ O painel:
   vincular uma ou várias bases. `COR-RIO — RJ` é uma base somente de
   distribuição e pode ser o único vínculo de uma pessoa.
 - Envia automaticamente os informativos às 08:00 e 15:00 (horário de
-  Brasília) para as bases meteorológicas e, em fluxo separado nos mesmos
-  horários, o aviso COR-RIO apenas para seus próprios
+  Brasília) para as bases meteorológicas. Em fluxo separado, o monitor COR-RIO
+  envia publicações novas/editadas e mudanças de estágio apenas para seus próprios
   destinatários. `REPORT_RECIPIENTS` nunca
   é usado como fallback do aviso COR-RIO.
 

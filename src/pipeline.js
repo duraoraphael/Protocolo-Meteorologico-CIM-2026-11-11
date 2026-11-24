@@ -127,11 +127,20 @@ function relatorioBaseCorRio(cidade, horarioAgendado = null) {
   };
 }
 
-async function executarPipelineCorRio({ enviarEmail = true, horarioAgendado = null, teste = false, permitirSemDestinatarios = false } = {}) {
+async function executarPipelineCorRio({ enviarEmail = true, horarioAgendado = null, teste = false, permitirSemDestinatarios = false,
+  monitorPublicacoes = false, publicacoesDesde = null } = {}) {
   const cidade = getCidade("rio_de_janeiro");
   const report = relatorioBaseCorRio(cidade, horarioAgendado);
   if (teste) report.envioTeste = true;
   await anexarCorRioAoRelatorio(report, cidade, { forcarAtualizacao: true });
+  if (monitorPublicacoes) {
+    try {
+      report.publicacoesCorRio = await require('./sources/corRioPublicacoes').buscarPublicacoesCorRio({ desde: publicacoesDesde });
+    } catch (erro) {
+      console.error(`[COR-RIO] Falha ao consultar publicações: ${erro.message}`);
+      report.publicacoesCorRio = { status: 'indisponivel', itens: [], falha: erro.message };
+    }
+  }
   registrarDocumentoOperacional(report, {
     tipo: TIPOS_DOCUMENTO.AVISO_COR_RIO,
     fontes: ["COR-Rio — Centro de Operações e Resiliência"],

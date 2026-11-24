@@ -95,10 +95,17 @@ comitados no repositório**):
 | `ENVIO_AUTOMATICO_DIARIO` | `true` |
 | `HORARIOS_INFORMATIVO` | `08:00,15:00` |
 | `MONITOR_ALERTAS` | `true` |
+| `MONITOR_COR_RIO` | `true` |
+| `INTERVALO_COR_RIO_SEGUNDOS` | `15` |
 
-O COR-RIO é enviado pelo monitor somente quando muda o estágio operacional ou
-de calor. Não há envio fixo às 08h e 15h; `HORARIOS_COR_RIO` não é mais usado.
-A primeira consulta válida registra a referência sem disparar aviso.
+O COR-RIO possui monitor exclusivo 24h: consulta a cada 15 segundos após o
+término do ciclo anterior, independente do intervalo dos demais alertas.
+Envia publicações novas/editadas de todas as categorias (inclusive trânsito e
+notícias) e mudanças do estágio operacional ou de calor. Não há envio fixo às
+08h e 15h; `HORARIOS_COR_RIO` não é usado. A primeira consulta válida registra
+a referência sem disparar histórico. Falhas geram espera progressiva até 5 minutos.
+O intervalo não garante entrega instantânea: depende da fonte e do SMTP.
+Após atualizar código e `.env`, reinicie o serviço para carregar o novo monitor.
 
 Demais variáveis (bases monitoradas e integrações opcionais) já vêm com
 valores padrão razoáveis — ver comentários no próprio `.env.example`.

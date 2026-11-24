@@ -103,7 +103,7 @@ test("fenômeno oficial do INMET é preservado sem complemento ou singularizaç�
   };
   const alerta = renderAlertEmailHtml(base);
   assert.match(alerta, /TEMPESTADE — ALERTA/);
-  assert.match(assuntoAlerta(base), /TEMPESTADE — ALERTA/);
+  assert.equal(assuntoAlerta(base), `${r.cidade.nome} - Tempestade - Alerta`);
   assert.doesNotMatch(`${alerta} ${assuntoAlerta(base)}`, /TEMPESTADE COM RAIOS|TEMPESTADES? DE RAIOS/i);
 });
 

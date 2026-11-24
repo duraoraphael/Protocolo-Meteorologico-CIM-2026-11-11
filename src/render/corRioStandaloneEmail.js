@@ -62,6 +62,18 @@ function quadro(id, titulo, corpo) {
 }
 
 function comunicado(r, s) {
+  if (r.publicacoesCorRio) {
+    if (r.publicacoesCorRio.status !== 'operacional') return paragrafo('Não foi possível atualizar as publicações nesta consulta.');
+    if (!r.publicacoesCorRio.itens.length) return paragrafo('Nenhuma publicação nova ou editada nesta consulta.');
+    return r.publicacoesCorRio.itens.map(item => `
+      <h3 style="margin:0 0 12px;font:bold 20px/27px Arial,sans-serif;">${esc(item.tituloIntegral || item.titulo)}</h3>
+      ${(item.descricaoIntegral || []).map(texto => paragrafo(esc(texto))).join('') || paragrafo(esc(item.resumo || ''))}
+      ${linha('Publicação', dataOficial(item.publicadoEm))}
+      ${linha('Atualização', dataOficial(item.atualizadoEm))}
+      ${linkOficial(item.link, 'Consultar publicação oficial')}
+      <hr style="border:0;border-top:1px solid ${BORDA};margin:16px 0;">
+    `).join('');
+  }
   const item = s.comunicados === "indisponivel" ? null : comunicadoDoDia(s.itens, {
     geradoEm: r.geradoEmISO || Date.now(), integral: true,
   });

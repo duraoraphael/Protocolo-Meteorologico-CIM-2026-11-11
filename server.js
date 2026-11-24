@@ -16,6 +16,7 @@ const { executarPipeline, PASTA_SAIDA } = require("./src/pipeline");
 const { criarAtualizadorDados } = require("./src/logic/atualizacaoDados");
 const { comConteudoEmail } = require("./src/logic/conteudoEmailPainel");
 const { servicoCorRioPadrao } = require("./src/sources/corRio");
+const { iniciarMonitorCorRio } = require('./src/logic/corRioMonitorScheduler');
 const {
   iniciarAgendamentoDiario,
   agendarEnvioUnicoHoje,
@@ -494,6 +495,7 @@ function iniciarServidor() {
     agendarEnvioUnicoHoje(publicarSnapshotInformativo);
     iniciarMonitorColetaAvisosInmet();
     iniciarMonitorAlertas();
+    iniciarMonitorCorRio();
     iniciarAtualizacaoAutomatica(app.locals.atualizadorDados);
     iniciarVerificacaoFontes();
   };

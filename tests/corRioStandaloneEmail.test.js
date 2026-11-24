@@ -1,5 +1,19 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
+
+test('aviso automático mostra trânsito e notícias editadas sem filtro de data ou categoria e escapa conteúdo', () => {
+  const { renderCorRioStandaloneEmail } = require('../src/render/corRioStandaloneEmail');
+  const html = renderCorRioStandaloneEmail({ corRio: {}, publicacoesCorRio: { status: 'operacional', itens: [
+    { id: '1', titulo: 'Trânsito <bloqueado>', descricaoIntegral: ['Desvio <script>malicioso</script>'],
+      publicadoEm: '2025-01-01T10:00:00Z', atualizadoEm: '2026-11-24T11:00:00Z', link: 'https://cor.rio/transito/', categorias: [99] },
+    { id: '2', titulo: 'Notícia institucional', descricaoIntegral: ['Notícia integral'], link: 'https://cor.rio/noticia/' },
+  ] } });
+  assert.match(html, /Trânsito &lt;bloqueado&gt;/);
+  assert.match(html, /Notícia institucional/);
+  assert.match(html, /Atualização/);
+  assert.match(html, /https:\/\/cor.rio\/transito\//);
+  assert.doesNotMatch(html, /<script>|Nenhum comunicado meteorológico/);
+});
 const cheerio = require("cheerio");
 const { renderCorRioStandaloneEmail } = require("../src/render/corRioStandaloneEmail");
 const { interpretarComunicados, interpretarCalor } = require("../src/sources/corRio");

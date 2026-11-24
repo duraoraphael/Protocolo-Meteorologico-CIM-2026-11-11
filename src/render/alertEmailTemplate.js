@@ -3,7 +3,6 @@
 
 const {
   esc,
-  nivelExibicao,
   nomeParametroAlerta,
   normalizarGrau,
   renderEmailHeader,
@@ -11,7 +10,7 @@ const {
   renderStatusChangeCard,
   classificacaoMudanca,
 } = require("./emailComponents");
-const { ordenarEventosParaExibicao, prioridadeNivel } = require("./eventOrdering");
+const { ordenarEventosParaExibicao } = require("./eventOrdering");
 const { TIPOS_DOCUMENTO, deveExibirNoDocumento } = require("../logic/alertPresentation");
 const { formatarRajadaPrevista } = require("../../public/weather-format");
 
@@ -172,20 +171,16 @@ function renderAlertEmailHtml(base) {
 function assuntoAlerta(base) {
   const alertas = alertasCimExibiveis(base.alertas);
   if (!alertas.length) return "";
-  const tipos = [...new Set(alertas.map((a) => nomeParametroAlerta(a.tipo, {
-    oficial: a.naturezaDado === "Aviso oficial",
-  })))].slice(0, 2).join(" / ");
-  const grau = alertas
-    .map((a) => normalizarGrau(a.grau))
-    .filter(Boolean)
-    .sort((a, b) => prioridadeNivel(b) - prioridadeNivel(a))[0] || "ALERTA";
-  const simbolo = { NORMAL: "🟢", "ATENÇÃO": "🟡", ALERTA: "🟠", "EMERGÊNCIA": "🔴" }[grau];
-  const prefixo = alertas.every((alerta) => alerta.motivo === "normalizou")
-    ? "NORMALIZAÇÃO"
-    : alertas.every((alerta) => ["reduziu", "atualizou"].includes(alerta.motivo))
-      ? "ATUALIZAÇÃO"
-      : null;
-  return `${simbolo} ${prefixo ? `${prefixo} — ` : ""}${tipos} — ${nivelExibicao(grau)} — ${base.cidade.nome}/${base.cidade.uf}`;
+  const legivel = valor => {
+    const texto = valor.toLocaleLowerCase('pt-BR');
+    return (texto.charAt(0).toLocaleUpperCase('pt-BR') + texto.slice(1))
+      .replace(/\b(uv|inmet|ehf)\b/gi, sigla => sigla.toUpperCase());
+  };
+  const tipos = [...new Set(alertas.map(a => {
+    const tipo = nomeParametroAlerta(a.tipo, { oficial: a.naturezaDado === 'Aviso oficial' });
+    return `${legivel(tipo)} - ${legivel(normalizarGrau(a.grau) || 'ALERTA')}`;
+  }))].join(' / ');
+  return `${base.cidade.nome} - ${tipos}`;
 }
 
 module.exports = { alertasCimExibiveis, renderAlertEmailHtml, assuntoAlerta };

@@ -48,6 +48,7 @@ function conteudoVerificavel(documento) {
     severidade: documento?.severidade || null,
     monitorSecas: documento?.monitorSecas || null,
     corRio: documento?.corRio || null,
+    publicacoesCorRio: documento?.publicacoesCorRio || null,
     bases: documento?.bases || null,
   };
 }

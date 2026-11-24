@@ -256,7 +256,7 @@ test("e-mail apresenta fenômeno, grau, fontes, valores e recomendações", () =
   assert.doesNotMatch(html, /Fonte de dados:|Origem da classificação|Significado do nível CIM|Instalações/);
   assert.match(html, /Chuva entre 30 e 60 mm\/h/);
   assert.match(html, /Recomendações – Protocolo Meteorológico do COMPARTILHADO/);
-  assert.match(assuntoAlerta(base), /CHUVA INTENSA — ALERTA — Rio de Janeiro\/RJ/);
+  assert.equal(assuntoAlerta(base), 'Rio de Janeiro - Chuva intensa - Alerta');
 });
 
 test("aviso oficial mantém a fonte INMET e explica todos os riscos oficiais sem duplicar", () => {

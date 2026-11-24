@@ -2,7 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const { iniciarMonitorAlertas } = require("../src/scheduler");
 
-test("monitor agenda uma vez e verifica COR-Rio mesmo quando não há alertas meteorológicos", async () => {
+test("monitor geral agenda uma vez; COR-Rio fica em ciclo exclusivo", async () => {
   const tarefas = [];
   const schedule = (expression, callback, options) => {
     const tarefa = { expression, callback, options, stop() {} };
@@ -30,8 +30,7 @@ test("monitor agenda uma vez e verifica COR-Rio mesmo quando não há alertas me
   assert.equal(consultasCorRio, 0, "agendar não dispara envio imediato");
   await tarefas[0].callback();
   await tarefas[0].callback();
-  assert.equal(consultasCorRio, 2);
-  assert.equal(consultasBases, 2, "falha COR-Rio não interrompe outras bases");
-  assert.match(resultados[0].erro.message, /Falha COR-Rio/);
-  assert.equal(resultados[1].resultado.envio.messageId, "cor-ok");
+  assert.equal(consultasCorRio, 0);
+  assert.equal(consultasBases, 2, "bases são consultadas no monitor geral");
+  assert.deepEqual(resultados, []);
 });
