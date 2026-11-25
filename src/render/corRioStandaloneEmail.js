@@ -2,7 +2,7 @@ const { renderEmailHeader, renderEmailHeaderStyles, esc } = require("./emailComp
 const { comunicadoDoDia, paragrafosHtml } = require("./corRioEmail");
 const { faixaSimulacaoEmail } = require("./simulationBanner");
 const { formatarDataBrasilia } = require("../sources/sourceHealth");
-const { ESTAGIOS, TINTA, situacao } = require("../../public/cor-rio-compartilhado");
+const { TINTA, situacao } = require("../../public/cor-rio-compartilhado");
 
 const VERDE = "#006527";
 const BORDA = "#D5DBD8";
@@ -139,8 +139,7 @@ function renderCorRioStandaloneEmail(r) {
   const calor = quadroEstagio({
     id: "cor-rio-calor", titulo: "ESTÁGIO DE CALOR — COR-RIO", tipo: "ESTÁGIO DE CALOR",
     nivel: s.nivelCalor, rotulo: `Calor ${s.nivelCalor}`,
-    cor: s.nivelCalor === 1 ? ESTAGIOS[1].cor : VERDE,
-    tinta: s.nivelCalor === 1 ? TINTA : "#FFFFFF", dados: estado?.calor?.dados,
+    cor: s.calor?.cor, dados: estado?.calor?.dados,
     desatualizado: s.calorDesatualizado, orientacao: CALOR,
   });
   return `<!doctype html>

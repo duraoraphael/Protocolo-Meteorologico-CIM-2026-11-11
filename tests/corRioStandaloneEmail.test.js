@@ -51,10 +51,8 @@ test("classifica todos os níveis em escalas independentes, com vigências próp
     const estagio = $("#cor-rio-operacional");
     const calor = $("#cor-rio-calor");
     assert.equal(estagio.find(".cor-rio-nivel").attr("bgcolor"), cores[nivel - 1]);
-    assert.equal(calor.find(".cor-rio-nivel").attr("bgcolor"), nivel === 1 ? cores[0] : "#006527");
-    if (nivel === 1) {
-      assert.equal(calor.find(".cor-rio-nivel").attr("style"), estagio.find(".cor-rio-nivel").attr("style"));
-    }
+    assert.equal(calor.find(".cor-rio-nivel").attr("bgcolor"), cores[nivel - 1]);
+    assert.equal(calor.find(".cor-rio-nivel").attr("style"), estagio.find(".cor-rio-nivel").attr("style"));
     assert.equal(estagio.find(".cor-rio-nivel").text(), `Estágio ${nivel}`);
     assert.equal(calor.find(".cor-rio-nivel").text(), `Calor ${nivel}`);
     assert.match(estagio.text(), /18\/11\/2026 09:00[\s\S]*Descrição da fonte\./);
@@ -63,6 +61,22 @@ test("classifica todos os níveis em escalas independentes, com vigências próp
     assert.doesNotMatch(calor.text(), /18\/11\/2026|Descrição da fonte/);
     assert.equal(estagio.find("a").attr("href"), "https://cor.rio/faq/");
     assert.equal(calor.find("a").attr("href"), "https://cor.rio/niveis-de-calor/");
+  }
+});
+
+test("cores dos estágios operacional e de calor acompanham mudanças de nível independentemente", () => {
+  const cores = ["#22C55E", "#FACC15", "#F97316", "#EF4444", "#A855F7"];
+  for (const [operacional, calor] of [[1, 3], [4, 2], [2, 5], [5, 4], [3, 1]]) {
+    const $ = cheerio.load(renderCorRioStandaloneEmail({ geradoEmISO, corRio: {
+      estagio: { status: "operacional", dados: { nivel: operacional } },
+      calor: { status: "operacional", dados: { nivel: calor } },
+    } }));
+    for (const [id, nivel] of [["cor-rio-operacional", operacional], ["cor-rio-calor", calor]]) {
+      const selo = $(`#${id} .cor-rio-nivel`);
+      assert.equal(selo.attr("bgcolor"), cores[nivel - 1]);
+      assert.ok(selo.attr("style").includes(`background:${cores[nivel - 1]};`));
+      assert.ok(selo.attr("style").includes("color:#0B1A12;"));
+    }
   }
 });
 
