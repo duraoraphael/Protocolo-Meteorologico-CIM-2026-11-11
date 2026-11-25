@@ -127,12 +127,11 @@ function relatorioBaseCorRio(cidade, horarioAgendado = null) {
   };
 }
 
-async function executarPipelineCorRio({ enviarEmail = true, horarioAgendado = null, teste = false, permitirSemDestinatarios = false,
-  monitorPublicacoes = false, publicacoesDesde = null } = {}) {
+async function executarPipelineCorRio({ enviarEmail = true, horarioAgendado = null, teste = false, permitirSemDestinatarios = false } = {}) {
   const cidade = getCidade("rio_de_janeiro");
   const report = relatorioBaseCorRio(cidade, horarioAgendado);
   if (teste) report.envioTeste = true;
-  await anexarCorRioAoRelatorio(report, cidade, { forcarAtualizacao: true });
+  await anexarCorRioAoRelatorio(report, cidade, { forcarAtualizacao: true, somenteEstagios: true });
   const calor = report.corRio?.calor;
   if (calor?.status === 'operacional' && calor.dados?.nivel && !calor.dados.vigenteDesde) {
     try {
@@ -142,13 +141,9 @@ async function executarPipelineCorRio({ enviarEmail = true, horarioAgendado = nu
       console.warn(`[COR-RIO] Não foi possível consultar o início do estágio de calor: ${erro.message}`);
     }
   }
-  if (monitorPublicacoes) {
-    try {
-      report.publicacoesCorRio = await require('./sources/corRioPublicacoes').buscarPublicacoesCorRio({ desde: publicacoesDesde });
-    } catch (erro) {
-      console.error(`[COR-RIO] Falha ao consultar publicações: ${erro.message}`);
-      report.publicacoesCorRio = { status: 'indisponivel', itens: [], falha: erro.message };
-    }
+  if (report.corRio) {
+    const { comunicados: _comunicados, ...estagios } = report.corRio;
+    report.corRio = estagios;
   }
   registrarDocumentoOperacional(report, {
     tipo: TIPOS_DOCUMENTO.AVISO_COR_RIO,

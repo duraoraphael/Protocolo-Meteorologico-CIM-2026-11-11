@@ -4,48 +4,34 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 
-test('publicações de qualquer categoria e edições são enviadas, com referência persistida somente após SMTP', async (t) => {
+test('publicacoes novas e editadas nao disparam aviso de estagios', async t => {
   const { criarMonitorCorRio } = require('../src/logic/corRioAlertMonitor');
   const pasta = fs.mkdtempSync(path.join(os.tmpdir(), 'cim-cor-posts-'));
   t.after(() => fs.rmSync(pasta, { recursive: true, force: true }));
-  const arquivo = path.join(pasta, 'estado.json');
-  let itens = [{ id: '1', revisao: 'v1', titulo: 'Trânsito', categorias: [99] }];
-  let desde = '2026-11-24T11:00:00Z'; let falhar = false; let status = 'operacional';
-  const enviados = [];
-  const opcoes = { arquivo, coletar: async () => ({ report: { corRio: {}, publicacoesCorRio: { status, itens, desde } } }),
-    enviar: async r => { if (falhar) throw new Error('SMTP falhou'); enviados.push(r.publicacoesCorRio.itens); return { messageId: 'ok' }; } };
-  let monitor = criarMonitorCorRio(opcoes);
-  await monitor(); assert.equal(enviados.length, 0);
-  itens = [...itens, { id: '2', revisao: 'v1', titulo: 'Notícia institucional', categorias: [100] }];
-  desde = '2026-11-24T11:00:15Z'; falhar = true;
-  await assert.rejects(monitor(), /SMTP falhou/);
-  falhar = false; monitor = criarMonitorCorRio(opcoes); await monitor();
-  assert.deepEqual(enviados[0].map(i => i.id), ['2']);
-  await monitor(); assert.equal(enviados.length, 1);
-  itens[0] = { ...itens[0], revisao: 'v2' }; status = 'indisponivel';
-  await monitor(); assert.equal(enviados.length, 1);
-  status = 'operacional'; await monitor();
-  assert.deepEqual(enviados[1].map(i => i.id), ['1']);
+  let envios = 0;
+  const monitor = criarMonitorCorRio({ arquivo: path.join(pasta, 'estado.json'),
+    coletar: async () => ({ report: { corRio: {
+      estagio: { status: 'operacional', dados: { nivel: 1 } }, calor: { status: 'operacional', dados: { nivel: 3 } },
+    }, publicacoesCorRio: { status: 'operacional', itens: [{ id: String(Math.random()) }] } } }),
+    enviar: async () => { envios++; return { messageId: 'ok' }; }, logger: { log() {}, error() {} },
+  });
+  await monitor(); await monitor(); await monitor(); assert.equal(envios, 0);
 });
 
-test('composição das publicações preserva a procedência operacional e protege o conteúdo enviado', async (t) => {
+test('transicao enviada preserva a assinatura operacional', async t => {
   const { criarMonitorCorRio } = require('../src/logic/corRioAlertMonitor');
-  const { registrarDocumentoOperacional, validarDocumentoOperacional } = require('../src/logic/documentProvenance');
-  const pasta = fs.mkdtempSync(path.join(os.tmpdir(), 'cim-cor-procedencia-'));
+  const { validarDocumentoOperacional } = require('../src/logic/documentProvenance');
+  const pasta = fs.mkdtempSync(path.join(os.tmpdir(), 'cim-cor-assinatura-'));
   t.after(() => fs.rmSync(pasta, { recursive: true, force: true }));
-  let itens = []; let reportEnviado;
-  const monitor = criarMonitorCorRio({ arquivo: path.join(pasta, 'estado.json'), coletar: async () => {
-    const report = { cidade: { chave: 'rio_de_janeiro' }, tipoDocumento: 'AVISO_COR_RIO',
-      geradoEmISO: '2026-11-24T11:00:00Z', corRio: {}, publicacoesCorRio: {
-        status: 'operacional', desde: '2026-11-24T11:00:00Z', itens,
-      } };
-    registrarDocumentoOperacional(report, { fontes: ['COR-Rio'] }); return { report };
-  }, enviar: async report => {
-    validarDocumentoOperacional(report); reportEnviado = report; return { messageId: 'ok' };
-  } });
-  await monitor(); itens = [{ id: '1', titulo: 'Notícia', revisao: 'v1' }]; await monitor();
-  reportEnviado.publicacoesCorRio.itens[0].titulo = 'Texto alterado após composição';
-  assert.throws(() => validarDocumentoOperacional(reportEnviado), /alterado|integridade/i);
+  let nivel = 1; let enviado;
+  const monitor = criarMonitorCorRio({ arquivo: path.join(pasta, 'estado.json'),
+    coletar: async () => ({ report: { corRio: { estagio: { status: 'operacional', dados: { nivel } } } } }),
+    enviar: async r => { validarDocumentoOperacional(r); enviado = r; return { messageId: 'ok' }; },
+    logger: { log() {}, error() {} },
+  });
+  await monitor(); nivel = 3; await monitor();
+  enviado.corRioMudancas[0].anterior = 2;
+  assert.throws(() => validarDocumentoOperacional(enviado));
 });
 
 test("COR-Rio avisa apenas mudanças válidas, persiste referência e retenta falha de envio", async (t) => {

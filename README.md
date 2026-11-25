@@ -89,12 +89,18 @@ retorna ao padrão seguro 08:00/15:00.
 
 O COR-RIO tem monitor exclusivo 24h, com `MONITOR_COR_RIO=true` e
 `INTERVALO_COR_RIO_SEGUNDOS=15` (valores aceitos: 5 a 300 segundos; inválidos
-usam 15). Detecta publicações novas e editadas de **todas as categorias**, incluindo
-trânsito e notícias, e mudanças de estágio operacional ou de calor, inclusive
-redução. O e-mail inclui as publicações detectadas com conteúdo e links oficiais.
+usam 15). Dispara **somente por mudança numérica do estágio operacional ou de calor**,
+incluindo saltos de níveis e retorno ao nível 1. Publicações e edições de notícias
+não geram aviso. O e-mail mostra apenas os dois estágios atuais, cores, vigência,
+recomendações oficiais e fontes; recomendações ficam ocultas no nível 1.
+As transições ficam registradas internamente: o corpo e o assunto não exibem
+agravamento, redução, setas nem estágio anterior. O link da fonte da vigência é omitido.
 A primeira consulta válida estabelece a referência sem distribuir histórico.
-O estado é persistido em `data/cor-rio-notificado.json`; falhas de coleta não
-mudam a referência e falhas de envio são retentadas. Durante falhas, a espera
+O estado é persistido em `data/cor-rio-notificado.json` (versão 2, migração automática
+do legado). Cada episódio tem UUID, snapshot, tentativas e status; falhas de coleta
+preservam referências, e novas transições não apagam eventos pendentes. Falhas de envio
+são retentadas; aceitação parcial registra quem recebeu e retenta só os pendentes.
+Durante falhas, a espera
 aumenta progressivamente até 5 minutos. O ciclo não sobrepõe consultas; aguarda
 15 segundos após terminar a consulta anterior. O tempo de resposta do site,
 seu cache e a entrega SMTP impedem garantir envio instantâneo.
@@ -105,6 +111,13 @@ que continuam valendo para os demais alertas. `HORARIOS_COR_RIO` não é utiliza
 Os destinatários continuam sendo exclusivamente os vinculados à opção COR-RIO
 no painel; o aviso não tem PDF. O painel e os relatórios meteorológicos gerais
 mantêm sua seleção de comunicados meteorológicos.
+
+Validação local sem SMTP: `npm run simular-cor-rio -- --cenario=simultanea`.
+As prévias e o estado simulado ficam em `output/simulacoes-cor-rio/`, sem usar `.env`
+ou `data/`. Cenários: `agravamento`, `reducao`, `simultanea`, `sem-alteracao`,
+`api-indisponivel`, `falha-envio`, `reinicio`. Níveis podem ser definidos por
+`--operacional=1..5`, `--calor=1..5`, `--anterior-operacional=1..5` e `--anterior-calor=1..5`.
+As 40 transições são verificadas por `node --test tests/corRioEventos.test.js`.
 
 O cadastro central de bases é estático em `src/config/cities.js`; não há
 cadastro/edição de instalações pela interface. Relatórios e monitores percorrem
@@ -165,7 +178,7 @@ O painel:
   distribuição e pode ser o único vínculo de uma pessoa.
 - Envia automaticamente os informativos às 08:00 e 15:00 (horário de
   Brasília) para as bases meteorológicas. Em fluxo separado, o monitor COR-RIO
-  envia publicações novas/editadas e mudanças de estágio apenas para seus próprios
+  envia mudanças de estágio operacional/calor apenas para seus próprios
   destinatários. `REPORT_RECIPIENTS` nunca
   é usado como fallback do aviso COR-RIO.
 

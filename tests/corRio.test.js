@@ -54,6 +54,23 @@ function servico(rotas, opcoes = {}) {
   return { s, fetchImpl, avancar: (ms) => { agora += ms; } };
 }
 
+test('monitor exclusivo consulta estágios sem depender de publicações', async () => {
+  const { s, fetchImpl } = servico({ [URL_ESTAGIO]: () => respostaJson(estagioBruto()) });
+  const estado = await s.obter({ forcar: true, somenteEstagios: true });
+  assert.equal(estado.estagio.status, 'operacional');
+  assert.equal(estado.calor.status, 'operacional');
+  assert.deepEqual(fetchImpl.chamadas.sort(), [URL_ESTAGIO, URL_CALOR].sort());
+});
+
+test('consultas frequentes só de estágios não impedem atualizar comunicados do painel', async () => {
+  const { s, fetchImpl, avancar } = servico({ [URL_ESTAGIO]: () => respostaJson(estagioBruto()),
+    [URL_COMUNICADOS]: () => respostaJson([]) });
+  await s.obter({ forcar: true, somenteEstagios: true });
+  avancar(15000);
+  await s.obter();
+  assert.ok(fetchImpl.chamadas.includes(URL_COMUNICADOS));
+});
+
 test("estágio: só o texto oficial 'Estágio N' (1–5) define o nível", () => {
   for (const n of [1, 2, 3, 4, 5]) {
     const e = interpretarEstagio(estagioBruto(`Estágio ${n}`));

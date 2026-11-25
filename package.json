@@ -7,6 +7,7 @@
   "scripts": {
     "start": "node server.js",
     "send-now": "node src/cli.js",
+    "simular-cor-rio": "node scripts/simularCorRio.js",
     "verificar-fontes": "node src/cliVerificarFontes.js",
     "validar-integracao-meteo": "node scripts/validarIntegracaoOpenMeteo.js",
     "test": "node --test \"tests/**/*.test.js\""

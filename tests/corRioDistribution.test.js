@@ -38,7 +38,7 @@ test("envios geral e COR-RIO usam listas isoladas e sem duplicação", { concurr
       return { messageId: `m-${mensagens.length}`, response: "250 OK", accepted: mensagem.to.split(", "), rejected: [] };
     },
   });
-  transport.enderecoRemetente = () => ({ formatado: "CIM <cim@exemplo.com>" });
+  transport.enderecoRemetente = () => ({ email: "cim@exemplo.com", formatado: "CIM <cim@exemplo.com>" });
   delete require.cache[caminhoEnvio];
 
   t.after(() => {
@@ -81,8 +81,10 @@ test("envios geral e COR-RIO usam listas isoladas e sem duplicação", { concurr
   assert.equal(mensagens[0].attachments.filter((item) => item.contentType === "application/pdf").length, 1);
 
   assert.deepEqual(mensagens[1].to.split(", "), ["cor@exemplo.com", "ambos@exemplo.com"]);
+  assert.equal(mensagens[0].from, 'CIM <cim@exemplo.com>');
+  assert.equal(mensagens[1].from, '"ALERTA COR-RIO" <cim@exemplo.com>');
   assert.match(mensagens[1].html, /AVISO COR-RIO/);
-  assert.match(mensagens[1].html, /COMUNICADO OFICIAL COR-RIO/);
+  assert.doesNotMatch(mensagens[1].html, /COMUNICADO OFICIAL COR-RIO/);
   assert.equal(mensagens[1].attachments.filter((item) => item.contentType === "application/pdf").length, 0);
   assert.deepEqual(listaDestinatarios("macae"), ["fallback@exemplo.com"]);
 });

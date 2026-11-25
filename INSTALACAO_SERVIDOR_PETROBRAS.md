@@ -100,12 +100,17 @@ comitados no repositório**):
 
 O COR-RIO possui monitor exclusivo 24h: consulta a cada 15 segundos após o
 término do ciclo anterior, independente do intervalo dos demais alertas.
-Envia publicações novas/editadas de todas as categorias (inclusive trânsito e
-notícias) e mudanças do estágio operacional ou de calor. Não há envio fixo às
+Envia somente mudanças do estágio operacional ou de calor, incluindo reduções e
+retorno ao nível 1. Notícias e edições de publicações não geram aviso. Não há envio fixo às
 08h e 15h; `HORARIOS_COR_RIO` não é usado. A primeira consulta válida registra
 a referência sem disparar histórico. Falhas geram espera progressiva até 5 minutos.
 O intervalo não garante entrega instantânea: depende da fonte e do SMTP.
 Após atualizar código e `.env`, reinicie o serviço para carregar o novo monitor.
+O arquivo `data/cor-rio-notificado.json` é migrado automaticamente para a versão 2;
+faça backup e não o apague: ele contém referências, eventos e entregas pendentes.
+Mantenha uma única instância por diretório de dados. A trava é publicada atomicamente
+e recupera proprietários encerrados; trava legada inválida só é recuperada após 5 minutos.
+Teste o novo layout sem disparos: `npm run simular-cor-rio -- --cenario=simultanea`.
 
 Demais variáveis (bases monitoradas e integrações opcionais) já vêm com
 valores padrão razoáveis — ver comentários no próprio `.env.example`.

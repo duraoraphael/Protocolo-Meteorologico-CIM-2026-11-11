@@ -274,18 +274,18 @@ function criarServicoCorRio({
     }
   }
 
-  async function atualizar() {
+  async function atualizar({ somenteEstagios = false } = {}) {
     if (emAndamento) return emAndamento;
     emAndamento = Promise.all([
       atualizarParte("estagio", URL_ESTAGIO, interpretarEstagio, "COR-Rio (estágio)"),
       atualizarParte("calor", URL_CALOR, interpretarCalor, "COR-Rio (calor)"),
-      atualizarParte("comunicados", URL_COMUNICADOS, interpretarComunicados, "COR-Rio (comunicados)"),
+      ...(!somenteEstagios ? [atualizarParte("comunicados", URL_COMUNICADOS, interpretarComunicados, "COR-Rio (comunicados)")] : []),
     ])
       .then((resultados) => {
         if (resultados.some(Boolean)) persistir();
         const e = partes.estagio.dados;
         const c = partes.calor.dados;
-        logger.log?.(`[COR-RIO] Consulta concluída: estágio ${resultados[0] ? e.nivel : "indisponível"}; calor ${resultados[1] ? c.nivel : "indisponível"}; comunicados ${resultados[2] ? partes.comunicados.dados.length : "indisponíveis"}.`);
+        logger.log?.(`[COR-RIO] Consulta concluída: estágio ${resultados[0] ? e.nivel : "indisponível"}; calor ${resultados[1] ? c.nivel : "indisponível"}; comunicados ${somenteEstagios ? "não consultados" : resultados[2] ? partes.comunicados.dados.length : "indisponíveis"}.`);
       })
       .finally(() => { emAndamento = null; });
     return emAndamento;
@@ -331,13 +331,14 @@ function criarServicoCorRio({
   }
 
   /** Devolve o estado, consultando a fonte se a última tentativa passou do TTL. */
-  async function obter({ forcar = false } = {}) {
-    const ultima = Math.max(
-      Date.parse(partes.estagio.ultimaTentativaEm || "") || 0,
-      Date.parse(partes.calor.ultimaTentativaEm || "") || 0,
-      Date.parse(partes.comunicados.ultimaTentativaEm || "") || 0
-    );
-    if (forcar || agora() - ultima >= ttlMs) await atualizar();
+  async function obter({ forcar = false, somenteEstagios = false } = {}) {
+    const consultadas = [partes.estagio, partes.calor, ...(!somenteEstagios ? [partes.comunicados] : [])];
+    const ultima = Math.min(...consultadas.map(parte => Date.parse(parte.ultimaTentativaEm || '') || 0));
+    if (forcar || agora() - ultima >= ttlMs) await atualizar({ somenteEstagios });
+    // Uma consulta completa pode ter aguardado uma consulta simultânea só de estágios.
+    if (!somenteEstagios && agora() - (Date.parse(partes.comunicados.ultimaTentativaEm || '') || 0) >= ttlMs) {
+      await atualizar();
+    }
     return estado();
   }
 
@@ -387,12 +388,12 @@ function fontesCorRio(estado) {
  * falha vira estado "indisponível" e o restante do PDF segue normalmente.
  */
 async function anexarCorRioAoRelatorio(report, cidade, {
-  servico = servicoCorRioPadrao(), logger = console, forcarAtualizacao = false,
+  servico = servicoCorRioPadrao(), logger = console, forcarAtualizacao = false, somenteEstagios = false,
 } = {}) {
   if (!cidade?.integracaoCorRio) return null;
   let estado;
   try {
-    estado = await servico.obter({ forcar: forcarAtualizacao });
+    estado = await servico.obter({ forcar: forcarAtualizacao, somenteEstagios });
   } catch (erro) {
     logger.error?.(`[COR-RIO] Falha inesperada ao preparar o relatório: ${erro.message}`);
     estado = {

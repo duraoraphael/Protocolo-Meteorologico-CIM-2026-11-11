@@ -1,0 +1,65 @@
+{
+  "verificadoEm": "2026-11-25",
+  "fontes": {
+    "operacional": "https://cor.rio/faq/",
+    "calor": "https://cor.rio/niveis-de-calor/"
+  },
+  "operacional": {
+    "1": {
+      "recomendacoes": [
+        "quando não há mudança significativa no cotidiano da população. Siga sua rotina."
+      ]
+    },
+    "2": {
+      "recomendacoes": [
+        "quando há risco de acontecimentos impactarem a cidade ou existem situações com chances de agravamento. Fique atento e mantenha-se informado pelos canais de comunicação do COR."
+      ]
+    },
+    "3": {
+      "recomendacoes": [
+        "quando existe uma ou mais ocorrências afetando a população. As equipes responsáveis já acompanham e agem para solucionar os problemas. Evite as regiões afetadas."
+      ]
+    },
+    "4": {
+      "recomendacoes": [
+        "Quando uma ou mais ocorrências impactam a mobilidade urbana, exigindo o emprego de todo o operacional para retorno aos estágios anteriores. Não se desloque pela cidade, fique em local seguro."
+      ]
+    },
+    "5": {
+      "recomendacoes": [
+        "Quando há ocorrências de alto risco, sem previsão de retorno à normalidade, sendo necessários apoio e recursos extras. O que fazer? Permaneça em local seguro até que a situação seja resolvida."
+      ]
+    }
+  },
+  "calor": {
+    "1": {
+      "recomendacoes": [
+        "Sem impactos na rotina da cidade."
+      ]
+    },
+    "2": {
+      "recomendacoes": [
+        "Ainda não há impactos na rotina da cidade, mas os cidadãos devem se manter informados."
+      ]
+    },
+    "3": {
+      "recomendacoes": [
+        "Ainda não há impactos na rotina da cidade, mas os cidadãos devem se manter informados."
+      ]
+    },
+    "4": {
+      "recomendacoes": [
+        "Indicação de equipamentos públicos já existentes com ar-condicionado ou refrigeração para servirem como pontos de resfriamento; orientação de refrigeração ou sombreamento adequado.",
+        "Também poderá ser ampliada a oferta de estações de hidratação ou distribuição de água em locais de acolhimento das populações mais vulneráveis.",
+        "No nível quatro, há ainda a possibilidade de cancelamento ou reagendamento de eventos de médio e grande porte, megaeventos em áreas externas, caso estes não se ajustem. Neste nível também poderá haver a suspensão de atividades realizadas em áreas externas para transferência para espaços sombreados ou internos.",
+        "Todas as ações serão orientadas pelo Comitê de Desenvolvimento de Protocolos para Enfrentamento de Calor Extremo e aprovadas pelo prefeito da cidade."
+      ]
+    },
+    "5": {
+      "recomendacoes": [
+        "Estão previstas ainda uma série de medidas que podem ser adotadas sempre que a cidade atingir os níveis de calor mais altos. Entre elas, estão a abertura de unidades municipais para serem utilizadas como pontos de resfriamento, a possibilidade de reagendamento de eventos de médio e grande porte, suspensão de atividades ao ar livre em escolas, entre outras.",
+        "Além da possibilidade do cancelamento de eventos, o calor extremo poderá levar à suspensão de trabalhos ou atividades esportivas ao ar livre. Todas as ações serão orientadas pelo Comitê de Desenvolvimento de Protocolos para Enfrentamento de Calor Extremo."
+      ]
+    }
+  }
+}

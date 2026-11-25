@@ -49,6 +49,10 @@ function conteudoVerificavel(documento) {
     monitorSecas: documento?.monitorSecas || null,
     corRio: documento?.corRio || null,
     publicacoesCorRio: documento?.publicacoesCorRio || null,
+    corRioMudancas: documento?.corRioMudancas || null,
+    corRioEventoId: documento?.corRioEventoId || null,
+    corRioIdentificadoEm: documento?.corRioIdentificadoEm || null,
+    corRioOrientacoes: documento?.corRioOrientacoes || null,
     bases: documento?.bases || null,
   };
 }

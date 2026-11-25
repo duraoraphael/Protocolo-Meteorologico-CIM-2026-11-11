@@ -1,5 +1,6 @@
 const { criarMonitorCorRio } = require('./corRioAlertMonitor');
 const { alertasAutomaticosAtivos } = require('../config/email');
+const INTERVALO_PADRAO_SEGUNDOS = 15;
 
 function criarAgendamentoCorRio({
   verificar = criarMonitorCorRio(), env = process.env, ativo = alertasAutomaticosAtivos,
@@ -9,8 +10,9 @@ function criarAgendamentoCorRio({
   return function iniciar(onResultado) {
     if (tarefa) return tarefa;
     if (!ativo() || env.MONITOR_ALERTAS === 'false' || env.MONITOR_COR_RIO === 'false') return null;
-    const configurado = Number(env.INTERVALO_COR_RIO_SEGUNDOS || 15);
-    const intervalo = Number.isFinite(configurado) && configurado >= 5 && configurado <= 300 ? configurado * 1000 : 15000;
+    const configurado = Number(env.INTERVALO_COR_RIO_SEGUNDOS || INTERVALO_PADRAO_SEGUNDOS);
+    const intervalo = (Number.isFinite(configurado) && configurado >= 5 && configurado <= 300
+      ? configurado : INTERVALO_PADRAO_SEGUNDOS) * 1000;
     let parado = false;
     let timer;
     let falhas = 0;
@@ -34,7 +36,7 @@ function criarAgendamentoCorRio({
       }
     }
     tarefa = { stop() { parado = true; cancelar(timer); tarefa = null; } };
-    logger.log?.(`[COR-RIO] Monitor exclusivo 24h: intervalo ${intervalo / 1000}s; todas as publicações e estágios.`);
+    logger.log?.(`[COR-RIO] Monitor exclusivo 24h: intervalo ${intervalo / 1000}s; mudanças dos estágios operacional e de calor.`);
     programar(0);
     return tarefa;
   };

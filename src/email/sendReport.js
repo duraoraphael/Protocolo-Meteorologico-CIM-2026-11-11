@@ -1,5 +1,5 @@
 const { renderEmailHtml } = require("../render/emailTemplate");
-const { renderCorRioStandaloneEmail } = require("../render/corRioStandaloneEmail");
+const { renderCorRioStandaloneEmail, assuntoCorRio } = require("../render/corRioStandaloneEmail");
 const { listarPorCidade, validarEmail, filtrarEmailsAtivos } = require("../config/recipients");
 const { BASE_COR_RIO } = require("../config/distributionBases");
 const { criarTransportador, enderecoRemetente } = require("./transport");
@@ -97,17 +97,25 @@ async function enviarRelatorioPorEmail(report, pdfBuffer, {
   };
 }
 
-async function enviarAvisoCorRioPorEmail(report) {
+async function enviarAvisoCorRioPorEmail(report, { destinatariosOverride = null } = {}) {
   validarDocumentoOperacional(report, "envio do aviso COR-Rio");
-  const destinatarios = listaDestinatarios(BASE_COR_RIO, { permitirFallback: false });
-  if (destinatarios.length === 0) return null;
+  const cadastrados = listaDestinatarios(BASE_COR_RIO, { permitirFallback: false });
+  const pendentes = destinatariosOverride === null ? null : new Set(destinatariosOverride.map(validarEmail));
+  const destinatarios = destinatariosOverride === null ? cadastrados
+    : cadastrados.filter(email => pendentes.has(email.toLowerCase()));
+  if (destinatarios.length === 0) return destinatariosOverride === null ? null
+    : { destinatarios: [], destinatariosAceitos: [], destinatariosRejeitados: [], semDestinatariosPendentes: true };
 
   const html = renderCorRioStandaloneEmail(report);
   const prefixoTeste = report.envioTeste ? `[TESTE${report.horarioAgendado ? ` ${report.horarioAgendado}` : ""}] ` : "";
   const info = await criarTransportador().sendMail({
-    from: enderecoRemetente().formatado,
+    from: `"ALERTA COR-RIO" <${enderecoRemetente().email}>`,
     to: destinatarios.join(", "),
-    subject: `${prefixoTeste}Aviso COR-RIO — ${report.dataFormatadaCurta}`,
+    subject: `${prefixoTeste}${assuntoCorRio(report)}`,
+    ...(report.corRioEventoId ? {
+      messageId: `<cor-rio-${report.corRioEventoId}@cim.local>`,
+      headers: { 'X-CIM-COR-RIO-Event-ID': report.corRioEventoId },
+    } : {}),
     html,
     attachments: anexosLogosEmail(html),
   });
@@ -118,6 +126,8 @@ async function enviarAvisoCorRioPorEmail(report) {
     respostaSmtp: info.response || null,
     aceitos: Array.isArray(info.accepted) ? info.accepted.length : null,
     rejeitados: Array.isArray(info.rejected) ? info.rejected.length : null,
+    destinatariosAceitos: Array.isArray(info.accepted) ? info.accepted.map(email => String(email).toLowerCase()) : destinatarios,
+    destinatariosRejeitados: Array.isArray(info.rejected) ? info.rejected.map(email => String(email).toLowerCase()) : [],
   };
 }
 
