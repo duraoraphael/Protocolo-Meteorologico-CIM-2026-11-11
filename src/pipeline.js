@@ -133,6 +133,15 @@ async function executarPipelineCorRio({ enviarEmail = true, horarioAgendado = nu
   const report = relatorioBaseCorRio(cidade, horarioAgendado);
   if (teste) report.envioTeste = true;
   await anexarCorRioAoRelatorio(report, cidade, { forcarAtualizacao: true });
+  const calor = report.corRio?.calor;
+  if (calor?.status === 'operacional' && calor.dados?.nivel && !calor.dados.vigenteDesde) {
+    try {
+      const vigencia = await require('./sources/corRioCalorVigencia').buscarVigenciaCalor(calor.dados.nivel);
+      if (vigencia) report.corRio = { ...report.corRio, calor: { ...calor, dados: { ...calor.dados, ...vigencia } } };
+    } catch (erro) {
+      console.warn(`[COR-RIO] Não foi possível consultar o início do estágio de calor: ${erro.message}`);
+    }
+  }
   if (monitorPublicacoes) {
     try {
       report.publicacoesCorRio = await require('./sources/corRioPublicacoes').buscarPublicacoesCorRio({ desde: publicacoesDesde });

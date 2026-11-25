@@ -88,3 +88,11 @@ test("omite metadados e orientações ausentes e mantém o estado indisponível"
   ]);
   assert.doesNotMatch($("body").text(), /RECOMENDAÇÕES|Vigente desde|Consultar publicação oficial|Estágio 1|Calor 1/);
 });
+
+test('calor informa ausência de início oficial sem usar horário de consulta como vigência', () => {
+  const $ = cheerio.load(renderCorRioStandaloneEmail({ geradoEmISO, corRio: {
+    calor: { status: 'operacional', consultadoEm, dados: { nivel: 3 } },
+  } }));
+  assert.match($('#cor-rio-calor').text(), /Vigência:.*início não informado pelo COR-Rio/);
+  assert.doesNotMatch($('#cor-rio-calor').text(), /18\/11\/2026/);
+});

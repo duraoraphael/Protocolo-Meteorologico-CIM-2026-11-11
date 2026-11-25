@@ -22,11 +22,15 @@ test('publicação de trânsito percorre coleta, pipeline, monitor e e-mail excl
   let posts = []; let falhar = false; const mensagens = [];
   global.fetch = async url => {
     assert.equal(new URL(url).hostname, 'cor.rio');
-    return { ok: true, status: 200, headers: new Headers({ 'X-WP-TotalPages': '1' }), text: async () => JSON.stringify(posts) };
+    const resposta = new URL(url).searchParams.get('search') === 'calor' ? [{
+      title: { rendered: 'Rio entrou em calor 3 às 10h45 de 20 de novembro de 2026' },
+      date_gmt: '2026-11-20T13:50:37', link: 'https://cor.rio/vigencia-calor/',
+    }] : posts;
+    return { ok: true, status: 200, headers: new Headers({ 'X-WP-TotalPages': '1' }), text: async () => JSON.stringify(resposta) };
   };
   corRio.anexarCorRioAoRelatorio = async report => {
     report.corRio = { estagio: { status: 'operacional', dados: { nivel: 1, mensagens: [] } },
-      calor: { status: 'operacional', dados: { nivel: 1, mensagens: [] } },
+    calor: { status: 'operacional', dados: { nivel: 3, mensagens: [] } },
       comunicados: { status: 'operacional', itens: [] } };
   };
   transport.enderecoRemetente = () => ({ formatado: 'CIM <cim@example.test>' });
@@ -57,6 +61,8 @@ test('publicação de trânsito percorre coleta, pipeline, monitor e e-mail excl
   assert.equal(mensagens[0].to, 'cor@example.test');
   assert.match(mensagens[0].html, /Interdição na avenida/);
   assert.match(mensagens[0].html, /Use o desvio indicado/);
+  assert.match(mensagens[0].html, /Vigente desde/);
+  assert.match(mensagens[0].html, /20\/11\/2026 10:45/);
   assert.equal(mensagens[0].attachments.some(a => a.contentType === 'application/pdf'), false);
   await monitor(); assert.equal(mensagens.length, 1);
 });

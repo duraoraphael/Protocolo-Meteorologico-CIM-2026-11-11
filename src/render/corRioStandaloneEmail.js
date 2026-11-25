@@ -107,7 +107,9 @@ function quadroEstagio({ id, titulo, nivel, rotulo, cor, tinta = TINTA, dados, d
   const mensagens = new Set((dados.mensagens || []).filter((mensagem) => mensagem.trim()));
   const detalhes = [
     desatualizado ? paragrafo("Último estágio informado pelo COR-Rio.") : "",
-    linha("Vigente desde", dataOficial(dados.vigenteDesde)),
+    linha("Vigente desde", dataOficial(dados.vigenteDesde))
+      || (id === 'cor-rio-calor' ? linha('Vigência', 'início não informado pelo COR-Rio nesta consulta.') : ''),
+    dados.fonteVigencia ? linkOficial(dados.fonteVigencia, 'Comunicado de início da vigência') : '',
     ...Array.from(mensagens, (mensagem) => paragrafo(esc(mensagem))),
   ].join("");
   return quadro(id, titulo, `
