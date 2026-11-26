@@ -22,6 +22,15 @@ function assuntoCorRio(r) {
   const s = situacao(r.corRio);
   return `COR-RIO| Estágio ${s.nivel || 'indisponível'} | Calor ${s.nivelCalor || 'indisponível'}`;
 }
+function vigenciaHtml(r, parte, dados) {
+  const oficial = dataOficial(dados.vigenteDesde);
+  if (oficial) return paragrafo(`<strong>Vigente desde:</strong> ${esc(oficial)}`);
+  const mudou = (r.corRioMudancas || []).some(m => m.parte === parte && m.atual === dados.nivel);
+  const identificada = mudou && dataOficial(r.corRioIdentificadoEm);
+  if (identificada) return paragrafo(`<strong>Alteração identificada em:</strong> ${esc(identificada)}`)
+    + paragrafo('Horário de início oficial ainda não confirmado nesta consulta. A fonte será consultada novamente automaticamente.');
+  return paragrafo('<strong>Vigência:</strong> início oficial ainda não disponível nesta consulta.');
+}
 function quadroEstagio(r, parte, s) {
   const operacional = parte === 'estagio';
   const id = operacional ? 'cor-rio-operacional' : 'cor-rio-calor';
@@ -52,7 +61,7 @@ function quadroEstagio(r, parte, s) {
       <tr><td style="padding:15px;color:#1F2A26;font:15px/23px Arial,sans-serif;overflow-wrap:anywhere;word-wrap:break-word;">
         ${nivel ? `<table role="presentation" cellpadding="0" cellspacing="0"><tr><td class="cor-rio-nivel" bgcolor="${cor}" style="padding:7px 12px;background:${cor};color:${TINTA};font:bold 15px/21px Arial,sans-serif;">${prefixo} ${nivel}</td></tr></table>` : paragrafo('Estágio indisponível. Nenhum nível é presumido.')}
         ${desatualizado ? paragrafo('<strong>Dados desatualizados.</strong> Último estágio informado pelo COR-Rio.') : ''}
-        ${nivel ? `<div style="padding-top:10px;">${paragrafo(`<strong>Vigente desde:</strong> ${esc(dataOficial(dados.vigenteDesde) || 'início não informado pelo COR-Rio nesta consulta.')}`)}</div>` : ''}
+        ${nivel ? `<div style="padding-top:10px;">${vigenciaHtml(r, parte, dados)}</div>` : ''}
         ${recomendacoes}
       </td></tr>
     </table>

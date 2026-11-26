@@ -91,3 +91,19 @@ Não houve reinício do serviço nem disparo real nesta implementação. Para ap
 4. Conferir logs, migração para versão 2 e eventuais pendências antes de acompanhar os envios. Revisar a prévia também no Outlook Desktop/Web utilizado pela organização.
 
 Uma interrupção exatamente entre a aceitação SMTP e a gravação local pode tornar a entrega incerta. O Message-ID estável e o UUID permitem reconciliar com o relay; não há garantia transacional de entrega exatamente uma vez oferecida por SMTP. Hard links exigem sistema de arquivos compatível; a criação/recuperação foi validada no ambiente Windows atual. Uma trava inválida recente aguarda 5 minutos antes da recuperação. O mapeamento de orientações requer nova conferência se o COR-Rio alterar suas recomendações. Não foi executado um cliente Outlook real nesta sessão, apenas validação estrutural e renderização em Chromium.
+
+## Correção de vigência — 26/11/2026
+
+Ocorrência verificada no histórico: a mudança Calor 3 → Calor 1 foi detectada às 03:15:34 de 26/11/2026, mas o comunicado foi publicado às 03:20:11. O snapshot do primeiro aviso não tinha a vigência porque a fonte ainda não havia divulgado o comunicado. Buscas sem resultado também eram mantidas em cache por 15 minutos.
+
+Correções em `src/sources/corRioCalorVigencia.js`, `src/logic/corRioAlertMonitor.js` e `src/render/corRioStandaloneEmail.js`:
+
+- Buscar a data e o horário no título e no corpo/resumo do comunicado de mudança, aceitando datas por extenso/abreviadas e horas como `03h15`, `03:15` e `11h30min`, além da sigla NC.
+- Vincular a data à declaração do episódio atual. Referências históricas, inclusive de um episódio anterior do mesmo nível, não fornecem sua vigência. Ausência de vínculo seguro retorna ausência de horário oficial.
+- Busca sem resultado expira em 15 segundos; resultados válidos mantêm cache de 15 minutos. Uma nova publicação não gera outro alerta sem mudança de estágio.
+- Na retentativa de evento pendente, complementar a vigência quando a coleta válida já a disponibilizar para o mesmo nível e ela não for posterior à detecção do evento.
+- Enviar o alerta sem esperar publicação tardia. Se o início oficial ainda não tiver sido confirmado, apresentar “Alteração identificada em” com o horário observado pelo monitor, claramente distinto de “Vigente desde”. O horário de publicação ou de consulta nunca é convertido em início oficial.
+
+Foram adicionadas regressões para publicação tardia, corpo do comunicado, NC, horários com dois-pontos, referências históricas do mesmo/outro nível, notícia meteorológica posterior, cache negativo e complementação de pendência. A consulta real confirmou o início oficial do Calor 1 em 26/11/2026 às 03:15 de Brasília. Não houve reenvio real, alteração dos eventos já enviados ou modificação do histórico de produção durante a validação. A revisão independente confirmou a correção do vínculo entre data e episódio.
+
+Suíte após esta correção: 625 testes, 624 aprovados, zero falhas e 1 ignorado (o teste opcional de navegador do modal de lotes, descrito acima).

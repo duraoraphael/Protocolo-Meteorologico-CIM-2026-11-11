@@ -58,6 +58,6 @@ test('calor informa ausência de início oficial sem usar horário de consulta c
   const $ = cheerio.load(renderCorRioStandaloneEmail({ geradoEmISO, corRio: {
     calor: { status: 'operacional', consultadoEm, dados: { nivel: 3 } },
   } }));
-  assert.match($('#cor-rio-calor').text(), /Vigente desde:.*início não informado pelo COR-Rio/);
+  assert.match($('#cor-rio-calor').text(), /Vigência:.*início oficial ainda não disponível/);
   assert.doesNotMatch($('#cor-rio-calor').text(), /18\/11\/2026/);
 });

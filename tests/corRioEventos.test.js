@@ -108,3 +108,18 @@ test('trava legada incompleta e antiga é recuperada sem bloquear o reinício', 
   assert.equal(JSON.parse(fs.readFileSync(lock)).pid, process.pid);
   liberar(); assert.equal(fs.existsSync(lock), false);
 });
+
+test('retentativa complementa a vigência publicada depois da detecção sem criar novo evento', async t => {
+  const a = ambiente(t); let horario = new Date('2026-11-26T06:15:34Z'); let vigencia = null;
+  const opcoes = { ...a.opcoes, agora: () => horario, coletar: async () => {
+    const resultado = await a.opcoes.coletar();
+    if (vigencia) resultado.report.corRio.calor.dados.vigenteDesde = vigencia;
+    return resultado;
+  } };
+  a.niveis.calor = 3; let monitor = criarMonitorCorRio(opcoes); await monitor();
+  a.niveis.calor = 1; a.falhar = true; await assert.rejects(monitor(), /SMTP fora/);
+  horario = new Date('2026-11-26T06:21:00Z'); vigencia = '2026-11-26T06:15:00.000Z';
+  a.falhar = false; monitor = criarMonitorCorRio(opcoes); await monitor();
+  assert.equal(a.enviados[0].corRio.calor.dados.vigenteDesde, vigencia);
+  assert.equal(JSON.parse(fs.readFileSync(a.arquivo)).eventos.length, 1);
+});

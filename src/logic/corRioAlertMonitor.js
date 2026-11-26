@@ -70,6 +70,18 @@ function criarMonitorCorRio({
       let primeiraFalha = null;
       for (const evento of estado.eventos) {
         if (evento.status === 'enviado') continue;
+        for (const parte of store.PARTES) {
+          const snapshot = evento.report.corRio?.[parte]?.dados;
+          const fonte = report?.corRio?.[parte];
+          const vigenteDesde = fonte?.dados?.vigenteDesde;
+          if (snapshot && !snapshot.vigenteDesde && fonte?.status === 'operacional'
+            && fonte.dados.nivel === snapshot.nivel && Number.isFinite(Date.parse(vigenteDesde))
+            && Date.parse(vigenteDesde) <= Date.parse(evento.identificadoEm)) {
+            snapshot.vigenteDesde = vigenteDesde;
+            snapshot.fonteVigencia = fonte.dados.fonteVigencia;
+            log('vigencia_complementada', { id: evento.id, parte, vigenteDesde });
+          }
+        }
         evento.status = 'processando';
         evento.tentativas++;
         evento.ultimaTentativaEm = agora().toISOString();

@@ -71,3 +71,13 @@ test('indisponibilidade de orientações não impede renderizar o estágio', () 
   assert.match($('#cor-rio-calor').text(), /Recomendações oficiais indisponíveis/);
   assert.match($('#cor-rio-calor').text(), /Calor 3/);
 });
+
+test('sem início oficial, mudança informa detecção do monitor sem apresentar como vigência', () => {
+  const r = report(1, 1, [{ parte: 'calor', anterior: 3, atual: 1, tipo: 'REDUÇÃO' }]);
+  delete r.corRio.calor.dados.vigenteDesde;
+  const $ = cheerio.load(renderCorRioStandaloneEmail(r));
+  const texto = $('#cor-rio-calor').text();
+  assert.match(texto, /Alteração identificada em: 25\/11\/2026 08:59/);
+  assert.match(texto, /início oficial ainda não confirmado/);
+  assert.doesNotMatch(texto, /Vigente desde:|início não informado pelo COR-Rio nesta consulta/);
+});
