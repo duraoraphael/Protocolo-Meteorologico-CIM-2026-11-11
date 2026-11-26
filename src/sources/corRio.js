@@ -229,6 +229,7 @@ function criarServicoCorRio({
   tentativas = 2,
   timeoutMs = 10000,
   esperarFn,
+  buscarVigenciaCalor = null,
 } = {}) {
   const salvo = carregar() || {};
   // ultimaFalha guarda o motivo da tentativa mais recente que falhou; é limpa
@@ -276,12 +277,28 @@ function criarServicoCorRio({
 
   async function atualizar({ somenteEstagios = false } = {}) {
     if (emAndamento) return emAndamento;
+    const calorAnterior = partes.calor.dados;
     emAndamento = Promise.all([
       atualizarParte("estagio", URL_ESTAGIO, interpretarEstagio, "COR-Rio (estágio)"),
       atualizarParte("calor", URL_CALOR, interpretarCalor, "COR-Rio (calor)"),
       ...(!somenteEstagios ? [atualizarParte("comunicados", URL_COMUNICADOS, interpretarComunicados, "COR-Rio (comunicados)")] : []),
     ])
-      .then((resultados) => {
+      .then(async (resultados) => {
+        if (resultados[1] && buscarVigenciaCalor) {
+          try {
+            const vigencia = await buscarVigenciaCalor(partes.calor.dados.nivel);
+            if (vigencia?.vigenteDesde && Number.isFinite(Date.parse(vigencia.vigenteDesde))) {
+              partes.calor.dados = { ...partes.calor.dados,
+                vigenteDesde: vigencia.vigenteDesde, fonteVigencia: vigencia.fonteVigencia };
+            }
+          } catch (erro) {
+            if (calorAnterior?.nivel === partes.calor.dados.nivel && calorAnterior.vigenteDesde) {
+              partes.calor.dados = { ...partes.calor.dados,
+                vigenteDesde: calorAnterior.vigenteDesde, fonteVigencia: calorAnterior.fonteVigencia };
+            }
+            logger.error?.(`[COR-RIO] Vigência do calor indisponível: ${erro.message}`);
+          }
+        }
         if (resultados.some(Boolean)) persistir();
         const e = partes.estagio.dados;
         const c = partes.calor.dados;
@@ -349,7 +366,9 @@ function criarServicoCorRio({
 // anexado ao e-mail leem o mesmo cache e, portanto, a mesma consulta.
 let servicoPadrao = null;
 function servicoCorRioPadrao() {
-  if (!servicoPadrao) servicoPadrao = criarServicoCorRio();
+  if (!servicoPadrao) servicoPadrao = criarServicoCorRio({
+    buscarVigenciaCalor: nivel => require('./corRioCalorVigencia').buscarVigenciaCalor(nivel),
+  });
   return servicoPadrao;
 }
 

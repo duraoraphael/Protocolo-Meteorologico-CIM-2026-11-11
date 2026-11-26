@@ -16,11 +16,20 @@ function interpretarVigenciaCalor(posts, nivel, agora = Date.now()) {
   if (!atual || Number(/\bcalor\s+([1-5])\b/.exec(atual.texto)[1]) !== nivel) return null;
   const hora = /\b(?:as|desde)\s+(\d{1,2})h(?:(\d{2})(?:min)?)?\b/.exec(atual.texto);
   const data = /\b(\d{1,2})\s+de\s+(\w+)\s+de\s+(\d{4})\b/.exec(atual.texto);
-  if (!hora || !data) return null;
-  const [, diaTexto, mesTexto, anoTexto] = data;
-  const dia = Number(diaTexto), mes = MESES.indexOf(mesTexto), ano = Number(anoTexto);
+  const abreviada = /\b(\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?\b/.exec(atual.texto);
+  if (!hora || (!data && !abreviada)) return null;
+  const dia = Number(data ? data[1] : abreviada[1]);
+  const mes = data ? MESES.indexOf(data[2]) : Number(abreviada[2]) - 1;
+  let ano = Number(data ? data[3] : abreviada[3]);
+  if (!ano && abreviada) {
+    const publicada = Date.parse(`${atual.post.date_gmt}Z`);
+    if (!Number.isFinite(publicada)) return null;
+    const referencia = new Date(publicada).getUTCFullYear();
+    ano = [referencia - 1, referencia, referencia + 1]
+      .sort((a, b) => Math.abs(Date.UTC(a, mes, dia) - publicada) - Math.abs(Date.UTC(b, mes, dia) - publicada))[0];
+  }
   const horas = Number(hora[1]), minutos = Number(hora[2] || 0);
-  if (mes < 0 || ano < 2020 || horas > 23 || minutos > 59) return null;
+  if (mes < 0 || mes > 11 || ano < 2020 || horas > 23 || minutos > 59) return null;
   const civil = new Date(Date.UTC(ano, mes, dia, horas, minutos));
   if (civil.getUTCDate() !== dia || civil.getUTCMonth() !== mes) return null;
   const instante = civil.getTime() + 3 * 3600000; // Brasília, UTC−03 desde 2019.

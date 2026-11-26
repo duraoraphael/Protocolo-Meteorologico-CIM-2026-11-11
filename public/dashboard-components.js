@@ -478,13 +478,14 @@ const Dashboard = (() => {
         <p class="cor-rio-estagio-meta">${carregando ? 'Consultando o COR-Rio.' : `Não foi possível obter o estágio de calor${motivo ? `: ${escape(motivo)}` : ''}. Nova tentativa automática.`}</p>
       </aside>`;
     }
+    const desde = dateTimeBrasilia(parte.dados.vigenteDesde);
     const consulta = dateTimeBrasilia(parte.consultadoEm);
     const motivo = motivoFalhaCor(parte, st);
     return `<aside class="cor-rio-estagio" data-cor-estagio="${nivel}" aria-label="Estágio de calor do COR-Rio: ${nivel}">
       <p class="cor-rio-estagio-rotulo">Estágio de calor</p>
       <p class="cor-rio-estagio-atual"><span class="cor-rio-estagio-chip">Calor ${nivel}</span></p>
       ${corRioEscala(nivel).replace('estágios operacionais', 'estágios de calor')}
-      <p class="cor-rio-estagio-meta">${p.calorDesatualizado ? '' : `Consultado em ${escape(consulta || 'horário indisponível')}`}</p>
+      <p class="cor-rio-estagio-meta">${desde ? `Em vigor desde ${escape(desde)}` : 'Vigência não informada pelo COR-Rio.'}<br>${p.calorDesatualizado ? '' : `Consultado em ${escape(consulta || 'horário indisponível')}`}</p>
       ${p.calorDesatualizado ? `<p class="oc-flag cor-rio-flag">Desatualizado · última consulta válida: ${escape(consulta || 'horário indisponível')}${motivo ? ` (${escape(motivo)})` : ''}</p>` : ''}
     </aside>`;
   }
@@ -572,7 +573,9 @@ const Dashboard = (() => {
       : '<p class="det-indisponivel">Estágio indisponível: não há consulta válida ao COR-Rio.</p>';
     const blocoEstagio = `<section class="det-bloco"><h3>Estágio operacional da cidade</h3><p class="cor-rio-nota">O estágio é publicado pelo COR-Rio separadamente dos comunicados e pode ter sido definido em outro horário.</p>${estagio}<p class="det-fonte">Fonte: COR-Rio · ${linkOriginal(p.est?.dados?.urlPublica || 'https://cor.rio/estagios-operacionais-da-cidade/', 'Estágios operacionais no cor.rio')}</p></section>`;
     const calor = p.nivelCalor
-      ? `<div class="cor-rio-det-estagio" data-cor-estagio="${p.nivelCalor}"><span class="cor-rio-estagio-chip">Calor ${p.nivelCalor}</span><dl class="det-lista"><div><dt>Consulta ao COR-Rio</dt><dd>${escape(dateTimeBrasilia(p.calor.consultadoEm) || 'horário indisponível')}${p.calorDesatualizado ? ' — última consulta válida (dado desatualizado)' : ''}</dd></div></dl></div>`
+      ? `<div class="cor-rio-det-estagio" data-cor-estagio="${p.nivelCalor}"><span class="cor-rio-estagio-chip">Calor ${p.nivelCalor}</span><dl class="det-lista">
+          <div><dt>Em vigor desde</dt><dd>${escape(dateTimeBrasilia(p.calor.dados.vigenteDesde) || 'Vigência não informada pelo COR-Rio.')}</dd></div>
+          <div><dt>Consulta ao COR-Rio</dt><dd>${escape(dateTimeBrasilia(p.calor.consultadoEm) || 'horário indisponível')}${p.calorDesatualizado ? ' — última consulta válida (dado desatualizado)' : ''}</dd></div></dl></div>`
       : '<p class="det-indisponivel">Estágio de calor indisponível: não há consulta válida ao COR-Rio.</p>';
     const blocoCalor = `<section class="det-bloco"><h3>Estágio de calor</h3><p class="cor-rio-nota">O Protocolo de Calor é publicado separadamente do estágio operacional da cidade.</p>${calor}<p class="det-fonte">Fonte: COR-Rio · ${linkOriginal(p.calor?.dados?.urlPublica || 'https://cor.rio/niveis-de-calor/', 'Níveis de calor no cor.rio')}</p></section>`;
     const lista = (excluir) => itens.filter(i => i.id !== excluir).map(i => `<article class="aviso-item cor-rio-item"><strong>${escape(i.titulo)}</strong><p>${corRioPublicacao(i)}</p><button class="text-link det-link" data-detail="cor-rio:${escape(i.id)}">Ver comunicado <span aria-hidden="true">→</span></button></article>`).join('');

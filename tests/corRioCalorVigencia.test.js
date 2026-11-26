@@ -30,3 +30,13 @@ test('consulta reutiliza vigência e consulta novamente quando muda o nível', a
   await buscar(3); assert.equal(consultas, 1);
   assert.equal(await buscar(2), null); assert.equal(consultas, 2);
 });
+
+test('data abreviada do comunicado de retorno ao Calor 1 usa o ano da publicação', () => {
+  const atual = post('Município do Rio retornou ao primeiro nível do Protocolo de Calor (CALOR 1) às 3h15 desta quinta-feira (26/11)',
+    '2026-11-26T06:20:11');
+  assert.equal(interpretarVigenciaCalor([atual], 1, Date.parse('2026-11-26T12:00:00Z')).vigenteDesde,
+    '2026-11-26T06:15:00.000Z');
+  const virada = post('Rio retornou ao calor 1 às 23h30 de quarta-feira (31/12)', '2027-01-01T03:00:00');
+  assert.equal(interpretarVigenciaCalor([virada], 1, Date.parse('2027-01-01T05:00:00Z')).vigenteDesde,
+    '2027-01-01T02:30:00.000Z');
+});

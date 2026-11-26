@@ -71,6 +71,26 @@ test('consultas frequentes só de estágios não impedem atualizar comunicados d
   assert.ok(fetchImpl.chamadas.includes(URL_COMUNICADOS));
 });
 
+test('serviço disponibiliza e persiste vigência do calor sem confundir com última consulta', async () => {
+  let nivel = 3, falharVigencia = false, salvo;
+  const { s, avancar } = servico({ [URL_ESTAGIO]: () => respostaJson(estagioBruto()),
+    [URL_CALOR]: () => respostaJson(`calor ${nivel}`), [URL_COMUNICADOS]: () => respostaJson([]),
+  }, { salvar: valor => { salvo = valor; }, buscarVigenciaCalor: async n => {
+    if (falharVigencia) throw new Error('Comunicado indisponível');
+    return { vigenteDesde: '2026-10-01T13:45:00Z', fonteVigencia: 'https://cor.rio/calor/' };
+  } });
+  const primeiro = await s.obter();
+  assert.equal(primeiro.calor.dados.vigenteDesde, '2026-10-01T13:45:00Z');
+  assert.equal(primeiro.calor.consultadoEm, new Date(AGORA).toISOString());
+  assert.equal(salvo.calor.dados.vigenteDesde, primeiro.calor.dados.vigenteDesde);
+  falharVigencia = true; avancar(60000);
+  assert.equal((await s.obter()).calor.dados.vigenteDesde, primeiro.calor.dados.vigenteDesde);
+  nivel = 4; avancar(60000);
+  const alterado = await s.obter();
+  assert.equal(alterado.calor.status, 'operacional');
+  assert.equal(alterado.calor.dados.vigenteDesde, undefined, 'não usa vigência do nível anterior');
+});
+
 test("estágio: só o texto oficial 'Estágio N' (1–5) define o nível", () => {
   for (const n of [1, 2, 3, 4, 5]) {
     const e = interpretarEstagio(estagioBruto(`Estágio ${n}`));
@@ -287,6 +307,21 @@ function renderizar(estado) {
   painel.contexto.__estado = estado;
   return { html: painel.executar("Dashboard.corRio(__estado)"), painel };
 }
+
+test('painel e detalhes do calor mostram vigência e a última consulta em Brasília', () => {
+  const dados = resposta();
+  dados.calor.dados.vigenteDesde = '2026-10-01T13:45:00Z';
+  const { html, painel } = renderizar({ resposta: dados });
+  const calor = require('cheerio').load(html)('aside[aria-label^="Estágio de calor"]');
+  assert.match(calor.text(), /Em vigor desde 01\/10\/2026 10:45/);
+  assert.match(calor.text(), /Consultado em 02\/10\/2026 11:35/);
+  const det = painel.executar('Dashboard.corRioDetalhes(__estado)');
+  assert.match(det, /Em vigor desde<\/dt><dd>01\/10\/2026 10:45/);
+  dados.calor.status = 'desatualizado';
+  const antigo = require('cheerio').load(renderizar({ resposta: dados }).html)('aside[aria-label^="Estágio de calor"]');
+  assert.match(antigo.text(), /Em vigor desde 01\/10\/2026 10:45/);
+  assert.match(antigo.text(), /Desatualizado · última consulta válida: 02\/10\/2026 11:35/);
+});
 
 test("mapa de cores único e exato para os cinco estágios", () => {
   const painel = carregarPainel();
