@@ -657,7 +657,7 @@ test("disparo efetivo: monitor -> fila -> envio -> estado; mesmo nível não ree
     enviar: async (b, o) => {
       const html = renderAlertEmailHtml(b);
       emails.push({ para: o.destinatariosOverride, html, alertas: b.alertas.map((a) => `${a.assinatura}:${a.grau}:${a.transicao}`) });
-      return { messageId: `smtp-${emails.length}`, destinatarios: o.destinatariosOverride };
+      return { messageId: `smtp-${emails.length}`, destinatarios: o.destinatariosOverride, destinatariosAceitos: o.destinatariosOverride };
     },
     confirmar: (b) => marcarAlertasEnviados(b, { carregar: amb.carregar, salvar: amb.salvar, auditar: true }),
   });

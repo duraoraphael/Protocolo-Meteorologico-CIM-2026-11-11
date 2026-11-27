@@ -113,7 +113,7 @@ test("cenários F e G: falha permanece pendente e reinício não reenvia evento 
     assert.equal(fila.carregarFila(arquivo).eventos[evento.id].status, "pendente");
     assert.equal(fila.assumir(evento.id, { arquivo, agora: new Date("2026-10-21T12:04:00Z") }), null);
     assert.ok(fila.assumir(evento.id, { arquivo, agora: new Date("2026-10-21T12:06:00Z") }));
-    fila.marcarEnviado(evento.id, { messageId: "smtp-1" }, { arquivo, agora: new Date("2026-10-21T12:06:01Z") });
+    fila.marcarEnviado(evento.id, { messageId: "smtp-1", destinatariosAceitos: ['macae@exemplo.com'] }, { arquivo, agora: new Date("2026-10-21T12:06:01Z") });
     assert.equal(fila.enfileirar(base, ["macae@exemplo.com"], { arquivo }).status, "enviado");
     assert.equal(fila.assumir(evento.id, { arquivo, agora: new Date("2026-10-22T12:00:00Z") }), null);
   } finally {
@@ -393,9 +393,9 @@ test("processamento usa somente destinatários da base e confirma após SMTP", a
     assumir: () => ({ id: "evento-1", status: "processando" }),
     enviar: async (_base, opcoes) => {
       assert.deepEqual(opcoes.destinatariosOverride, ["focal.macae@exemplo.com"]);
-      return { messageId: "smtp-1", destinatarios: opcoes.destinatariosOverride };
+      return { messageId: "smtp-1", destinatarios: opcoes.destinatariosOverride, destinatariosAceitos: opcoes.destinatariosOverride };
     },
-    marcarEnviado: () => {},
+    marcarEnviado: () => ({ status: 'enviado' }),
     marcarFalha: () => assert.fail("não deveria registrar falha"),
     confirmar: () => { confirmou = true; },
   });

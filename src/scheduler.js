@@ -250,11 +250,19 @@ async function processarAlertaBase(base, {
 
   try {
     if (!destinatarios.length) throw new Error(`Nenhum ponto focal cadastrado para "${base.cidade.nome}".`);
+    const ativos = new Set(destinatarios.map(email => email.toLowerCase()));
+    const pendentesAtivos = (assumido.pendentes || assumido.destinatarios || destinatarios)
+      .filter(email => ativos.has(email.toLowerCase()));
+    if (!pendentesAtivos.length) throw new Error(`Nenhum destinatário pendente permanece ativo na base "${base.chave}".`);
     const envio = await enviarEfetivo(base, {
       eventoId: evento.id,
-      destinatariosOverride: destinatarios,
+      destinatariosOverride: pendentesAtivos,
     });
-    marcarEnviadoEfetivo(evento.id, envio);
+    const registro = marcarEnviadoEfetivo(evento.id, envio);
+    if (registro?.status !== 'enviado') {
+      return { ...envio, eventoId: evento.id, parcial: true,
+        pendentes: registro?.pendentes || [], confirmacaoEnvio: registro?.confirmacaoEnvio || 'nao_confirmado' };
+    }
     try {
       confirmarEfetivo(base);
     } catch (erroEstado) {
@@ -275,8 +283,10 @@ async function verificarAlertasEEnviarPorBase({ onResultado, verificar } = {}) {
         const envio = await processarAlertaBase(base);
         if (envio.ignorado) {
           console.log(`[CIM] Evento de alerta não reenviado (${base.chave}): ${envio.motivo}.`);
+        } else if (envio.parcial) {
+          console.warn(`[CIM] Alerta com aceite SMTP incompleto (${base.chave}): ${envio.pendentes.length} destinatário(s) pendente(s); evento ${envio.eventoId}.`);
         } else {
-          console.log(`[CIM] Alerta enviado (${base.chave}): ${base.alertas.map((a) => a.tipo).join(", ")} -> ${envio.destinatarios.length} destinatário(s).`);
+          console.log(`[CIM] Alerta aceito pelo SMTP (${base.chave}): ${base.alertas.map((a) => a.tipo).join(", ")} -> ${envio.destinatarios.length} destinatário(s); evento ${envio.eventoId}. Entrega à caixa não confirmada.`);
         }
         onResultado?.(null, { base, envio });
       } catch (erro) {

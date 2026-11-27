@@ -1,6 +1,7 @@
 const crypto = require("node:crypto");
 const fs = require("node:fs");
 const path = require("node:path");
+const { emailsUnicos } = require('../email/smtpReceipt');
 
 const ARQUIVO_FILA = process.env.ALERTAS_FILA_ARQUIVO || path.join(__dirname, "..", "..", "data", "alertas-fila.json");
 const LOCK_EXPIRA_MS = 5 * 60 * 1000;
@@ -84,7 +85,12 @@ function enfileirar(base, destinatarios, { arquivo = ARQUIVO_FILA, agora = new D
           naturezaDado: alerta.naturezaDado || null,
           fingerprint: alerta.fingerprint || null,
         })),
-        destinatarios: [...new Set(destinatarios || [])],
+        destinatarios: emailsUnicos(destinatarios),
+        destinatariosAceitos: [],
+        pendentes: emailsUnicos(destinatarios),
+        historicoEnvios: [],
+        confirmacaoEnvio: 'nao_confirmado',
+        entrega: 'nao_confirmada',
         prioridade: prioridade(base),
         detectadoEm: agora.toISOString(),
         status: "pendente",
@@ -126,13 +132,47 @@ function marcarEnviado(id, envio, { arquivo = ARQUIVO_FILA, agora = new Date() }
     const fila = carregarFila(arquivo);
     const evento = fila.eventos[id];
     if (!evento) return null;
+    const esperados = emailsUnicos(evento.destinatarios);
+    const aceitos = emailsUnicos([
+      ...(evento.destinatariosAceitos || []),
+      ...(!envio?.ignorado ? emailsUnicos(envio?.destinatariosAceitos) : []),
+    ]).filter(email => esperados.includes(email));
+    const pendentes = esperados.filter(email => !aceitos.includes(email));
+    const completo = esperados.length > 0 && pendentes.length === 0;
+    const mensagem = envio?.ignorado ? `Envio ignorado: ${envio.motivo || 'sem motivo'}`
+      : `${pendentes.length} destinatário(s) sem aceite SMTP confirmado.`;
     Object.assign(evento, {
-      status: "enviado", enviadoEm: agora.toISOString(), messageId: envio?.messageId || null,
-      leaseAte: null, proximaTentativaEm: null, ultimoErro: null,
+      status: completo ? 'enviado' : 'pendente',
+      enviadoEm: completo ? agora.toISOString() : null,
+      messageId: envio?.messageId || evento.messageId || null,
+      respostaSmtp: envio?.respostaSmtp || null,
+      destinatariosAceitos: aceitos,
+      destinatariosRejeitados: emailsUnicos(envio?.destinatariosRejeitados),
+      pendentes,
+      confirmacaoEnvio: completo ? 'aceito_smtp' : aceitos.length ? 'parcial' : 'nao_confirmado',
+      entrega: 'nao_confirmada',
+      leaseAte: null,
+      proximaTentativaEm: completo ? null : proximaTentativa(evento, agora),
+      ultimoErro: completo ? null : mensagem,
+    });
+    (evento.historicoEnvios ||= []).push({
+      registradoEm: agora.toISOString(),
+      messageId: envio?.messageId || null,
+      respostaSmtp: envio?.respostaSmtp || null,
+      destinatarios: emailsUnicos(envio?.destinatarios),
+      destinatariosAceitos: !envio?.ignorado ? emailsUnicos(envio?.destinatariosAceitos) : [],
+      destinatariosRejeitados: emailsUnicos(envio?.destinatariosRejeitados),
+      errosRejeitados: envio?.errosRejeitados || [],
+      ignorado: Boolean(envio?.ignorado),
     });
     salvarFila(fila, arquivo);
     return { ...evento };
   }).resultado || null;
+}
+
+function proximaTentativa(evento, agora) {
+  const minutos = Math.min(60, 2 ** Math.max(0, evento.tentativas - 1) * 5);
+  return new Date(agora.getTime() + minutos * 60_000).toISOString();
 }
 
 function marcarFalha(id, erro, { arquivo = ARQUIVO_FILA, agora = new Date() } = {}) {
@@ -140,10 +180,17 @@ function marcarFalha(id, erro, { arquivo = ARQUIVO_FILA, agora = new Date() } = 
     const fila = carregarFila(arquivo);
     const evento = fila.eventos[id];
     if (!evento) return null;
-    const atrasoMinutos = Math.min(60, 2 ** Math.max(0, evento.tentativas - 1) * 5);
+    (evento.historicoEnvios ||= []).push({
+      registradoEm: agora.toISOString(),
+      codigo: erro?.code || null,
+      codigoSmtp: erro?.responseCode || null,
+      respostaSmtp: erro?.response || null,
+      destinatariosRejeitados: emailsUnicos(erro?.rejected),
+      erro: String(erro?.message || erro || 'Falha desconhecida').slice(0, 500),
+    });
     Object.assign(evento, {
       status: "pendente", leaseAte: null,
-      proximaTentativaEm: new Date(agora.getTime() + atrasoMinutos * 60_000).toISOString(),
+      proximaTentativaEm: proximaTentativa(evento, agora),
       ultimoErro: String(erro?.message || erro || "Falha desconhecida").slice(0, 500),
     });
     salvarFila(fila, arquivo);

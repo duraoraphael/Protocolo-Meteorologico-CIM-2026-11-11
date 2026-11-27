@@ -3,6 +3,7 @@ const { listaDestinatarios } = require("./sendReport");
 const { criarTransportador, enderecoRemetente } = require("./transport");
 const { anexosLogosEmail } = require("../config/headerAssets");
 const { validarDocumentoOperacional } = require("../logic/documentProvenance");
+const { reciboSmtp } = require('./smtpReceipt');
 
 /**
  * Envia um alerta para os responsáveis da base afetada.
@@ -55,7 +56,7 @@ async function enviarAlertaPorEmail(base, { teste = false, eventoId = null, dest
     } : {}),
   });
 
-  return { messageId: info.messageId, destinatarios, ignorado: false };
+  return { ...reciboSmtp(info), destinatarios, ignorado: false };
 }
 
 module.exports = { enviarAlertaPorEmail };

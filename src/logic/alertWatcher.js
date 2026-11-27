@@ -778,10 +778,9 @@ async function enviarAlertaCalorDoRelatorio(cidade, report) {
   const novos = filtrarNovidades(cidade.chave, achados, estado, () => true);
   if (!novos.length) return null;
   const base = { chave: cidade.chave, cidade, report, alertas: novos };
-  const { enviarAlertaPorEmail } = require('../email/sendAlert');
-  const envio = await enviarAlertaPorEmail(base);
-  marcarAlertasEnviados(base);
-  return envio;
+  // Usa o mesmo controle por destinatário dos demais alertas.
+  const { processarAlertaBase } = require('../scheduler');
+  return processarAlertaBase(base);
 }
 
 module.exports = {
